@@ -1,0 +1,310 @@
+import datetime
+import pytz
+import asyncio
+import time
+import math
+import random
+import functools
+import yaml
+import certifi
+import os
+
+import discord
+from discord import Option, OptionChoice
+from discord.ext import commands, tasks
+
+from utility.config import config
+from cogs.function_in import function_in
+from cogs.function_in_in import function_in_in
+
+class Help(discord.Cog, name="幫助"):
+    def __init__(self, bot):
+        self.bot: discord.Bot = bot
+    
+    @discord.slash_command(guild_only=True, name="幫助", description="遊戲幫助及指南")
+    async def 幫助(self, interaction: discord.Interaction):
+        embed = discord.Embed(title=':book: 遊戲幫助', description="不知道怎麼玩嗎? 來看看幫助吧", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
+        embed.add_field(name="歡迎來到《幻境之旅 RPG》的世界!", value="\u200b", inline=False)
+        embed.add_field(name="剛開始是不是不知道該怎麼開始遊玩呢!", value="\u200b", inline=False)
+        embed.add_field(name="就由我來教你吧!", value="\u200b", inline=False)
+        embed.add_field(name="首先, 需要先輸入指令 `/註冊` 指令來註冊一個身分!", value="\u200b", inline=False)
+        embed.add_field(name="接著, 先輸入 `/禮包碼 禮包碼:new_player_gogo` 來取得新手禮包!", value="\u200b", inline=False)
+        embed.add_field(name="然後拿著禮包給予的晶幣, 輸入 `/商店` 來查看要購買的東西, 並輸入 `/購買` 來購買物品", value="\u200b", inline=False)
+        embed.add_field(name="最後買好後, 再到 `/裝備` 並根據要裝備的類型, 選擇並於送出後跳出的表單填入要裝備的裝備名稱就好啦!", value="\u200b", inline=False)
+        embed.add_field(name="接著, 就可以到野外使用指令 `/攻擊` 來打怪啦!", value="\u200b", inline=False)
+        embed.add_field(name="接下來, 你可以透過下方的按鈕, 來查找想要的幫助~", value="\u200b", inline=False)
+        embed.add_field(name="若依然有不知道的, 可詢問遊戲GM, 誠摯為您服務", value="\u200b", inline=False)
+        guild = self.bot.get_guild(config.guild)
+        await interaction.response.send_message(embed=embed, view=self.help_menu(interaction, guild, self.bot.user.avatar.url),ephemeral=True)
+
+    class help_menu(discord.ui.View):
+        def __init__(self, interaction: discord.Interaction, guild: discord.Guild, url):
+            super().__init__(timeout=60)
+            self.interaction = interaction
+            self.guild = guild
+            self.url = url
+            self.button1 = discord.ui.Button(emoji="<:command_block:1149171629805555754>", label="指令表(一)", style=discord.ButtonStyle.red, custom_id="button1")
+            self.button1.callback = functools.partial(self.button1_callback, interaction)
+            self.add_item(self.button1)
+            self.button2 = discord.ui.Button(emoji="<:command_block:1149171629805555754>", label="指令表(二)", style=discord.ButtonStyle.red, custom_id="button2")
+            self.button2.callback = functools.partial(self.button2_callback, interaction)
+            self.add_item(self.button2)
+            self.button3 = discord.ui.Button(emoji="<:weapon:1078601327262842893>", label="野外", style=discord.ButtonStyle.blurple, custom_id="button3")
+            self.button3.callback = functools.partial(self.button3_callback, interaction)
+            self.add_item(self.button3)
+            self.button4 = discord.ui.Button(emoji="⏰", label="冷卻條", style=discord.ButtonStyle.blurple, custom_id="button4")
+            self.button4.callback = functools.partial(self.button4_callback, interaction)
+            self.add_item(self.button4)
+            self.button5 = discord.ui.Button(emoji="<:strengthen:1149172469329035354>", label="強化系統", style=discord.ButtonStyle.blurple, custom_id="button5")
+            self.button5.callback = functools.partial(self.button5_callback, interaction)
+            self.add_item(self.button5)
+            self.button6 = discord.ui.Button(emoji="🔮", label="附魔系統", style=discord.ButtonStyle.blurple, custom_id="button6")
+            self.button6.callback = functools.partial(self.button6_callback, interaction)
+            self.add_item(self.button6)
+            self.button7 = discord.ui.Button(emoji="<:equipment:1078600684624171068>", label="裝備系統", style=discord.ButtonStyle.blurple, custom_id="button7")
+            self.button7.callback = functools.partial(self.button7_callback, interaction)
+            self.add_item(self.button7)
+            self.button8 = discord.ui.Button(emoji="<:king:1154993624765956156>", label="世界BOSS", style=discord.ButtonStyle.blurple, custom_id="button8")
+            self.button8.callback = functools.partial(self.button8_callback, interaction)
+            self.add_item(self.button8)
+            self.button9 = discord.ui.Button(emoji="💰", label="拍賣行", style=discord.ButtonStyle.blurple, custom_id="button9")
+            self.button9.callback = functools.partial(self.button9_callback, interaction)
+            self.add_item(self.button9)
+            self.button10 = discord.ui.Button(emoji="🚪", label="副本", style=discord.ButtonStyle.blurple, custom_id="button10")
+            self.button10.callback = functools.partial(self.button10_callback, interaction)
+            self.add_item(self.button10)
+            self.button11 = discord.ui.Button(emoji="🍗", label="飢餓度", style=discord.ButtonStyle.blurple, custom_id="button11")
+            self.button11.callback = functools.partial(self.button11_callback, interaction)
+            self.add_item(self.button11)
+            self.web_link_button = discord.ui.Button(label="官方網站", style=discord.ButtonStyle.link, url="https://www.rbctw.net")
+            self.add_item(self.web_link_button)
+            self.discord_link_button = discord.ui.Button(label="官方Discord群", style=discord.ButtonStyle.link, url="https://www.rbctw.net/discord")
+            self.add_item(self.discord_link_button)
+            self.discord_craft_list_button = discord.ui.Button(label="合成配方", style=discord.ButtonStyle.link, url="https://www.rbctw.net/rpg_craft_list")
+            self.add_item(self.discord_craft_list_button)
+
+        async def on_timeout(self):
+            await super().on_timeout()
+            self.disable_all_items()
+            if self.interaction.message:
+                try:
+                    await self.interaction.response.edit_message(view=self)
+                    self.stop()
+                except discord.errors.InteractionResponded:
+                    pass
+            else:
+                self.stop()
+        
+        async def button1_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="指令表(一)", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="/註冊", value="註冊一個帳號", inline=False)
+            embed.add_field(name="/攻擊", value="攻擊一隻怪物! 也可以選擇攻擊世界BOSS!", inline=False)
+            embed.add_field(name="/背包", value="查看自己的背包(將會發送至私聊)💼", inline=False)
+            embed.add_field(name="/工作", value="可以進行任意工作", inline=False)
+            embed.add_field(name="/交易", value="可以與他人進行晶幣交易, 請注意, 系統會在交易完成後收取10%手續費", inline=False)
+            embed.add_field(name="/任務", value="當沒有任務時會自動接取一個隨機任務, 有任務時會顯示任務進度及獎勵", inline=False)
+            embed.add_field(name="/休息", value="血量不夠, 但是又想省藥水嗎? 休息一下, 讓身體放鬆的同時, 也可以讓身體得到適當的回復喔", inline=False)
+            embed.add_field(name="/冥想", value="魔力不夠, 但是又想省藥水嗎? 冥想一下, 讓身體放鬆的同時, 也可以讓身體得到適當的回復喔", inline=False)
+            embed.add_field(name="/使用", value="使用一個道具~", inline=False)
+            embed.add_field(name="/商店", value="查看系統商店", inline=False)
+            embed.add_field(name="/購買", value="向系統商店購買道具!", inline=False)
+            embed.add_field(name="/販售", value="將用不到的東西回收給系統~", inline=False)
+            embed.add_field(name="/強化", value="裝備不夠強? 那就強化阿!", inline=False)
+            embed.add_field(name="/復活", value="血量歸零? 別著急! 可以復活的!", inline=False)
+            embed.add_field(name="/傳送", value="傳送到指定的地圖!", inline=False)
+            embed.add_field(name="/裝備", value="編輯裝備欄!", inline=False)
+            embed.add_field(name="/資訊", value="查看自身的資訊, 當然也可以看別人的啦!", inline=False)
+            embed.add_field(name="/升級", value="升級技能!", inline=False)
+            embed.add_field(name="/屬性點", value="增加自己的素質", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button2_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="指令表(二)", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="/禮包碼", value="有禮包? 太香啦! 只是沒有VIP666喔!", inline=False)
+            embed.add_field(name="/轉蛋", value="阿..... 萬惡的轉蛋....", inline=False)
+            embed.add_field(name="/簽到", value="每天簽到都會有獎勵喔!", inline=False)
+            embed.add_field(name="/寵物", value="看看自己或別人出陣的寵物, 也可以決定派出甚麼寵物!", inline=False)
+            embed.add_field(name="/wiki", value="查看道具資訊及介紹", inline=False)
+            embed.add_field(name="/合成", value="合成物品", inline=False)
+            embed.add_field(name="/分解", value="分解物品", inline=False)
+            embed.add_field(name="/幫助", value="查看遊戲幫助", inline=False)
+            embed.add_field(name="/fix", value="覺得資料有問題嗎? 可以使用這個指令來修復.若還是有問題, 請聯繫GM", inline=False)
+            embed.add_field(name="/傷害測試", value="可以召喚一隻稻草人出來, 傷害將登記於系統, 最高的前十個玩家將被載入官網!", inline=False)
+            embed.add_field(name="/拍賣", value="想要跨群販賣物品或購買物品嗎? 拍賣行是你的好幫手", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button3_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="野外設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="目前, 存在著下列地圖", value="\u200b", inline=False)
+            embed.add_field(name="翠葉林地", value="適合等級: Lv1~10", inline=False)
+            embed.add_field(name="無盡山脊", value="適合等級: Lv11~20", inline=False)
+            embed.add_field(name="極寒之地", value="適合等級: Lv21~30", inline=False)
+            embed.add_field(name="熔岩深谷", value="適合等級: Lv31~40", inline=False)
+            embed.add_field(name="所有的地圖, 皆不設等級限制, 只要願意隨時都可以前往", value="\u200b", inline=False)
+            embed.add_field(name="更改地圖的方式為使用指令 `/傳送` 並於後面的選項選擇欲前往的地圖名稱即可!", value="\u200b", inline=False)
+            embed.add_field(name="請特別注意, 本遊戲設有冷卻條, 傳送的冷卻為60秒", value="\u200b", inline=False)
+            embed.add_field(name="於官方伺服器內時, 將不需要使用指令, 直接前往欲前往的地圖名稱之頻道即可, 不須等待冷卻, 同時, 若原本已使用指令前往某地區, 於該特定頻道內也會強制設定為該地圖", value="\u200b", inline=False)
+            channel = self.guild.get_channel(1198808217396990062)
+            embed.add_field(name=f"例如: 原本在翠葉林地, 於 {channel.mention} 使用 `/攻擊` 時, 將會屏蔽原本的設定, 自動召喚出 {channel.name} 的怪物, 且不會因為地圖轉換而進入冷卻, 但當不在官方伺服器內遊玩時, 將會自動回到翠葉林地, 不會受到影響", value="\u200b", inline=False)
+            embed.add_field(name=f"找不到怪物怎麼辦? 可以到官方Discord群, 於右上角搜尋框像下面圖片一樣, 並把怪物名稱改成你想要找的怪物, 這樣就可以找到了喔!", value="\u200b", inline=False)            
+            embed.set_image(url="https://cdn.discordapp.com/attachments/983627773736271902/1154463603299201137/image.png")
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button4_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="冷卻設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="本遊戲的冷卻為**共用冷卻**", value="\u200b", inline=False)
+            embed.add_field(name="意即, 當使用一個指令產生冷卻時, 其他所有會產生冷卻的指令都會同步進入冷卻", value="\u200b", inline=False)
+            embed.add_field(name="例如: 當使用了 `/休息` 後, 10秒內無法進行 `/攻擊`, 但可以正常查看 `/背包`", value="\u200b", inline=False)
+            embed.add_field(name="以下為擁有冷卻的指令:", value="\u200b", inline=False)
+            embed.add_field(name="/工作", value=f"{config.cd_工作}秒", inline=False)
+            embed.add_field(name="/使用", value=f"{config.cd_使用}秒", inline=False)
+            embed.add_field(name="/休息", value=f"{config.cd_休息}秒", inline=False)
+            embed.add_field(name="/冥想", value=f"{config.cd_冥想}秒", inline=False)
+            embed.add_field(name="/攻擊", value=f"{config.cd_攻擊}秒", inline=False)
+            embed.add_field(name="/傳送", value=f"{config.cd_傳送}秒", inline=False)
+            embed.add_field(name="備註: 當使用特定道具時, 該道具介紹內有提到 `使用本道具可無視冷卻時間且不會產生冷卻時間` 時, 可在冷卻時使用, 並且於使用後不會進入冷卻", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button5_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="強化系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="20等以上裝備/武器/飾品皆可以強化", value="\u200b", inline=False)
+            embed.add_field(name="強化時, 需要放入素材, 可放入強化晶石或相同的裝備", value="\u200b", inline=False)
+            embed.add_field(name="素材可放入未強化過的裝備或強化過的裝備, 但給予的機率為相同", value="\u200b", inline=False)
+            embed.add_field(name="無論是否強化成功, 素材都會消耗", value="\u200b", inline=False)
+            embed.add_field(name="每次強化會收取(強化階層+1)x100", value="例如+0至+1則是100元, +1至+2則是200元, 依此類推", inline=False)
+            embed.add_field(name="強化成功時, 將會提升一階", value="\u200b", inline=False)
+            embed.add_field(name="強化失敗時, 20%安然無恙, 60%掉一階, 20%毀損, 若強化時為+0至+1, 則為20%安然無恙, 80%毀損", value="失敗率為(強化階層+1)x15", inline=False)
+            embed.add_field(name="目前擁有的強化晶石:", value="`劣質強化晶石` `普通強化晶石` `稀有強化晶石` `高級強化晶石`", inline=False)
+            embed.add_field(name="各自的強化機率皆寫在各自的物品敘述內, 相同裝備給予的成功率為75%", value="\u200b", inline=False)
+            embed.add_field(name="另外, 每次失敗都會增加一層強化層數堆疊", value="\u200b", inline=False)
+            embed.add_field(name="每層強化層數堆疊都會略為增加強化機率, 過高的強化階級裝備在強化時會獲得更低的成功機率", value="\u200b", inline=False)
+            embed.add_field(name="強化成功時將歸零強化層數堆疊", value="\u200b", inline=False)
+            embed.add_field(name="帕德修絲的祝福可於強化層數為0時直接提升強化層數堆疊", value="\u200b", inline=False)
+            embed.add_field(name="帕德修絲的寧靜之石可將強化層數歸零, 可於道具商店購買", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button6_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="附魔系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="30等以上裝備/武器皆可以附魔", value="\u200b", inline=False)
+            embed.add_field(name="附魔時, 需要一個魔力晶核, 並可選擇性放入咒紋碎片", value="\u200b", inline=False)
+            embed.add_field(name="咒紋碎片可增加特定的附魔取得機率, 不使用則是隨機", value="\u200b", inline=False)
+            embed.add_field(name="武器擁有以下附魔", value="鋒利, 法術, 火焰, 冰凍, 瘟疫, 尖銳, 腐蝕, 破壞, 全能", inline=False)
+            embed.add_field(name="裝備擁有以下附魔", value="保護, 生命, 全能", inline=False)
+            embed.add_field(name="以下附魔為共用附魔, 武器及裝備皆可附魔", value="全能", inline=False)
+            embed.add_field(name="其中, `鋒利` `法術` `保護` `生命` 為基礎附魔, 不需使用咒紋碎片即可取得", value="\u200b", inline=False)
+            embed.add_field(name="其餘附魔則是需要特定咒紋碎片才有機會取得", value="\u200b", inline=False)
+            embed.add_field(name="另外, `鋒利` `法術` `保護` `生命` 在使用特定的咒紋碎片時, 最高可取得10等附魔", value="\u200b", inline=False)
+            embed.add_field(name="`全能` 最高可取得4等附魔", value="\u200b", inline=False)
+            embed.add_field(name="其餘附魔最高可取得3等附魔", value="\u200b", inline=False)
+            embed.add_field(name="下述附魔直接反映在裝備屬性上:", value="鋒利, 法術, 保護, 生命, 破壞", inline=False)
+            embed.add_field(name="下述附魔裝備時在戰鬥中機率觸發:", value="火焰, 冰凍, 瘟疫, 尖銳, 腐蝕", inline=False)
+            embed.add_field(name="請特別注意, 戰鬥中觸發的附魔只能透過普通攻擊觸發", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button7_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="裝備系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="當你使用`/裝備` 並依照選項選擇類型後", value="\u200b", inline=False)
+            embed.add_field(name="會出現一個表單, 供你輸入", value="\u200b", inline=False)
+            embed.add_field(name="可以一次於不同選項框填入對應的裝備以裝備", value="\u200b", inline=False)
+            embed.add_field(name="當要脫下裝備時, 直接將該選項框留空即可", value="\u200b", inline=False)
+            embed.add_field(name="當需要更換裝備時", value="\u200b", inline=False)
+            embed.add_field(name="可直接將原裝備名稱刪除, 並填入新的裝備名稱", value="\u200b", inline=False)
+            embed.add_field(name="若有強化過, 請填入完整名稱, 如欲裝備 `破舊的布製頭盔+1`, 則於頭盔欄位輸入`破舊的布製頭盔+1`", value="\u200b", inline=False)
+            embed.add_field(name="如果不小心忘記要裝備的是甚麼欄位, 也可以直接填入, 系統會提示該裝備應裝在哪個欄位", value="\u200b", inline=False)
+            embed.add_field(name="若道具介紹內含有 `可裝備於戰鬥道具欄位`, 及代表可裝備於戰鬥道具欄位", value="\u200b", inline=False)
+            embed.add_field(name="技能欄位則只可裝備主動技能", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button8_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="世界BOSS設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="每天中午12點/晚上9點時, 皆會重生所有世界BOSS", value="\u200b", inline=False)
+            embed.add_field(name="並在出現一個小時後消失", value="\u200b", inline=False)
+            embed.add_field(name="這期間, 可以使用 /攻擊 並在後面的選項選擇要打的世界BOSS", value="\u200b", inline=False)
+            embed.add_field(name="世界BOSS在每次行動時, 都會實時更新血量", value="\u200b", inline=False)
+            embed.add_field(name="每個人雖然攻擊面板都是獨立的, 但數值皆相同, 血量也會保存", value="\u200b", inline=False)
+            embed.add_field(name="此外, 世界BOSS將必定給予尾刀玩家掉落物", value="\u200b", inline=False)
+            embed.add_field(name="並且, 會給予對此世界BOSS造成傷害前3名物品獎勵, 第一名3個, 第二名2個, 第三名1個", value="\u200b", inline=False)
+            embed.add_field(name="及前十名經驗, 晶幣獎勵", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button9_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="拍賣行設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="拍賣行為所有人的公開交易", value="\u200b", inline=False)
+            embed.add_field(name="可至官網查看物品的交易資料, 例如拍賣品ID, 價格, 物品名稱及類別", value="\u200b", inline=False)
+            embed.add_field(name="並在Discord內進行購買及販賣", value="\u200b", inline=False)
+            embed.add_field(name="當上架的東西被購買時, 系統會自動給予賣家晶幣", value="\u200b", inline=False)
+            embed.add_field(name="每樣物品, 系統將會酌收10%手續費", value="\u200b", inline=False)
+            embed.add_field(name="當不想賣了時, 也可以選擇下架該道具", value="\u200b", inline=False)
+            embed.add_field(name="當一件商品超過3天階沒有人購買時, 將會自動被下架", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+        
+        async def button10_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="副本設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="副本為一個獨立的地圖", value="\u200b", inline=False)
+            embed.add_field(name="每天早上6點時刷新所有副本CD", value="\u200b", inline=False)
+            embed.add_field(name="每個副本皆有不同的回合數與怪物數量", value="\u200b", inline=False)
+            embed.add_field(name="期間, 打死怪物會正常給予經驗與晶幣", value="\u200b", inline=False)
+            embed.add_field(name="但是不會掉落物品及計算任務進度", value="\u200b", inline=False)
+            embed.add_field(name="打死所有副本內的怪物時會給予額外的副本獎勵", value="\u200b", inline=False)
+            embed.add_field(name="以下行為會判定副本失敗:", value="\u200b", inline=False)
+            embed.add_field(name="1. 死亡", value="\u200b", inline=False)
+            embed.add_field(name="2. 超過該副本限定的回合數(會顯示在該副本模板最上方)", value="\u200b", inline=False)
+            embed.add_field(name="3. 每次攻擊完, 可點擊按鈕但未點擊按鈕超過一分鐘(及普通的攻擊時超過一分鐘導致怪物逃跑)", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+        
+        async def button11_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="飢餓度設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="每個人初始飢餓度為100", value="\u200b", inline=False)
+            embed.add_field(name="不會低於0, 也不會高於100", value="\u200b", inline=False)
+            embed.add_field(name="每10分鐘會自行恢復3點", value="\u200b", inline=False)
+            embed.add_field(name="飢餓度可透過使用料理來回復", value="\u200b", inline=False)
+            embed.add_field(name="飢餓度高於80時, 物理/魔法攻擊力提升20%, 閃避/爆擊率提升10%", value="\u200b", inline=False)
+            embed.add_field(name="飢餓度低於50時, 物理/魔法攻擊力降低20%, 閃避/爆擊率降低10%", value="\u200b", inline=False)
+            embed.add_field(name="飢餓度低於30時, 物理/魔法攻擊力降低40%, 閃避/爆擊率降低25%", value="\u200b", inline=False)
+            embed.add_field(name="飢餓度低於10時, 物理/魔法攻擊力降低65%, 閃避/爆擊率降低50%, 最大血量降低30%", value="\u200b", inline=False)
+            embed.add_field(name="進行以下行為時, 會降低飢餓度:", value="\u200b", inline=False)
+            embed.add_field(name="攻擊(使用指令`/攻擊`時扣除)", value="-1", inline=False)
+            embed.add_field(name="副本(使用指令`/副本`並且確認進入時扣除)", value="-5", inline=False)
+            embed.add_field(name="工作", value="次數為1/5/10/30/50/100, 消耗1/2/4/6/9/15", inline=False)
+            embed.add_field(name="烹飪", value="-1", inline=False)
+            embed.add_field(name="休息", value="-1", inline=False)
+            embed.add_field(name="冥想", value="-1", inline=False)
+            embed.add_field(name="當前飢餓度可於 `/資訊` 查看", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+def setup(client: discord.Bot):
+    client.add_cog(Help(client))
