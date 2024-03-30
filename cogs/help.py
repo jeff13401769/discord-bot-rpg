@@ -50,33 +50,36 @@ class Help(discord.Cog, name="幫助"):
             self.button2 = discord.ui.Button(emoji="<:command_block:1149171629805555754>", label="指令表(二)", style=discord.ButtonStyle.red, custom_id="button2")
             self.button2.callback = functools.partial(self.button2_callback, interaction)
             self.add_item(self.button2)
-            self.button3 = discord.ui.Button(emoji="<:weapon:1078601327262842893>", label="野外", style=discord.ButtonStyle.blurple, custom_id="button3")
+            self.button3 = discord.ui.Button(emoji="<:weapon:1078601327262842893>", label="戰鬥介紹", style=discord.ButtonStyle.blurple, custom_id="button3")
             self.button3.callback = functools.partial(self.button3_callback, interaction)
             self.add_item(self.button3)
-            self.button4 = discord.ui.Button(emoji="⏰", label="冷卻條", style=discord.ButtonStyle.blurple, custom_id="button4")
+            self.button4 = discord.ui.Button(emoji="🗺️", label="野外", style=discord.ButtonStyle.blurple, custom_id="button4")
             self.button4.callback = functools.partial(self.button4_callback, interaction)
             self.add_item(self.button4)
-            self.button5 = discord.ui.Button(emoji="<:strengthen:1149172469329035354>", label="強化系統", style=discord.ButtonStyle.blurple, custom_id="button5")
+            self.button5 = discord.ui.Button(emoji="⏰", label="冷卻條", style=discord.ButtonStyle.blurple, custom_id="button5")
             self.button5.callback = functools.partial(self.button5_callback, interaction)
             self.add_item(self.button5)
-            self.button6 = discord.ui.Button(emoji="🔮", label="附魔系統", style=discord.ButtonStyle.blurple, custom_id="button6")
+            self.button6 = discord.ui.Button(emoji="<:strengthen:1149172469329035354>", label="強化系統", style=discord.ButtonStyle.blurple, custom_id="button6")
             self.button6.callback = functools.partial(self.button6_callback, interaction)
             self.add_item(self.button6)
-            self.button7 = discord.ui.Button(emoji="<:equipment:1078600684624171068>", label="裝備系統", style=discord.ButtonStyle.blurple, custom_id="button7")
+            self.button7 = discord.ui.Button(emoji="🔮", label="附魔系統", style=discord.ButtonStyle.blurple, custom_id="button7")
             self.button7.callback = functools.partial(self.button7_callback, interaction)
             self.add_item(self.button7)
-            self.button8 = discord.ui.Button(emoji="<:king:1154993624765956156>", label="世界BOSS", style=discord.ButtonStyle.blurple, custom_id="button8")
+            self.button8 = discord.ui.Button(emoji="<:equipment:1078600684624171068>", label="裝備系統", style=discord.ButtonStyle.blurple, custom_id="button8")
             self.button8.callback = functools.partial(self.button8_callback, interaction)
             self.add_item(self.button8)
-            self.button9 = discord.ui.Button(emoji="💰", label="拍賣行", style=discord.ButtonStyle.blurple, custom_id="button9")
+            self.button9 = discord.ui.Button(emoji="<:king:1154993624765956156>", label="世界BOSS", style=discord.ButtonStyle.blurple, custom_id="button9")
             self.button9.callback = functools.partial(self.button9_callback, interaction)
             self.add_item(self.button9)
-            self.button10 = discord.ui.Button(emoji="🚪", label="副本", style=discord.ButtonStyle.blurple, custom_id="button10")
+            self.button10 = discord.ui.Button(emoji="💰", label="拍賣行", style=discord.ButtonStyle.blurple, custom_id="button10")
             self.button10.callback = functools.partial(self.button10_callback, interaction)
             self.add_item(self.button10)
-            self.button11 = discord.ui.Button(emoji="🍗", label="飢餓度", style=discord.ButtonStyle.blurple, custom_id="button11")
+            self.button11 = discord.ui.Button(emoji="🚪", label="副本", style=discord.ButtonStyle.blurple, custom_id="button11")
             self.button11.callback = functools.partial(self.button11_callback, interaction)
             self.add_item(self.button11)
+            self.button12 = discord.ui.Button(emoji="🍗", label="飢餓度", style=discord.ButtonStyle.blurple, custom_id="button12")
+            self.button12.callback = functools.partial(self.button12_callback, interaction)
+            self.add_item(self.button12)
             self.web_link_button = discord.ui.Button(label="官方網站", style=discord.ButtonStyle.link, url="https://www.rbctw.net")
             self.add_item(self.web_link_button)
             self.discord_link_button = discord.ui.Button(label="官方Discord群", style=discord.ButtonStyle.link, url="https://www.rbctw.net/discord")
@@ -139,8 +142,28 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="/拍賣", value="想要跨群販賣物品或購買物品嗎? 拍賣行是你的好幫手", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
-
+        
         async def button3_callback(self, button, interaction: discord.Interaction):
+            self.disable_all_items()
+            embed = discord.Embed(title=':book: 遊戲幫助', description="戰鬥介紹", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed.set_thumbnail(url=self.url)
+            embed.add_field(name="普通打怪及副本有以下選項可使用", value="攻擊/防禦/道具/技能/逃跑", inline=False)
+            embed.add_field(name="pvp有以下選項可使用", value="攻擊/道具/技能/認輸", inline=False)
+            embed.add_field(name="攻擊: 進行普通攻擊", value="\u200b", inline=False)
+            embed.add_field(name="防禦: 進行防禦, 可減少下次受到的傷害", value="\u200b", inline=False)
+            embed.add_field(name="道具: 使用對應的背包內的道具, 若對應道具使用完畢則會跳過該回合", value="\u200b", inline=False)
+            embed.add_field(name="技能: 使用對應的技能, 若沒有該技能或魔力不足或該技能施放條件未達成則會跳過該回合", value="\u200b", inline=False)
+            embed.add_field(name="逃跑: 感覺不敵就逃跑吧! 逃跑成功則不會獲得經驗、晶幣及掉落物並離開該次戰鬥, 逃跑失敗則會跳過該回合", value="\u200b", inline=False)
+            embed.add_field(name="認輸: 認輸後將會直接結束決鬥", value="\u200b", inline=False)
+            embed.add_field(name="當與怪物的戰鬥勝利後, 將會獲得經驗值及晶幣, 並且有機率獲得掉落物", value="\u200b", inline=False)
+            embed.add_field(name="道具使用後無論是否使用成功皆會固定進入3回合冷卻時間, 技能則是按照技能介紹提到的冷卻時間計算", value="\u200b", inline=False)
+            embed.add_field(name="戰鬥進行中將無法進行別的行動, 若有急需請使用逃跑", value="\u200b", inline=False)
+            embed.add_field(name="戰鬥中若死亡需要使用指令 /復活 進行復活, 復活前將無法進行其他行動", value="\u200b", inline=False)
+            embed.add_field(name="小提示: 所有負面效果皆為真實傷害且無法被迴避, 但可以使用對應的特殊藥水解除負面效果", value="\u200b", inline=False)
+            await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
+            self.stop()
+
+        async def button4_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="野外設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -160,7 +183,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button4_callback(self, button, interaction: discord.Interaction):
+        async def button5_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="冷卻設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -178,7 +201,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button5_callback(self, button, interaction: discord.Interaction):
+        async def button6_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="強化系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -199,7 +222,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button6_callback(self, button, interaction: discord.Interaction):
+        async def button7_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="附魔系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -220,7 +243,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button7_callback(self, button, interaction: discord.Interaction):
+        async def button8_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="裝備系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -237,7 +260,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button8_callback(self, button, interaction: discord.Interaction):
+        async def button9_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="世界BOSS設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -252,7 +275,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button9_callback(self, button, interaction: discord.Interaction):
+        async def button10_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="拍賣行設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -266,7 +289,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         
-        async def button10_callback(self, button, interaction: discord.Interaction):
+        async def button11_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="副本設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -283,7 +306,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         
-        async def button11_callback(self, button, interaction: discord.Interaction):
+        async def button12_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="飢餓度設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
