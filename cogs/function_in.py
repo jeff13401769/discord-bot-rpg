@@ -100,8 +100,8 @@ class function_in(discord.Cog, name="模塊導入1"):
                 expfull = int((17 * players_level) ** 1.7) * special_exp
             exp -= expfull
             players_level+=1
-            player_attr_point+=3
-            if players_level % 2 == 0:
+            player_attr_point+=1
+            if players_level % 3 == 0:
                 player_skill_point+=1
             await function_in.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
             await function_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
@@ -318,6 +318,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             ("裝備", "accessories", "飾品"),
             ("物品", "材料", "材料"),
             ("物品", "道具", "道具"),
+            ("物品", "技能書", "技能書"),
             ("物品", "料理", "料理"),
             ("裝備", "pet", "寵物"),
             ("裝備", "medal", "勳章"),
@@ -489,7 +490,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_con = search[9]
         players_luk = search[10]
         players_add_attr_point = search[19]
-        total_attr = (players_level * 3) + players_add_attr_point
+        total_attr = players_level + players_add_attr_point
         attr = total_attr - (players_str + players_int + players_dex + players_con + players_luk) - players_add_attr_point
         await function_in.sql_update("rpg_players", "players", "attr_point", attr, "user_id", user_id)
     
@@ -549,7 +550,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_medal_hit = 0
         players_medal_ndef = 0
         players_medal_str = 0
-        players_medal_int =0
+        players_medal_int = 0
         players_medal_dex = 0
         players_medal_con = 0
         players_medal_luk = 0

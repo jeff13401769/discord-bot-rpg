@@ -302,13 +302,14 @@ class System(discord.Cog, name="主系統"):
         alignment = Alignment(horizontal='center', vertical='center')
         sheet1 = workbook.active
         sheet2 = workbook.create_sheet(title='材料類')
-        sheet3 = workbook.create_sheet(title='裝備類')
-        sheet4 = workbook.create_sheet(title='武器類')
-        sheet5 = workbook.create_sheet(title='飾品類')
-        sheet6 = workbook.create_sheet(title='寵物類')
-        sheet7 = workbook.create_sheet(title='卡牌類')
-        sheet8 = workbook.create_sheet(title='料理類')
-        sheet9 = workbook.create_sheet(title='生成時間')
+        sheet3 = workbook.create_sheet(title='技能書類')
+        sheet4 = workbook.create_sheet(title='裝備類')
+        sheet5 = workbook.create_sheet(title='武器類')
+        sheet6 = workbook.create_sheet(title='飾品類')
+        sheet7 = workbook.create_sheet(title='寵物類')
+        sheet8 = workbook.create_sheet(title='卡牌類')
+        sheet9 = workbook.create_sheet(title='料理類')
+        sheet10 = workbook.create_sheet(title='生成時間')
         sheet1.title = '道具類'
         sheets = workbook.sheetnames
         search = await function_in.sql_findall("rpg_backpack", f"{user.id}")
@@ -328,7 +329,9 @@ class System(discord.Cog, name="主系統"):
         sheet7['B1'] = '數量'
         sheet8['A1'] = '道具名稱'
         sheet8['B1'] = '數量'
-        sheet9['A1'] = '本工作表生成時間'
+        sheet9['A1'] = '道具名稱'
+        sheet9['B1'] = '數量'
+        sheet10['A1'] = '本工作表生成時間'
         
         msg1 = ""
         msg2 = ""
@@ -338,6 +341,7 @@ class System(discord.Cog, name="主系統"):
         msg6 = ""
         msg7 = ""
         msg8 = ""
+        msg9 = ""
         a = 0
         b = 0
         c = 0
@@ -346,6 +350,7 @@ class System(discord.Cog, name="主系統"):
         f = 0
         g = 0
         h = 0
+        i = 0
         for item_info in search:
             item_type = item_info[1]
             name = item_info[0]
@@ -372,7 +377,7 @@ class System(discord.Cog, name="主系統"):
                     sheet2[f'B{b+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "裝備":
+            if item_type == "技能書類":
                 if num > 0:
                     if c < 1:
                         msg3 += f"{name}: {num}個"
@@ -383,7 +388,7 @@ class System(discord.Cog, name="主系統"):
                     sheet3[f'B{c+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "武器":
+            if item_type == "裝備":
                 if num > 0:
                     if d < 1:
                         msg4 += f"{name}: {num}個"
@@ -394,7 +399,7 @@ class System(discord.Cog, name="主系統"):
                     sheet4[f'B{d+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "飾品":
+            if item_type == "武器":
                 if num > 0:
                     if e < 1:
                         msg5 += f"{name}: {num}個"
@@ -405,7 +410,7 @@ class System(discord.Cog, name="主系統"):
                     sheet5[f'B{e+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "寵物":
+            if item_type == "飾品":
                 if num > 0:
                     if f < 1:
                         msg6 += f"{name}: {num}個"
@@ -416,7 +421,7 @@ class System(discord.Cog, name="主系統"):
                     sheet6[f'B{f+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "卡牌":
+            if item_type == "寵物":
                 if num > 0:
                     if g < 1:
                         msg7 += f"{name}: {num}個"
@@ -427,7 +432,7 @@ class System(discord.Cog, name="主系統"):
                     sheet7[f'B{g+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "料理":
+            if item_type == "卡牌":
                 if num > 0:
                     if h < 1:
                         msg8 += f"{name}: {num}個"
@@ -436,6 +441,17 @@ class System(discord.Cog, name="主系統"):
                     h += 1
                     sheet8[f'A{h+1}'] = f'{name}'
                     sheet8[f'B{h+1}'] = num
+                else:
+                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+            if item_type == "料理":
+                if num > 0:
+                    if i < 1:
+                        msg9 += f"{name}: {num}個"
+                    else:
+                        msg9 += f" | {name}: {num}個"
+                    i += 1
+                    sheet9[f'A{i+1}'] = f'{name}'
+                    sheet9[f'B{i+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
         if msg1 == "":
@@ -494,6 +510,13 @@ class System(discord.Cog, name="主系統"):
         else:
             if len(msg8) > 2000:
                 msg8 = "由於該類別超過2000字, 該類別無法顯示.\n請查看excel"
+        if msg9 == "":
+            msg9 = "無"
+            sheet9['A2'] = '無'
+            sheet9['B2'] = 'X'
+        else:
+            if len(msg9) > 2000:
+                msg9 = "由於該類別超過2000字, 該類別無法顯示.\n請查看excel"
         now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y年%m月%d日-%H:%M:%S")
         sheet9['B1'] = f"{now_time}"
         for sheet_name in sheets:
@@ -517,12 +540,13 @@ class System(discord.Cog, name="主系統"):
         msg = await user.send('你的背包:')
         await msg.reply(f"道具類\n```{msg1}```")
         await msg.reply(f"材料類\n```{msg2}```")
-        await msg.reply(f"裝備類\n```{msg3}```")
-        await msg.reply(f"武器類\n```{msg4}```")
-        await msg.reply(f"飾品類\n```{msg5}```")
-        await msg.reply(f"寵物類\n```{msg6}```")
-        await msg.reply(f"卡牌類\n```{msg7}```")
-        await msg.reply(f"料理類\n```{msg8}```")
+        await msg.reply(f"技能書類\n```{msg3}```")
+        await msg.reply(f"裝備類\n```{msg4}```")
+        await msg.reply(f"武器類\n```{msg5}```")
+        await msg.reply(f"飾品類\n```{msg6}```")
+        await msg.reply(f"寵物類\n```{msg7}```")
+        await msg.reply(f"卡牌類\n```{msg8}```")
+        await msg.reply(f"料理類\n```{msg9}```")
         await msg.reply(f"背包完整Excel檔", file=file)
         await msg.reply(f"本背包生成時間: {now_time}")
         os.remove(save_path)
@@ -706,8 +730,11 @@ class System(discord.Cog, name="主系統"):
                 if "全屬性增加" in attname:
                     search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
                     players_all_attr_point = search[20]
-                    await function_in.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
-                    embed.add_field(name=f"力量+{value}!\n智慧+{value}!\n敏捷+{value}!\n體質+{value}!\n幸運+{value}!", value=f"\u200b", inline=False)
+                    if int(players_level*0.1)*5 < players_all_attr_point:
+                        embed.add_field(name=f"你當前已無法在使用更多的 {name}!", value=f"\u200b", inline=False)
+                    else:
+                        await function_in.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
+                        embed.add_field(name=f"力量+{value}!\n智慧+{value}!\n敏捷+{value}!\n體質+{value}!\n幸運+{value}!", value=f"\u200b", inline=False)
                 if "任務放棄" in attname:
                     search = await function_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
                     if not search:

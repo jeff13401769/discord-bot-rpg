@@ -458,6 +458,13 @@ class Info(discord.Cog, name="資訊"):
                 embed.add_field(name="<a:clock:1220799040782864405> 冷卻條:", value=f":x: 你還需要等待 {actiontime}!", inline=False)
             else:
                 embed.add_field(name="<a:clock:1220799040782864405> 冷卻條:", value=":white_check_mark: 可以進行行動!", inline=False)
+            search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+            players_level = search[1]
+            players_all_attr_point = search[20]
+            if int(players_level*0.1)*5 < players_all_attr_point:
+                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
+            else:
+                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point}", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
 
 def setup(client: discord.Bot):
