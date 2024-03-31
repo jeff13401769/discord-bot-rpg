@@ -12,9 +12,8 @@ from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 
 code_list = {
-    "new_player_gogo",
-    "磨刀石",
-    "副本禮包"
+    "vip666",
+    "dungeon"
 }
 class Kits(discord.Cog, name="禮包碼"):
     def __init__(self, bot):
@@ -56,17 +55,18 @@ class Kits(discord.Cog, name="禮包碼"):
             return
         
     async def open_kits(self, interaction: discord.Interaction, user: discord.Member, code):
-        if code == "new_player_gogo":
+        if code == "vip666":
             await function_in.give_item(self, user.id, "一小瓶紅藥水", 10)
             await function_in.give_item(self, user.id, "一瓶紅藥水", 5)
             await function_in.give_item(self, user.id, "一小瓶藍藥水", 10)
             await function_in.give_item(self, user.id, "一瓶藍藥水", 5)
-            await function_in.give_money(self, user, "money", 100, "kits")
-            kit_info = "一小瓶紅藥水x10, 一瓶紅藥水x5, 一小瓶藍藥水x10, 一瓶藍藥水x5, 晶幣x100"
-        elif code == "磨刀石":
-            await function_in.give_item(self, user.id, "磨刀石", 10)
-            kit_info = "磨刀石x10"
-        elif code == "副本禮包":
+            await function_in.give_item(self, user.id, "破舊的布製頭盔")
+            await function_in.give_item(self, user.id, "破舊的布製胸甲")
+            await function_in.give_item(self, user.id, "破舊的布製短褲")
+            await function_in.give_item(self, user.id, "破舊的布製鞋子")
+            await function_in.give_money(self, user, "money", 1000, "kits")
+            kit_info = "一小瓶紅藥水x10, 一瓶紅藥水x5, 一小瓶藍藥水x10, 一瓶藍藥水x5, 破舊的布製頭盔x1, 破舊的布製胸甲x1, 破舊的布製短褲x1, 破舊的布製鞋子x1, 晶幣x1000"
+        elif code == "dungeon":
             await function_in.give_item(self, user.id, "「古樹之森」副本入場卷", 10)
             await function_in.give_item(self, user.id, "「寒冰之地」副本入場卷", 10)
             await function_in.give_item(self, user.id, "「黑暗迴廊」副本入場卷", 10)

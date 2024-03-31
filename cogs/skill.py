@@ -37,8 +37,8 @@ class Skill(discord.Cog, name="技能系統"):
                 return "但是這個技能無法在世界BOSS戰中使用, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if type(skill_mana) == str:
-            skill_mana = skill_mana.replace("%", "")
-            skill_mana = int(players_max_mana*(skill_mana*0.01))
+            remove_mana = skill_mana.replace("%", "")
+            skill_mana = int(players_max_mana * (int(remove_mana)*0.01))
         if skill_mana > players_mana:
             return "但因為魔力不夠, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
         search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
@@ -98,7 +98,7 @@ class Skill(discord.Cog, name="技能系統"):
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
-            dmg = int(150+(((players_AD*0.6)*(skill_lvl*0.5))+(remove_hp*3)+(players_con*5))+(skill_lvl*30))
+            dmg = int(200+(((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -131,7 +131,7 @@ class Skill(discord.Cog, name="技能系統"):
                 dmg = 1
             skill_type_damage = dmg
         if skill == "暗刺":
-            dmg = int(250+(players_AD*skill_lvl*0.55)+(skill_lvl*60))
+            dmg = int(210+(players_AD*skill_lvl*0.3)+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -150,14 +150,14 @@ class Skill(discord.Cog, name="技能系統"):
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
-            dmg = int(210+((players_AD*(skill_lvl*0.5))+(remove_hp*5))+(skill_lvl*60))
+            dmg = int(250+((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
             skill_type_damage = dmg
             blood = True
             blood_round = 2
-            blood_dmg = int(dmg*0.45)
+            blood_dmg = int(dmg*0.65)
             if round(random.random(), 2) <= 0.35:
                 stun = True
                 stun_round = 2
@@ -169,7 +169,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_type_damage = dmg
             absolute_hit = True
         if skill == "毒刺":
-            dmg = int(300+(players_AD*(skill_lvl*0.6))+(skill_lvl*40))
+            dmg = int(250+(players_AD*(skill_lvl*0.5))+(skill_lvl*40))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -370,6 +370,16 @@ class Skill(discord.Cog, name="技能系統"):
                 stun_round = 3
                 dmg = int(players_AP*skill_lvl)
                 skill_type_damage = dmg
+        
+        if skill == "禁咒●魔龍穿心刺":
+            dmg = int(((players_str*150)+(players_int*180)+(players_AD*0.8)+(players_AP*0.75)+(skill_mana*100))*skill_lvl)
+            dmg -= monster_def
+            if dmg < 1:
+                dmg = 1
+            absolute_hit = True
+            remove_def = True
+            remove_def_round = 30
+            remove_def_range = 75
         
         if not fire:
             fire_round = 0

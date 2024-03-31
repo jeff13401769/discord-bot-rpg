@@ -1,13 +1,5 @@
-import datetime
-import pytz
-import asyncio
-import time
-import math
 import random
 import functools
-import yaml
-import certifi
-import os
 
 import discord
 from discord import Option, OptionChoice
@@ -62,6 +54,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 return
         up = 0
         star = -1
+        crown = -1
         enchant = False
         if "+" in name:
             name_che = name.split("+")
@@ -74,6 +67,15 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
         elif "☆" in name and "★" not in name:
             up = 20
             item_name = name.replace("☆", "").replace(" ", "").replace("【", "").replace("】", "")
+        elif "♛" in name:
+            up = 20
+            star = 10
+            crown = name.count("♛")
+            item_name = name.replace("♛", "").replace("☉", "").replace("∼⊱", "").replace("⊰∽", "")
+        elif "☉" in name and "♛" not in name:
+            up = 20
+            star = 10
+            item_name = name.replace("☉", "").replace(" ", "").replace("∼⊱", "").replace("⊰∽", "")
         else:
             item_name = name
         if "[" in item_name:
@@ -93,9 +95,9 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
         if not data:
             await interaction.followup.send(f'裝備 `{item_name}` 不存在於資料庫! 請聯繫GM處理!')
             return
-        if star >= 10:
+        if crown >= 5:
             if support != "磨刀石":
-                await interaction.followup.send(f'升星最高只能升至10星!')
+                await interaction.followup.send(f'升冠最高只能升至5冠!')
                 return
         if support:
             data = await function_in.search_for_file(self, support)
@@ -187,12 +189,14 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 upgrade_chance2_1 = int(upgrade_chance2*0.5)
                 if star > 5:
                     upgrade_chance2_1 = int(upgrade_chance2*0.5)
+                    if crown > 2:
+                        upgrade_chance2_1 = int(upgrade_chance2*0.5)
             else:
                 upgrade_chance2_1 = upgrade_chance2
-        chance = int(((up+star+2)*5.5)-upgrade_chance-upgrade_chance1-upgrade_chance2_1)
+        chance = int(((up+star+crown+2)*5.5)-upgrade_chance-upgrade_chance1-upgrade_chance2_1)
         data, a, b, c = await function_in.search_for_file(self, item_name, False)
         if f"{c}" == "武器":
-            chance = int(((up+star+1)*4)-upgrade_chance-upgrade_chance1-upgrade_chance2_1)
+            chance = int(((up+star+crown+1)*4)-upgrade_chance-upgrade_chance1-upgrade_chance2_1)
         if chance < 0:
             chance = 0
         checkactioning, stat = await function_in.checkactioning(self, user, "強化")
@@ -221,18 +225,36 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                     fail_item = name
                     suss_item = f"{item_name}【★☆☆☆☆☆☆☆☆☆】"
                 else:
-                    stars = ""
-                    for i in range(star-1):
-                        stars += "★"
-                    for ii in range(10-star+1):
-                        stars += "☆"
-                    fail_item = f"{item_name}【{stars}】"
-                    stars1 = ""
-                    for i1 in range(star+1):
-                        stars1 += "★"
-                    for ii1 in range(10-star-1):
-                        stars1 += "☆"
-                    suss_item = f"{item_name}【{stars1}】"
+                    if star == 10:
+                        if crown < 1:
+                            fail_item = name
+                            suss_item = f"{item_name}∼⊱♛☉☉☉☉⊰∽"
+                        else:
+                            crowns = ""
+                            for i in range(crown-1):
+                                crowns += "♛"
+                            for ii in range(5-crown+1):
+                                crowns += "☉"
+                            fail_item = f"{item_name}∼⊱{crowns}⊰∽"
+                            crowns1 = ""
+                            for i1 in range(crown+1):
+                                crowns1 += "♛"
+                            for ii1 in range(5-crown-1):
+                                crowns1 += "☉"
+                            suss_item = f"{item_name}∼⊱{crowns1}⊰∽"
+                    else:
+                        stars = ""
+                        for i in range(star-1):
+                            stars += "★"
+                        for ii in range(10-star+1):
+                            stars += "☆"
+                        fail_item = f"{item_name}【{stars}】"
+                        stars1 = ""
+                        for i1 in range(star+1):
+                            stars1 += "★"
+                        for ii1 in range(10-star-1):
+                            stars1 += "☆"
+                        suss_item = f"{item_name}【{stars1}】"
             elif up < 20:
                 suss_item = f"{item_name}+{up+1}"
                 if up <= 1:

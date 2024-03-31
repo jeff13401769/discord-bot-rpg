@@ -275,6 +275,7 @@ class function_in(discord.Cog, name="模塊導入1"):
     async def search_for_file(self, name: str, lazy=True):
         star = 0
         up = 0
+        crown = 0
         enchant = False
         try:
             if "+" in name:
@@ -285,6 +286,15 @@ class function_in(discord.Cog, name="模塊導入1"):
                 up = 20
                 star = name.count("★")
                 item_name = name.replace("★", "").replace("☆", "").replace("【", "").replace("】", "")
+            elif "♛" in name:
+                up = 20
+                star = 10
+                crown = name.count("♛")
+                item_name = name.replace("♛", "").replace("☉", "").replace("∼⊱", "").replace("⊰∽", "")
+            elif "☉" in name and "♛" not in name:
+                up = 20
+                star = 10
+                item_name = name.replace("☉", "").replace(" ", "").replace("∼⊱", "").replace("⊰∽", "")
             else:
                 item_name = name
             if "[" and "]" in item_name:
@@ -318,8 +328,8 @@ class function_in(discord.Cog, name="模塊導入1"):
             ("裝備", "accessories", "飾品"),
             ("物品", "材料", "材料"),
             ("物品", "道具", "道具"),
-            ("物品", "技能書", "技能書"),
             ("物品", "料理", "料理"),
+            ("物品", "技能書", "技能書"),
             ("裝備", "pet", "寵物"),
             ("裝備", "medal", "勳章"),
             ("裝備", "card", "卡牌"),
@@ -347,7 +357,11 @@ class function_in(discord.Cog, name="模塊導入1"):
                 if star > 0:
                     for attname, value in data.get(name).get("增加屬性", {}).items():
                         if "套裝" not in attname:
-                            data.get(name).get("增加屬性", {})[attname] = int(value*((star*0.08)+1))
+                            data.get(name).get("增加屬性", {})[attname] = int(value*((star*0.06)+1))
+                if crown > 0:
+                    for attname, value in data.get(name).get("增加屬性", {}).items():
+                        if "套裝" not in attname:
+                            data.get(name).get("增加屬性", {})[attname] = int(value*((crown*0.07)+1))
                 if enchant:
                     if "鋒利" in enchant:
                         try:
@@ -550,7 +564,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_medal_hit = 0
         players_medal_ndef = 0
         players_medal_str = 0
-        players_medal_int = 0
+        players_medal_int =0
         players_medal_dex = 0
         players_medal_con = 0
         players_medal_luk = 0
@@ -769,7 +783,7 @@ class function_in(discord.Cog, name="模塊導入1"):
                 skills_crit_chance += skill_info[1]*2
                 skills_crit_damage += skill_info[1]*5.5
             if skill_info[0] == "戰士的蠻力" and skill_info[1] > 0:
-                skills_str += skill_info[1]
+                skills_str += skill_info[1]*3
             if skill_info[0] == "致命精通" and skill_info[1] > 0:
                 skills_crit_damage += skill_info[1]*7
             if skill_info[0] == "鋼鐵意志" and skill_info[1] > 0:
@@ -860,20 +874,8 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_con+=players_equip_con+players_medal_con+skills_con+players_food_con+players_guild_con
         players_luk+=players_equip_luk+players_medal_luk+skills_luk+players_food_luk+players_guild_luk
         
-        #零轉
-        if players_class == "初心者":
-            players_AD+=int(players_str*2)
-            players_max_hp+=int((players_str*3)+(players_con*3))
-            players_AP+=int(players_int*1.5)
-            players_max_mana+=int(players_int*5)
-            players_dodge+=int(players_dex*2)
-            players_hit+=int(players_dex*2)
-            players_crit_chance+=int(players_dex*1.5)
-            players_crit_damage+=int(players_dex*1.5)
-            players_def+=int(players_con*2)
-        
         #一轉
-        elif players_class == "戰士":
+        if players_class == "戰士":
             players_AD+=int(players_str*2.5)
             players_max_hp+=int((players_str*3.75)+(players_con*5))
             players_AP+=int(players_int*0.8)
@@ -1108,12 +1110,22 @@ class function_in(discord.Cog, name="模塊導入1"):
         return False
     
     async def delete_player(self, user_id, re=False):
-        await function_in.sql_drop_table("rpg_backpack", f"{user_id}")
-        await function_in.sql_drop_table("rpg_equip", f"{user_id}")
-        await function_in.sql_drop_table("rpg_pet", f"{user_id}")
-        await function_in.sql_drop_table("rpg_skills", f"{user_id}")
+        search = await function_in.sql_findall_table("rpg_backpack")
+        if user_id in search:
+            await function_in.sql_drop_table("rpg_backpack", f"{user_id}")
+        search = await function_in.sql_findall_table("rpg_equip")
+        if user_id in search:
+            await function_in.sql_drop_table("rpg_equip", f"{user_id}")
+        search = await function_in.sql_findall_table("rpg_pet")
+        if user_id in search:
+            await function_in.sql_drop_table("rpg_pet", f"{user_id}")
+        search = await function_in.sql_findall_table("rpg_skills")
+        if user_id in search:
+            await function_in.sql_drop_table("rpg_skills", f"{user_id}")
         search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
         medal_list = search[17]
+        if not medal_list:
+            medal_list = ""
         player_class = search[3]
         await function_in.sql_delete("rpg_players", "players", "user_id", user_id)
         await function_in.sql_delete("rpg_players", "money", "user_id", user_id)
@@ -1137,7 +1149,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp = int(time.mktime(struct_time))
-        await function_in.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 3, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100])
+        await function_in.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 1, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100])
         try:
             await function_in.sql_insert("rpg_players", "money", ["user_id", "money", "diamond", "qp", "wbp", "pp"], [user_id, 1000, 0, 0, 0, 0])
         except:
