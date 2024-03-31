@@ -835,7 +835,6 @@ class System(discord.Cog, name="主系統"):
                         "史詩卡包": 1250,
                         "傳說卡包": 50,
                         "神性之石": 30,
-                        "初級技能領悟書": 10,
                         "奇異質點": 1,
                         "「古樹之森」副本入場卷": 1000,
                         "「寒冰之地」副本入場卷": 1000,
@@ -845,15 +844,18 @@ class System(discord.Cog, name="主系統"):
                     if "冰霜巨龍" in attname:
                         prizes["冰霜巨龍的鱗片"] = 1500
                         prizes["冰霜巨龍的寶箱"] = 1500
-                        prizes["冰霜幼龍"] = 1
+                        prizes["冰霜幼龍"] = 1,
+                        prizes["初級技能領悟書"] = 10
                     if "炎獄魔龍" in attname:
                         prizes["炎獄魔龍的鱗片"] = 1500
                         prizes["炎獄魔龍的寶箱"] = 1500
-                        prizes["炎獄幼龍"] = 1
+                        prizes["炎獄幼龍"] = 1,
+                        prizes["初級技能領悟書"] = 10
                     if "魅魔女王" in attname:
                         prizes["魅魔女王的緊身衣碎片"] = 1500
                         prizes["魅魔女王的寶箱"] = 1500
                         prizes["魅魔女王的皮鞭"] = 1
+                        prizes["中級技能領悟書"] = 15
                     
                     item = await function_in.lot(self, prizes)
                     await function_in.give_item(self, user.id, item)
