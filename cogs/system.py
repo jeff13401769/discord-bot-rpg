@@ -646,6 +646,8 @@ class System(discord.Cog, name="主系統"):
                     embed.add_field(name=f"你已經學會了 {attname} 技能, 無法再次學習!", value=f"\u200b", inline=False)
                     continue
                 await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level"], [attname, 1])
+                players_skill_point-=1
+                await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
                 embed.add_field(name=f"你成功學會了 {attname} 技能!", value=f"\u200b", inline=False)
             for attname, value in data.get(name).get("增加屬性", {}).items():
                 if "回復" in attname:
@@ -833,6 +835,7 @@ class System(discord.Cog, name="主系統"):
                         "史詩卡包": 1250,
                         "傳說卡包": 50,
                         "神性之石": 30,
+                        "初級技能領悟書": 10,
                         "奇異質點": 1,
                         "「古樹之森」副本入場卷": 1000,
                         "「寒冰之地」副本入場卷": 1000,
