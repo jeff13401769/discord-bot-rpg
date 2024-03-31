@@ -952,6 +952,14 @@ class System(discord.Cog, name="主系統"):
                     book = await function_in.get_skill_book(self, value)
                     await function_in.give_item(self, user.id, book)
                     embed.add_field(name=f"你獲得了 {book}!", value=f"\u200b", inline=False)
+                if "領悟技能點" in attname:
+                    a = random.randint(1, 100)
+                    if value > a:
+                        players_skill_point+=1
+                        await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
+                        embed.add_field(name="你成功領悟到技能點! 技能點+1!", value=f"\u200b", inline=False)
+                    else:
+                        embed.add_field(name="你沒有領悟到技能點...", value=f"\u200b", inline=False)
         msg = await interaction.followup.send(embed=embed)
         if quest:
             await Quest_system.add_quest(self, user, "賺錢", "道具", value, msg)
