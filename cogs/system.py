@@ -584,8 +584,8 @@ class System(discord.Cog, name="主系統"):
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
             return
         data, floder_name, floder_name1, c = await function_in.search_for_file(self, name, False)
-        if f"{floder_name1}" != "道具" and f"{floder_name1}" != "料理" or data is None:
-            await interaction.followup.send(f"{name} 不在資料庫內或不是道具或不是料理無法使用")
+        if f"{floder_name1}" != "道具" and f"{floder_name1}" != "料理" and f"{floder_name1}" != "技能書" or data is None:
+            await interaction.followup.send(f"{name} 不在資料庫內或不是道具/料理/技能書無法使用")
             return False
         if players_level < data[f"{name}"]["等級需求"]:
             await interaction.followup.send(f"你的等級不足以使用 {name} !")
