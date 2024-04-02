@@ -464,7 +464,7 @@ class Info(discord.Cog, name="資訊"):
             if int(players_level*0.1)*5 < players_all_attr_point:
                 embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
             else:
-                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point}", inline=False)
+                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
 
 def setup(client: discord.Bot):
