@@ -593,7 +593,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
                 if skill_info[0] == "強力拉弓" and skill_info[1] > 0:
-                    dmg_a = int(200+(players_str*2)+(players_dex*3)+((players_AD*1.5)*skill_info[1]))
+                    dmg_a = int((players_str*2)+(players_dex*3)+((players_AD*1.5)*skill_info[1]))
                     dmg_type = "增傷固定值"
                 if skill_info[0] == "充盈魔杖" and skill_info[1] > 0:
                     if players_class in ["法師"]:

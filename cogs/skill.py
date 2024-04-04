@@ -98,7 +98,7 @@ class Skill(discord.Cog, name="技能系統"):
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
-            dmg = int(200+(((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
+            dmg = int((((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -112,13 +112,13 @@ class Skill(discord.Cog, name="技能系統"):
             skill_type_chant = 50
             skill_type_chant1 = 9999
         if skill == "魔彈":
-            dmg = int(350+(players_AP*skill_lvl)+(skill_lvl*80))
+            dmg = int((players_AP*skill_lvl)+(skill_lvl*80))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
             skill_type_damage = dmg
         if skill == "貫穿魔束":
-            dmg = int(200+(players_AP*skill_lvl*0.8)+(skill_lvl*50))
+            dmg = int((players_AP*skill_lvl*0.8)+(skill_lvl*50))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -131,13 +131,13 @@ class Skill(discord.Cog, name="技能系統"):
                 dmg = 1
             skill_type_damage = dmg
         if skill == "暗刺":
-            dmg = int(210+(players_AD*skill_lvl*0.3)+(skill_lvl*30))
+            dmg = int((players_AD*skill_lvl*0.3)+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
             skill_type_damage = dmg
         if skill == "蓄力矢":
-            dmg = int(300+(players_AD*(skill_lvl*1.5))+(skill_lvl*60))
+            dmg = int((players_AD*(skill_lvl*1.5))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -150,7 +150,7 @@ class Skill(discord.Cog, name="技能系統"):
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
-            dmg = int(250+((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
+            dmg = int(((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -169,7 +169,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_type_damage = dmg
             absolute_hit = True
         if skill == "毒刺":
-            dmg = int(250+(players_AD*(skill_lvl*0.5))+(skill_lvl*40))
+            dmg = int((players_AD*(skill_lvl*0.5))+(skill_lvl*40))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -178,7 +178,7 @@ class Skill(discord.Cog, name="技能系統"):
             poison_round = 3
             poison_dmg = int(dmg*0.4)
         if skill == "神聖光芒":
-            dmg = int(300+(players_AP*1.2)*skill_lvl)
+            dmg = int((players_AP*1.2)*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -191,13 +191,13 @@ class Skill(discord.Cog, name="技能系統"):
             await function_in.sql_update("rpg_players", "players", "hp", players_hp, "user_id", user.id)
             clear_buff = True
         if skill == "聖光彈":
-            dmg = int(220+(skill_lvl*60)+(players_AP*1.5)*skill_lvl*0.9)
+            dmg = int((skill_lvl*60)+(players_AP*1.5)*skill_lvl*0.9)
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
             skill_type_damage = dmg
         if skill == "咒焰":
-            dmg = (200+(skill_lvl*40)+(players_AP*0.75)*skill_lvl)
+            dmg = ((skill_lvl*40)+(players_AP*0.75)*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -206,7 +206,7 @@ class Skill(discord.Cog, name="技能系統"):
             fire_round = 1
             fire_dmg = int(dmg*0.5)
         if skill == "邪破彈":
-            dmg = int(300+(skill_lvl*150)+(((players_AP*2)*skill_lvl)*0.7))
+            dmg = int((skill_lvl*150)+(((players_AP*2)*skill_lvl)*0.7))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 1
@@ -221,156 +221,6 @@ class Skill(discord.Cog, name="技能系統"):
             remove_def_round = 5
             remove_dmg_range = skill_lvl * 8
             remove_def_range = skill_lvl * 8
-        if skill == "手裡劍":
-            dmg = int((skill_lvl*100)+(players_AD*skill_lvl*0.4))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-        if skill == "精準刺殺":
-            dmg = int(((players_AD*skill_lvl*0.75)+(skill_lvl*60)))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            absolute_hit = True
-        if skill == "閃耀箭矢":
-            dmg = int((500+(65*skill_lvl))+((players_AD*0.2)+(players_AP*0.5)))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            stun = True
-            stun_round = 3
-            ice = True
-            ice_round = 3
-            ice_dmg = int(dmg*0.2)
-            wither = True
-            wither_round = 3
-            wither_dmg = int(dmg*0.2)
-            poison = True
-            poison_round = 3
-            poison_dmg = int(dmg*0.2)
-        if skill == "秘術箭矢":
-            dmg = int((450+(55*skill_lvl))+((players_AD*0.65)+(players_AP*0.2)))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            fire = True
-            fire_round = 2
-            fire_dmg = int(dmg*0.35)
-            blood = True
-            blood_round = 2
-            blood_dmg = int(dmg*0.35)
-            absolute_hit = True
-        if skill == "蓄力一刺":
-            dmg = int((250+((players_AD*2.5)*(skill_lvl*20))))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-        if skill == "弱點擊破":
-            dmg = int((100+((players_AD*2)*(skill_lvl*10))))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            remove_def = True
-            remove_def_round = 3
-            remove_def_range = skill_lvl * 10
-            stun = True
-            stun_round = 3
-        if skill == "黑暗侵蝕":
-            dmg = int((300+(players_AP*8))*skill_lvl)
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            remove_def = True
-            remove_def_round = 5
-            remove_def_range = skill_lvl * 4
-            wither = True
-            wither_round = 5
-            wither_dmg = int(dmg*(skill_lvl*0.07))
-        if skill == "黑暗殿堂":
-            skill_type_chant = skill_lvl*30
-            skill_type_chant1 = 7
-            remove_dmg_round = 7
-            remove_def_round = 7
-            remove_dmg = True
-            remove_def = True
-            remove_dmg_range = skill_lvl * 9
-            remove_def_range = skill_lvl * 9
-        if skill == "黑暗魔導砲":
-            if players_hp < players_max_hp*0.3:
-                return "但因為你的生命值低於30%, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-            dmg = int(1000+((players_AP*20)*(skill_lvl*2)))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            wither = True
-            wither_round = 10
-            wither_dmg = int(dmg*(skill_lvl*0.1))
-            blood = True
-            blood_round = 10
-            blood_dmg = int(dmg*(skill_lvl*0.1))
-        if skill == "元素共鳴":
-            skill_type_chant = skill_lvl*0.1
-            skill_type_chant1 = 20
-        if skill == "元素粒子砲":
-            dmg = int((500+(players_AP*8))*(skill_lvl*1.5))
-            dmg -= monster_def
-            if dmg < 1:
-                dmg = 1
-            skill_type_damage = dmg
-            fire = True
-            fire_round = 10
-            fire_dmg = int(dmg*(skill_lvl*0.01))
-            ice = True
-            ice_round = 10
-            ice_dmg = int(dmg*(skill_lvl*0.01))
-            remove_def = True
-            remove_def_round = 10
-            remove_def_range = skill_lvl * 3
-            remove_dmg = True
-            remove_dmg_round = 10
-            remove_dmg_range = skill_lvl * 3
-        if skill == "元素之怒":
-            check = random.randint(1, 7)
-            if check == 1:
-                dmg = int((500+(players_AP*5))*(skill_lvl*1.7))
-                dmg -= monster_def
-                if dmg < 1:
-                    dmg = 1
-                skill_type_damage = dmg
-            elif check == 2:
-                fire = True
-                fire_round = 3
-                fire_dmg = int(players_AP*skill_lvl)
-            elif check == 3:
-                ice = True
-                ice_round = 3
-                ice_dmg = int(players_AP*skill_lvl)
-            elif check == 4:
-                blood = True
-                blood_round = 3
-                blood_dmg = int(players_AP*skill_lvl)
-            elif check == 5:
-                wither = True
-                wither_round = 3
-                wither_dmg = int(players_AP*skill_lvl)
-            elif check == 6:
-                poison = True
-                poison_round = 3
-                poison_dmg = int(players_AP*skill_lvl)
-            elif check == 7:
-                stun = True
-                stun_round = 3
-                dmg = int(players_AP*skill_lvl)
-                skill_type_damage = dmg
-        
         if skill == "禁咒●魔龍穿心刺":
             dmg = int(((players_str*150)+(players_int*180)+(players_AD*0.8)+(players_AP*0.75)+(skill_mana*100))*skill_lvl)
             dmg -= monster_def
