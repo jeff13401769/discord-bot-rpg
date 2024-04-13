@@ -1,4 +1,6 @@
 import datetime
+import openpyxl
+from openpyxl.styles import Alignment
 import pytz
 import asyncio
 import time
@@ -93,7 +95,7 @@ class Info(discord.Cog, name="資訊"):
         embed.add_field(name="幸運:", value=f"{players_luk} <:luk:1087794455760883784>", inline=True)
         embed.add_field(name="\u200b", value="\u200b", inline=False)
         embed.add_field(name="屬性點:", value=f"{players_attr_point+players_add_attr_point}", inline=True)
-        embed.add_field(name="技能點:", value=f"{players_skill_point}", inline=True)
+        embed.add_field(name="天賦點:", value=f"{players_skill_point}", inline=True)
         embed.add_field(name="\u200b", value="\u200b", inline=False)
         players_register_time = datetime.datetime.fromtimestamp(players_register_time)
         embed.add_field(name="註冊時間:", value=f"{players_register_time}", inline=False)
@@ -184,7 +186,7 @@ class Info(discord.Cog, name="資訊"):
             embed.add_field(name="幸運:", value=f"{players_luk} <:luk:1087794455760883784>", inline=True)
             embed.add_field(name="\u200b", value="\u200b", inline=False)
             embed.add_field(name="屬性點:", value=f"{players_attr_point+players_add_attr_point}", inline=True)
-            embed.add_field(name="技能點:", value=f"{players_skill_point}", inline=True)
+            embed.add_field(name="天賦點:", value=f"{players_skill_point}", inline=True)
             embed.add_field(name="\u200b", value="\u200b", inline=False)
             players_register_time = datetime.datetime.fromtimestamp(players_register_time)
             embed.add_field(name="註冊時間:", value=f"{players_register_time}", inline=False)
@@ -250,10 +252,51 @@ class Info(discord.Cog, name="資訊"):
             che = False
             skills = await function_in.sql_findall("rpg_skills", f"{user.id}")
             for skill in skills:
-                embed.add_field(name=f"{skill[0]}", value=f"等級: {skill[1]}", inline=False)
+                embed.add_field(name=f"{skill[0]}", value=f"等級: {skill[1]} | 技能熟練度: {skill[2]}", inline=False)
                 che=True
             if not che:
                 embed.add_field(name="空空如也.....", value="\u200b", inline=False)
+            if len(embed.fields) > 25:
+                del embed.fields[24:]
+                embed.add_field(name="由於超過Discord Embed 25行限制, 以下已被省略...", value="已將您的技能表以Excel發送至您的私聊", inline=False)
+                workbook = openpyxl.Workbook()
+                alignment = Alignment(horizontal='center', vertical='center')
+                sheet1 = workbook.active
+                sheet1.title = '技能表'
+                sheet2 = workbook.create_sheet(title='生成時間')
+                sheets = workbook.sheetnames
+                sheet1['A1'] = '技能名稱'
+                sheet1['B1'] = '技能等級'
+                sheet1['C1'] = '技能熟練度'
+                sheet2['A1'] = '本工作表生成時間'
+                a = 0
+                for skill in skills:
+                    sheet1[f'A{a+1}'] = f'{skill[0]}'
+                    sheet1[f'B{a+1}'] = f'{skill[1]}'
+                    sheet1[f'C{a+1}'] = f'{skill[2]}'
+                    a+=1
+                now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y年%m月%d日-%H:%M:%S")
+                sheet2['B1'] = f"{now_time}"
+                for sheet_name in sheets:
+                    sheet = workbook[sheet_name]
+                    for row in sheet.iter_rows():
+                        for cell in row:
+                            cell.alignment = alignment
+                    sheet.column_dimensions['A'].width = 50
+                    sheet.column_dimensions['B'].width = 10
+                    sheet.column_dimensions['C'].width = 10
+                    if sheet.title == "生成時間":
+                        sheet.column_dimensions['A'].width = 30
+                        sheet.column_dimensions['B'].width = 100
+                base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                folder_path = os.path.join(base_path, "excel_cache")
+                save_filename = f"{user.id}_skills.xlsx"
+                save_path = os.path.join(folder_path, save_filename)
+                workbook.save(save_path)
+                workbook.close()
+                file = discord.File(save_path)
+                await user.send(file=file)
+                os.remove(save_path)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 

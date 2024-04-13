@@ -77,6 +77,22 @@ class function_in(discord.Cog, name="模塊導入1"):
                             self.bot.log.warn(f'在 {file_path} 中解析時出現錯誤: {e}')
         return random.choice(card_list)
     
+    async def give_skill_exp(self, user_id, skill_name):
+        if skill_name == "所有被動":
+            pass
+        else:
+            search = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])
+            if search:
+                skill_level = search[1]
+                skill_exp = search[2]+1
+                while int(skill_level*100) < skill_exp:
+                    skill_exp -= int(skill_level*100)
+                    skill_level += 1
+                    await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                    await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+            else:
+                return
+    
     async def give_exp(self, user_id, exp):
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
         search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
@@ -101,8 +117,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             exp -= expfull
             players_level+=1
             player_attr_point+=1
-            if players_level % 3 == 0:
-                player_skill_point+=1
+            player_skill_point+=1
             await function_in.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
             await function_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
             await function_in.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)
@@ -1167,7 +1182,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         except:
             pass
         try:
-            await function_in.sql_create_table("rpg_skills", f"{user_id}", ["skill", "level"], ["VARCHAR(100)", "BIGINT"], "skill")
+            await function_in.sql_create_table("rpg_skills", f"{user_id}", ["skill", "level", "exp"], ["VARCHAR(100)", "BIGINT", "BIGINT"], "skill")
         except:
             pass
         try:

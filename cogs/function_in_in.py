@@ -94,12 +94,9 @@ class function_in_in(discord.Cog, name="模塊導入2"):
             else:
                 expfull = int((17 * player_level) ** 1.7) * special_exp
             exp -= expfull
-            if player_level == 30:
-                player_skill_point+=5
             player_level+=1
             player_attr_point+=1
-            if player_level % 3 == 0:
-                player_skill_point+=1
+            player_skill_point+=1
             await function_in_in.sql_update("rpg_players", "players", "level", player_level, "user_id", user_id)
             await function_in_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
             await function_in_in.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)

@@ -1722,8 +1722,10 @@ class Pve(discord.Cog, name="PVE系統"):
             error, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range = await Skill.skill(self, user, skill, self.monster_def, self.monster_maxhp, self.monster_hp, self.monster_name)
             embed.add_field(name=f"{user.name} 使用技能 {skill}", value=f"消耗了 {skill_mana} 魔力!", inline=False)
             dmg = 0
+            give_exp = True
             if error:
                 embed.add_field(name=f"{error}", value="\u200b", inline=False)
+                give_exp = False
             else:
                 if skill_type_chant1:
                     embed.add_field(name=f"{user.name} 接下來 {skill_type_chant1} 回合內任意攻擊 攻擊力x{skill_type_chant}%", value="\u200b", inline=False)
@@ -1788,6 +1790,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     dodge_check = await self.dodge_check(dodge, player_hit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)
+                        give_exp = False
                     else:
                         dmg = await self.on_player_damage(user, int(skill_type_damage), self.monster_def)
                         crit_check = await self.crit_check(player_crit_chance)
@@ -1875,6 +1878,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         self.monster_異常_凋零_round = wither_round
                         self.monster_異常_凋零_dmg = wither_dmg
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 受到持續{wither_round}回合的凋零傷害!🖤", value="\u200b", inline=False)
+            if give_exp:
+                await function_in.give_skill_exp(self, user.id, skill)
             return dmg, cd, embed
         
         async def round_end(self):

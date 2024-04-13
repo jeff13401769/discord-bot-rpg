@@ -1038,9 +1038,11 @@ class Pvp(discord.Cog, name="PVP系統"):
             next_player_level, next_player_exp, next_player_money, next_player_diamond, next_player_qp, next_player_wbp, next_player_pp, next_player_hp, next_player_max_hp, next_player_mana, next_player_max_mana, next_player_dodge, next_player_hit,  next_player_crit_damage, next_player_crit_chance, next_player_AD, next_player_AP, next_player_def, next_player_ndef, next_player_str, next_player_int, next_player_dex, next_player_con, next_player_luk, next_player_attr_point, next_player_add_attr_point, next_player_skill_point, next_player_register_time, next_player_map, next_player_class, drop_chance, next_player_hunger = await Pvp.pvp_menu.checkattr_pvp(self, next_player.id)
             error, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range = await Skill.skill(self, self.now_player, skill, next_player_def*5, next_player_max_hp, next_player_hp, self.next_player.name)
             embed.add_field(name=f"{now_player.name} 使用技能 {skill}", value=f"消耗了 {skill_mana} 魔力!", inline=False)
+            give_exp = True
             dmg = 0
             if error:
                 embed.add_field(name=f"{error}", value="\u200b", inline=False)
+                give_exp = False
             else:
                 if skill_type_chant1:
                     embed.add_field(name=f"{now_player.name} 接下來 {skill_type_chant1} 回合內任意攻擊 攻擊力x{skill_type_chant}%", value="\u200b", inline=False)
@@ -1105,6 +1107,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                     dodge_check = await self.dodge_check(dodge, now_player_hit)
                     if dodge_check:
                         embed.add_field(name=f"{next_player.name} 迴避了 {now_player.name} 的傷害!🌟", value="\u200b", inline=False)
+                        give_exp = False
                     else:
                         dmg = await self.on_player_damage(int(skill_type_damage), next_player_def)
                         crit_check = await self.crit_check(now_player_crit_chance)
@@ -1192,6 +1195,8 @@ class Pvp(discord.Cog, name="PVP系統"):
                         self.next_player_異常_凋零_round = wither_round
                         self.next_player_異常_凋零_dmg = wither_dmg
                         embed.add_field(name=f"{next_player.name} 受到持續{wither_round}回合的凋零傷害!🖤", value="\u200b", inline=False)
+            if give_exp:
+                await function_in.give_skill_exp(self, now_player.id, skill)
             return dmg, cd, embed
 
         async def remove_hp(self, user: discord.Member, hp: int, embed): #扣除玩家血量

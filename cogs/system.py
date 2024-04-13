@@ -518,7 +518,7 @@ class System(discord.Cog, name="主系統"):
             if len(msg9) > 2000:
                 msg9 = "由於該類別超過2000字, 該類別無法顯示.\n請查看excel"
         now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y年%m月%d日-%H:%M:%S")
-        sheet9['B1'] = f"{now_time}"
+        sheet10['B1'] = f"{now_time}"
         for sheet_name in sheets:
             sheet = workbook[sheet_name]
             for row in sheet.iter_rows():
@@ -530,7 +530,7 @@ class System(discord.Cog, name="主系統"):
                 sheet.column_dimensions['A'].width = 30
                 sheet.column_dimensions['B'].width = 100
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        folder_path = os.path.join(base_path, "backpack_excel_cache")
+        folder_path = os.path.join(base_path, "excel_cache")
         save_filename = f"{user.id}_backpack.xlsx"
         save_path = os.path.join(folder_path, save_filename)
         workbook.save(save_path)
@@ -629,7 +629,7 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
             for attname, value in data.get(name).get("學會技能", {}).items():
                 if players_skill_point <= 0:
-                    embed.add_field(name=f"你沒有技能點了, 無法學習 {attname} 技能!", value=f"\u200b", inline=False)
+                    embed.add_field(name=f"你沒有天賦點了, 無法學習 {attname} 技能!", value=f"\u200b", inline=False)
                     await function_in.give_item(self, user.id, name)
                     continue
                 embed.add_field(name=f"技能書燒了起來, 一股黑煙竄進了你的身體", value=f"\u200b", inline=False)
@@ -645,7 +645,7 @@ class System(discord.Cog, name="主系統"):
                 if search:
                     embed.add_field(name=f"你已經學會了 {attname} 技能, 無法再次學習!", value=f"\u200b", inline=False)
                     continue
-                await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level"], [attname, 1])
+                await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level", "exp"], [attname, 1, 0])
                 players_skill_point-=1
                 await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
                 embed.add_field(name=f"你成功學會了 {attname} 技能!", value=f"\u200b", inline=False)
@@ -845,17 +845,17 @@ class System(discord.Cog, name="主系統"):
                         prizes["冰霜巨龍的鱗片"] = 1500
                         prizes["冰霜巨龍的寶箱"] = 1500
                         prizes["冰霜幼龍"] = 1,
-                        prizes["初級技能領悟書"] = 10
+                        prizes["初級天賦領悟書"] = 10
                     if "炎獄魔龍" in attname:
                         prizes["炎獄魔龍的鱗片"] = 1500
                         prizes["炎獄魔龍的寶箱"] = 1500
                         prizes["炎獄幼龍"] = 1,
-                        prizes["初級技能領悟書"] = 10
+                        prizes["初級天賦領悟書"] = 10
                     if "魅魔女王" in attname:
                         prizes["魅魔女王的緊身衣碎片"] = 1500
                         prizes["魅魔女王的寶箱"] = 1500
                         prizes["魅魔女王的皮鞭"] = 1
-                        prizes["中級技能領悟書"] = 15
+                        prizes["中級天賦領悟書"] = 15
                     
                     item = await function_in.lot(self, prizes)
                     await function_in.give_item(self, user.id, item)
@@ -957,14 +957,14 @@ class System(discord.Cog, name="主系統"):
                     book = await function_in.get_skill_book(self, value)
                     await function_in.give_item(self, user.id, book)
                     embed.add_field(name=f"你獲得了 {book}!", value=f"\u200b", inline=False)
-                if "領悟技能點" in attname:
+                if "領悟天賦點" in attname:
                     a = random.randint(1, 100)
                     if value > a:
                         players_skill_point+=1
                         await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
-                        embed.add_field(name="你成功領悟到技能點! 技能點+1!", value=f"\u200b", inline=False)
+                        embed.add_field(name="你成功領悟到天賦點! 天賦點+1!", value=f"\u200b", inline=False)
                     else:
-                        embed.add_field(name="你沒有領悟到技能點...", value=f"\u200b", inline=False)
+                        embed.add_field(name="你沒有領悟到天賦點...", value=f"\u200b", inline=False)
         msg = await interaction.followup.send(embed=embed)
         if quest:
             await Quest_system.add_quest(self, user, "賺錢", "道具", value, msg)
@@ -1447,7 +1447,7 @@ class System(discord.Cog, name="主系統"):
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
             return
         if players_skill_point <= 0:
-            await interaction.followup.send('你當前技能點為0!')
+            await interaction.followup.send('你當前天賦點為0!')
             return
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         data = False
@@ -1470,9 +1470,13 @@ class System(discord.Cog, name="主系統"):
         if search[1] >= data["等級上限"]:
             await interaction.followup.send(f"{skill_name} 技能等級已達上限!")
             return
+        if players_skill_point < search[1]:
+            await interaction.followup.send(f"你的 {skill_name} 技能等級{search[1]}, 需要消耗 {search[1]} 點天賦點才能升等! 你只有 {players_skill_point} 點天賦點!")
+            return
         await function_in.sql_update("rpg_skills", f"{user.id}", "level", search[1]+1, "skill", skill_name)
-        await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point-1, "user_id", user.id)
-        await interaction.followup.send(f"你成功升級了 {skill_name} 技能! 技能等級 {search[1]+1}!")
+        await function_in.sql_update("rpg_skills", f"{user.id}", "exp", 0, "skill", skill_name)
+        await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point-search[1], "user_id", user.id)
+        await interaction.followup.send(f"你成功消耗了 {search[1]} 點天賦點升級了 {skill_name} 技能! 技能等級 {search[1]+1}!")
 
     @discord.slash_command(guild_only=True, name="屬性點", description="屬性加點")
     async def 屬性點(self, interaction: discord.Interaction):
