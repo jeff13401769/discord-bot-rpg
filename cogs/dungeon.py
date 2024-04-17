@@ -1575,7 +1575,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     level_limit = 20
                 pdmg = int(pdmg + (pdmg*(level_limit*0.01)))
             if pdmg < mdef:
-                pdmg = 1
+                pdmg = 0
             else:
                 pdmg = pdmg - mdef
             return int(pdmg)
@@ -1607,7 +1607,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         hp100 = 0.4
                     mdmg = mdmg-int(mdmg*hp100)
             if mdmg < pdef:
-                mdmg = 1
+                mdmg = 0
             else:
                 mdmg = mdmg - pdef
             return int(mdmg)

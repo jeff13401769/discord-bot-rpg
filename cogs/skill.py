@@ -67,13 +67,13 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int(players_AD*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "無想的一刀":
             dmg = int(((players_AD*100)+(players_AP*200))*(skill_lvl*10))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "元素方盒":
             stun = True
@@ -101,7 +101,7 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             blood = True
             blood_round = 2
@@ -115,32 +115,32 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((players_AP*skill_lvl)+(skill_lvl*80))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "貫穿魔束":
             dmg = int((players_AP*skill_lvl*0.8)+(skill_lvl*50))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "收割":
             mhp = (monster_max_hp - monster_hp) * 0.15
             dmg = int(mhp+(skill_lvl*40))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "暗刺":
             dmg = int((players_AD*skill_lvl*0.3)+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "蓄力矢":
             dmg = int((players_AD*(skill_lvl*1.5))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             poison = True
             poison_round = 4
@@ -153,7 +153,7 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int(((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             blood = True
             blood_round = 2
@@ -165,14 +165,14 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((players_AD*3)*(skill_lvl*2))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             absolute_hit = True
         if skill == "毒刺":
             dmg = int((players_AD*(skill_lvl*0.5))+(skill_lvl*40))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             poison = True
             poison_round = 3
@@ -181,7 +181,7 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((players_AP*1.2)*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             reg_hp = int(players_int*skill_lvl)
             if reg_hp+players_hp > players_max_hp:
@@ -194,13 +194,13 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((skill_lvl*60)+(players_AP*1.5)*skill_lvl*0.9)
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
         if skill == "咒焰":
             dmg = ((skill_lvl*40)+(players_AP*0.75)*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             fire=True
             fire_round = 1
@@ -209,7 +209,7 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int((skill_lvl*150)+(((players_AP*2)*skill_lvl)*0.7))
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             skill_type_damage = dmg
             wither = True
             wither_round = 2
@@ -225,7 +225,7 @@ class Skill(discord.Cog, name="技能系統"):
             dmg = int(((players_str*150)+(players_int*180)+(players_AD*0.8)+(players_AP*0.75)+(skill_mana*100))*skill_lvl)
             dmg -= monster_def
             if dmg < 1:
-                dmg = 1
+                dmg = 0
             absolute_hit = True
             remove_def = True
             remove_def_round = 30

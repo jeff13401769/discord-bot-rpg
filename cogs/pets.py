@@ -197,10 +197,10 @@ class Pets(discord.Cog, name="寵物系統"):
                 crit_damage = int(pet_attr["爆擊傷害"]) if "爆擊傷害" in pet_attr else 0
                 hit = int(pet_attr["命中率"]+20) if "命中率" in pet_attr else 20
                 dmg = int(math.floor(dmg * (random.randint(8, 12) * 0.1)))
-                if dmg - monster_def > 0:
+                if dmg - monster_def >= 0:
                     dmg -= monster_def
                 else:
-                    dmg = 1
+                    dmg = 0
                 dodge = monster_dodge * 0.01
                 hit = hit * 0.01
                 if round(random.random(), 2) <= dodge:
