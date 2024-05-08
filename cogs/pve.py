@@ -1204,7 +1204,7 @@ class Pve(discord.Cog, name="PVE系統"):
                         self.player_異常_寒冷_dmg = 500
                 
                 if skill == "世界之力":
-                    reghp = int(self.monster_maxhp*0.2)
+                    reghp = int(self.monster_maxhp*0.1)
                     search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [self.monster_name])
                     hp = search[2]
                     if hp+reghp >= self.monster_maxhp:
