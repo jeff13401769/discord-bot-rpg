@@ -20,8 +20,8 @@ class Quest_system(discord.Cog, name="任務系統"):
                     {"qlvl": 1, "qtype": "工作", "name": "種植作物", "num": random.randint(30, 300), "daily": ({"exp": 200, "money": 50, "qp": 2})},
                     {"qlvl": 1, "qtype": "工作", "name": "狩獵動物", "num": random.randint(30, 300), "daily": ({"exp": 200, "money": 50, "qp": 2})},
                     {"qlvl": 1, "qtype": "工作", "name": "採集草藥", "num": random.randint(30, 300), "daily": ({"exp": 200, "money": 50, "qp": 2})},
-                    {"qlvl": 1, "qtype": "決鬥", "name": "勝利", "num": random.randint(1, 3), "daily": ({"exp": 100, "money": 200, "qp": 3})},
-                    {"qlvl": 1, "qtype": "決鬥", "name": "任意", "num": random.randint(1, 3), "daily": ({"exp": 80, "money": 150, "qp": 2})},
+                    #{"qlvl": 1, "qtype": "決鬥", "name": "勝利", "num": random.randint(1, 3), "daily": ({"exp": 100, "money": 200, "qp": 3})},
+                    #{"qlvl": 1, "qtype": "決鬥", "name": "任意", "num": random.randint(1, 3), "daily": ({"exp": 80, "money": 150, "qp": 2})},
                     {"qlvl": 1, "qtype": "擊殺", "name": "綠蔭魔花", "num": random.randint(3, 7), "daily": ({"exp": 120, "money": 40, "qp": 1})},
                     {"qlvl": 1, "qtype": "擊殺", "name": "深林影狼", "num": random.randint(3, 7), "daily": {"exp": 120, "money": 40, "qp": 1}},
                     {"qlvl": 1, "qtype": "擊殺", "name": "雙刃棘鬃", "num": random.randint(3, 7), "daily": {"exp": 120, "money": 40, "qp": 1}},
@@ -84,12 +84,13 @@ class Quest_system(discord.Cog, name="任務系統"):
                 ]
 
             quest_info = random.choice(quest_list)
-            if quest_info["qtype"] == "工作" or quest_info["qtype"] == "決鬥":
-                quest_check = True
-            if level >= 60:
-                if quest_info['qlvl'] >= 50:
-                    quest_check = True
-            if level+10 >= quest_info['qlvl'] >= level-10:
+            #if quest_info["qtype"] == "工作" or quest_info["qtype"] == "決鬥":
+            #    quest_check = True
+            #if level >= 60:
+            #    if quest_info['qlvl'] >= 50:
+            #        quest_check = True
+            #if level+10 >= quest_info['qlvl'] >= level-10:
+            if level >= quest_info['qlvl']:
                 quest_check = True
         return quest_info
     

@@ -29,23 +29,25 @@ class Dungeon(discord.Cog, name="副本系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="副本", description="進入副本")
-    async def 副本(self, interaction: discord.Interaction,
-        dungeon_map: Option(
-            str,
-            required=True,
-            name="副本名稱",
-            description="輸入要進入的副本名稱",
-            choices=[
-                OptionChoice(name="古樹之森", value="古樹之森"),
-                OptionChoice(name="寒冰之地", value="寒冰之地"),
-                OptionChoice(name="黑暗迴廊", value="黑暗迴廊"),
-                OptionChoice(name="惡夢迷宮", value="惡夢迷宮"),
-                OptionChoice(name="夢魘級惡夢迷宮", value="夢魘級惡夢迷宮"),
-            ]
-        ), # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="副本", description="進入副本",
+        options=[
+            discord.Option(
+                str,
+                name="副本名稱",
+                description="輸入要進入的副本名稱",
+                required=True,
+                choices=[
+                    OptionChoice(name="古樹之森", value="古樹之森"),
+                    OptionChoice(name="寒冰之地", value="寒冰之地"),
+                    OptionChoice(name="黑暗迴廊", value="黑暗迴廊"),
+                    OptionChoice(name="惡夢迷宮", value="惡夢迷宮"),
+                    OptionChoice(name="夢魘級惡夢迷宮", value="夢魘級惡夢迷宮")
+                ]
+            )
+        ]
+    )
+    async def 副本(self, interaction: discord.ApplicationContext, dungeon_map: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -158,7 +160,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
         
-        async def accept_button_callback(self, interaction: discord.Interaction):
+        async def accept_button_callback(self, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=None)
@@ -279,7 +281,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except:
                 pass
 
-        async def deny_button_callback(self, interaction: discord.Interaction):
+        async def deny_button_callback(self, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=None)
@@ -291,7 +293,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except:
                 pass
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能打幫別人進入副本啦!', ephemeral=True)
                 return False
@@ -299,7 +301,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 return True 
 
     class dungeon_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, 
+        def __init__(self, interaction: discord.ApplicationContext, 
             original_msg, embed: discord.Embed, bot: discord.Bot, 
             monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, item1_cd, item2_cd, item3_cd, item4_cd, item5_cd, skill_1_cd, skill_2_cd, skill_3_cd, drop_item, monster_skill_cd, #monster_element, 
         #怪物異常
@@ -1283,6 +1285,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             embed.add_field(name=f"你獲得了 {self.monster_exp} 經驗!", value="\u200b", inline=False)
             embed.add_field(name=f"你獲得了 {self.monster_money} 枚晶幣!", value="\u200b", inline=False)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            embed.add_field(name=f"目前飽食度剩餘 {players_hunger}", value="\u200b", inline=False)
             skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
             aexp = 0
             if not skill_list:
@@ -1326,7 +1329,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         "史詩卡包": 3,
                         "神運卷軸": 1,
                         "神佑之石": 1,
-                        "超級藥水": 1,
+                        "天賜聖露": 1,
                         "冰霜巨龍的寶箱": 1,
                         "炎獄魔龍的寶箱": 1,
                         "魅魔女王的寶箱": 1,
@@ -1371,7 +1374,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         "史詩卡包": 13,
                         "神運卷軸": 11,
                         "神佑之石": 11,
-                        "超級藥水": 11,
+                        "天賜聖露": 11,
                         "初級天賦領悟書": 10,
                         "冰霜巨龍的寶箱": 11,
                         "炎獄魔龍的寶箱": 11,
@@ -1612,7 +1615,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 mdmg = mdmg - pdef
             return int(mdmg)
 
-        async def use_item(self, item, embed: discord.Embed, msg: discord.Message, interaction: discord.Interaction):
+        async def use_item(self, item, embed: discord.Embed, msg: discord.Message, interaction: discord.ApplicationContext):
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, self.interaction.user.id)
             user = self.interaction.user
             checknum, numa = await function_in.check_item(self, user.id, item)
@@ -1987,7 +1990,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     a.append('no_crit')
             return random.choice(a)
 
-        async def normal_attack_button_callback(self, button, interaction: discord.Interaction):
+        async def normal_attack_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2137,7 +2140,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def defense_button_callback(self, button, interaction: discord.Interaction):
+        async def defense_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2226,7 +2229,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_1_button_callback(self, button, interaction: discord.Interaction):
+        async def item_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2315,7 +2318,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_2_button_callback(self, button, interaction: discord.Interaction):
+        async def item_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2404,7 +2407,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_3_button_callback(self, button, interaction: discord.Interaction):
+        async def item_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2499,7 +2502,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_4_button_callback(self, button, interaction: discord.Interaction):
+        async def item_4_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2589,7 +2592,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_5_button_callback(self, button, interaction: discord.Interaction):
+        async def item_5_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2678,7 +2681,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_1_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2772,7 +2775,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_2_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2867,7 +2870,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_3_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2967,7 +2970,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def bonus_button_1_callback(self, button, interaction: discord.Interaction):
+        async def bonus_button_1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3138,7 +3141,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def bonus_button_2_callback(self, button, interaction: discord.Interaction):
+        async def bonus_button_2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3309,7 +3312,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def bonus_button_3_callback(self, button, interaction: discord.Interaction):
+        async def bonus_button_3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3480,7 +3483,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def random_bonus_button1_callback(self, button, interaction: discord.Interaction):
+        async def random_bonus_button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3677,7 +3680,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def random_bonus_button2_callback(self, button, interaction: discord.Interaction):
+        async def random_bonus_button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3874,7 +3877,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def random_bonus_button3_callback(self, button, interaction: discord.Interaction):
+        async def random_bonus_button3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -4071,7 +4074,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能打别人的怪物啦!', ephemeral=True)
                 return False

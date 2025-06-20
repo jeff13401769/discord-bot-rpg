@@ -26,26 +26,30 @@ class Craft(discord.Cog, name="合成系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="合成", description="合成物品")
-    async def 合成(self, interaction: discord.Interaction,
-        item: Option(
-            str,
-            rquired=True,
-            name="物品",
-            description="輸入要合成的物品"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="數量",
-            description="輸入要合成的數量, 不填默認為1",
-        ) = 1 # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="合成", description="合成物品",
+        options=[
+            discord.Option(
+                str,
+                name="物品",
+                description="輸入要合成的物品",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="數量",
+                description="輸入要合成的數量, 不填默認為1",
+                required=False
+            )
+        ]
+    )
+    async def 合成(self, interaction: discord.ApplicationContext, item: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         checkaction = await function_in.checkaction(self, interaction, user.id, 5)
         if not checkaction:
             return
@@ -81,26 +85,30 @@ class Craft(discord.Cog, name="合成系統"):
         await interaction.followup.send(f'你成功合成出 {num} 個 {item}!')
         await function_in.checkactioning(self, user, "return")
     
-    @discord.slash_command(guild_only=True, name="分解", description="分解物品")
-    async def 分解(self, interaction: discord.Interaction,
-        item: Option(
-            str,
-            rquired=True,
-            name="物品",
-            description="輸入要分解的物品",
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="數量",
-            description="輸入要分解的數量, 不填默認為1",
-        ) = 1 # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="分解", description="分解物品",
+        options=[
+            discord.Option(
+                str,
+                name="物品",
+                description="輸入要分解的物品",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="數量",
+                description="輸入要分解的數量, 不填默認為1",
+                required=False
+            )
+        ]
+    )
+    async def 分解(self, interaction: discord.ApplicationContext, item: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         checkaction = await function_in.checkaction(self, interaction, user.id, 5)
         if not checkaction:
             return

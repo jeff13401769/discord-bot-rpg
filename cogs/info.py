@@ -23,27 +23,31 @@ class Info(discord.Cog, name="資訊"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @discord.user_command(guild_only=True, name="rpg資訊", description="查看自己或別人的資訊")
-    async def rpg資訊(self, interaction: discord.Interaction,
-        players: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇欲查看的玩家"
-        ) # type: ignore
-    ):
+    @discord.user_command(name="rpg資訊", description="查看自己或別人的資訊",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇欲查看的玩家",
+                required=False
+            )
+        ]
+    )
+    async def rpg資訊(self, interaction: discord.ApplicationContext, players: discord.Member):
         await self.資訊(interaction, players)
 
-    @discord.slash_command(guild_only=True, name="資訊", description="查看自己或別人的資訊")
-    async def 資訊(self, interaction: discord.Interaction,
-        players: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇欲查看的玩家"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="資訊", description="查看自己或別人的資訊",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇欲查看的玩家",
+                required=False
+            )
+        ]
+    )
+    async def 資訊(self, interaction: discord.ApplicationContext, players: discord.Member):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -68,15 +72,15 @@ class Info(discord.Cog, name="資訊"):
         check_special = await function_in.check_special(self, func_user.id, players_class)
         if check_special:
             special_exp = 2
-        if players_level < 12:
-            expfull = int(19.5 * 1.95 ** players_level) * special_exp
-        else:
-            expfull = int((17 * players_level) ** 1.7) * special_exp
+        #if players_level < 12:
+        #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
+        #else:
+        expfull = int((17 * players_level) ** 1.7) * special_exp
         exp_100_no = (players_exp / expfull) * 100
         exp_100 = round(exp_100_no)
         embed.add_field(name="職業:", value=f"{players_class}", inline=True)
         embed.add_field(name="等級:", value=f"{players_level} ({players_exp}/{expfull}) ({exp_100}%)", inline=True)
-        embed.add_field(name="飢餓度:", value=f"{players_hunger}🍗", inline=False)
+        embed.add_field(name="飽食度:", value=f"{players_hunger}🍗", inline=False)
         embed.add_field(name="血量:", value=f"{players_hp}/{players_max_hp}💖", inline=True)
         embed.add_field(name="魔力:", value=f"{players_mana}/{players_max_mana}💧", inline=True)
         embed.add_field(name="物理攻擊力:", value=f"{players_AD}⚔", inline=True)
@@ -102,7 +106,7 @@ class Info(discord.Cog, name="資訊"):
         await interaction.followup.send(embed=embed, view=self.info_menu(interaction, func_user))
 
     class info_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, player: discord.Member):
+        def __init__(self, interaction: discord.ApplicationContext, player: discord.Member):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.player = player
@@ -143,7 +147,7 @@ class Info(discord.Cog, name="資訊"):
             else:
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -159,15 +163,15 @@ class Info(discord.Cog, name="資訊"):
             check_special = await function_in.check_special(self, user.id, players_class)
             if check_special:
                 special_exp = 2
-            if players_level < 12:
-                expfull = int(19.5 * 1.95 ** players_level) * special_exp
-            else:
-                expfull = int((17 * players_level) ** 1.7) * special_exp
+            #if players_level < 12:
+            #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
+            #else:
+            expfull = int((17 * players_level) ** 1.7) * special_exp
             exp_100_no = (players_exp / expfull) * 100
             exp_100 = round(exp_100_no)
             embed.add_field(name="職業:", value=f"{players_class}", inline=True)
             embed.add_field(name="等級:", value=f"{players_level} ({players_exp}/{expfull}) ({exp_100}%)", inline=True)
-            embed.add_field(name="飢餓度:", value=f"{players_hunger}🍗", inline=False)
+            embed.add_field(name="飽食度:", value=f"{players_hunger}🍗", inline=False)
             embed.add_field(name="血量:", value=f"{players_hp}/{players_max_hp}💖", inline=True)
             embed.add_field(name="魔力:", value=f"{players_mana}/{players_max_mana}💧", inline=True)
             embed.add_field(name="物理攻擊力:", value=f"{players_AD}⚔", inline=True)
@@ -193,7 +197,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -213,7 +217,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button3_callback(self, button, interaction: discord.Interaction):
+        async def button3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -237,7 +241,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button4_callback(self, button, interaction: discord.Interaction):
+        async def button4_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -300,7 +304,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button5_callback(self, button, interaction: discord.Interaction):
+        async def button5_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -320,7 +324,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button6_callback(self, button, interaction: discord.Interaction):
+        async def button6_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -355,7 +359,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
 
-        async def button7_callback(self, button, interaction: discord.Interaction):
+        async def button7_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -473,7 +477,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
         
-        async def button8_callback(self, button, interaction: discord.Interaction):
+        async def button8_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -505,9 +509,9 @@ class Info(discord.Cog, name="資訊"):
             players_level = search[1]
             players_all_attr_point = search[20]
             if int(players_level*0.1)*5 < players_all_attr_point:
-                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
+                embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
             else:
-                embed.add_field(name="<:Dnitro_boost:1000595924109758524> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
+                embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
 
 def setup(client: discord.Bot):

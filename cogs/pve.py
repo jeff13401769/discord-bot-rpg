@@ -38,20 +38,22 @@ class Pve(discord.Cog, name="PVE系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="傷害測試", description="測試傷害")
-    async def 傷害測試(self, interaction: discord.Interaction,
-        Invincible: Option(
-            int,
-            required=False,
-            name="無敵",
-            description="是否無敵",
-            choices=[
-                OptionChoice(name="是", value=1),
-                OptionChoice(name="否", value=0)
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="傷害測試", description="測試傷害",
+        options=[
+            discord.Option(
+                int,
+                name="無敵",
+                description="訓練用假人是否為無敵",
+                required=True,
+                choices=[
+                    OptionChoice(name="是", value=1),
+                    OptionChoice(name="否", value=0)
+                ]
+            )
+        ]
+    )
+    async def 傷害測試(self, interaction: discord.ApplicationContext, invincible: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -67,7 +69,7 @@ class Pve(discord.Cog, name="PVE系統"):
         if not checkactioning:
             await interaction.followup.send(f'你當前正在 {stat} 中, 無法攻擊!')
             return
-        if Invincible == 1:
+        if invincible == 1:
             monster_name = "強化版訓練用假人"
             monster_level = 1000
             monster_hp = 2000000000
@@ -156,17 +158,18 @@ class Pve(discord.Cog, name="PVE系統"):
         guild = self.bot.get_guild(config.guild)
         await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, 10, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, None, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0))
 
-    @discord.slash_command(guild_only=True, name="攻擊", description="攻擊一隻怪物")
-    async def 攻擊(self, interaction: discord.Interaction,
-        func: Option(
-            str,
-            required=False,
-            name="攻擊世界boss",
-            description="選擇一個世界boss進行攻擊. 若世界boss當前不存在, 則無法攻擊",
-            choices = wb
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="攻擊", description="攻擊一隻怪物",
+        options=[
+            discord.Option(
+                str,
+                name="攻擊世界boss",
+                description="選擇一個世界boss進行攻擊. 若世界boss當前不存在, 則無法攻擊",
+                required=False,
+                choices=wb
+            )
+        ])
+    async def 攻擊(self, interaction: discord.ApplicationContext, func: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -290,7 +293,7 @@ class Pve(discord.Cog, name="PVE系統"):
         await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, False, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, drop_item, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0))
 
     class monster_button(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, original_msg, embed: discord.Embed, bot: discord.Bot,
+        def __init__(self, interaction: discord.ApplicationContext, original_msg, embed: discord.Embed, bot: discord.Bot,
             guild, DPS_test, 
             monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, item1_cd, item2_cd, item3_cd, item4_cd, item5_cd, skill_1_cd, skill_2_cd, skill_3_cd, drop_item, monster_skill_cd, #monster_element, 
         #怪物異常
@@ -878,8 +881,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 召喚的 {self.monster_summon_name}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, self.monster_summon_dmg, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 召喚的 {self.monster_summon_name} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, self.monster_summon_dmg, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 召喚的 {self.monster_summon_name} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                 self.monster_summon_round -= 1
                 if self.monster_summon_round <= 0:
@@ -910,8 +913,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*1.5, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*1.5, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                     
                 if skill == "樹神之赦":
@@ -926,8 +929,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
 
                 if skill == "冰封咆哮":
@@ -937,8 +940,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         if dodge_check:
                             embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                         else:
-                            a = await self.on_monster_damage(user, b, player_def)
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                            a, dmgstr = await self.on_monster_damage(user, b, player_def)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
 
                 if skill == "極寒氛圍":
@@ -969,8 +972,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                 
                 if skill == "岩漿噴吐":
@@ -981,8 +984,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*1.5, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*1.5, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                 
                 if skill == "地震之怒":
@@ -998,8 +1001,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*1.5, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*1.5, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_燃燒 = True
                         self.player_異常_燃燒_round = 10
@@ -1010,8 +1013,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*1.6, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*1.6, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_流血 = True
                         self.player_異常_流血_round = 3
@@ -1023,8 +1026,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 4
@@ -1042,8 +1045,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         if dodge_check:
                             embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                         else:
-                            a = await self.on_monster_damage(user, monster_AD*5, player_def)
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                            a, dmgstr = await self.on_monster_damage(user, monster_AD*5, player_def)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
                     else:
                         self.monster_異常_暈眩 = True
@@ -1060,8 +1063,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_凋零 = True
                         self.player_異常_凋零_round = 5
@@ -1084,8 +1087,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         if dodge_check:
                             embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 召喚出來的暗影觸手!🌟", value="\u200b", inline=False)
                         else:
-                            a = await self.on_monster_damage(user, int(monster_AD*((random.randint(7, 15)*0.1))), player_def)
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 召喚出來的暗影觸手 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                            a, dmgstr = await self.on_monster_damage(user, int(monster_AD*((random.randint(7, 15)*0.1))), player_def)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 召喚出來的暗影觸手 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
                 
                 if skill == "霜龍之怒":
@@ -1099,8 +1102,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 3
@@ -1118,8 +1121,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*2, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*2, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 3
@@ -1145,8 +1148,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         if dodge_check:
                             embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                         else:
-                            a = await self.on_monster_damage(user, monster_AD*1.5, player_def)
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                            a, dmgstr = await self.on_monster_damage(user, monster_AD*1.5, player_def)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
                 
                 if skill == "可愛的力量":
@@ -1181,8 +1184,8 @@ class Pve(discord.Cog, name="PVE系統"):
                         if dodge_check:
                             embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                         else:
-                            a = await self.on_monster_damage(user, monster_AD*5, player_def)
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                            a, dmgstr = await self.on_monster_damage(user, monster_AD*5, player_def)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
                             skche = True
                     if skche:
@@ -1196,8 +1199,8 @@ class Pve(discord.Cog, name="PVE系統"):
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
-                        a = await self.on_monster_damage(user, monster_AD*10, player_def)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點傷害", value="\u200b", inline=False)
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*10, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                         dmga+=a
                         self.player_異常_寒冷 = True
                         self.player_異常_寒冷_round = 10
@@ -1218,7 +1221,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 if self.DPS_test:
                     dmg = 0
                 else:
-                    dmg = await self.on_monster_damage(user, monster_AD, player_def)
+                    dmg, dmgstr = await self.on_monster_damage(user, monster_AD, player_def)
                     dodge_check = await self.dodge_check(players_dodge, monster_hit)
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的傷害!🌟", value="\u200b", inline=False)
@@ -1226,7 +1229,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     else:
                         dodge, players_hp = await self.passive_skill(user, embed, msg, players_hp)
                         if not dodge:
-                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 對 {user.name} 造成 {dmg} 點傷害", value="\u200b", inline=False)
+                            embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 對 {user.name} 造成 {dmg} 點{dmgstr}傷害", value="\u200b", inline=False)
                             remove_dmg, players_mana = await self.def_passive_skill(user, embed, dmg, players_mana)
                             if remove_dmg:
                                 dmg -= remove_dmg
@@ -1302,6 +1305,7 @@ class Pve(discord.Cog, name="PVE系統"):
             await function_in.checkactioning(self, user, "return")
             await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            embed.add_field(name=f"目前飽食度剩餘 {players_hunger}", value="\u200b", inline=False)
             aexp = 0
             skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
             if not skill_list:
@@ -1487,7 +1491,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     d = f"1世界幣"
                     await player.send(f'你成功在對 {self.monster_name} 的攻擊中, 傷害排行榜中排行第 {a}, {d}')
                 a+=1
-            channel = self.bot.get_channel(1198807348647579710)
+            channel = self.bot.get_channel(1382637390832730173)
             await channel.send(embed=embed)
             connection.commit()
             cursor.close()
@@ -1521,6 +1525,19 @@ class Pve(discord.Cog, name="PVE系統"):
             
         async def on_monster_damage(self, user, mdmg, pdef):
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            dmgstr = ""
+            chance = {
+                "普通": 75,
+                "爆擊": 15,
+                "會心": 5,
+            }
+            crit = await function_in.lot(self, chance)
+            if crit == "會心":
+                mdmg *= 2
+                dmgstr = "會心"
+            if crit == "爆擊":
+                mdmg *= 1.5
+                dmgstr = "爆擊"
             if self.player_異常_減防:
                 defrange = int((self.player_異常_減防_range * 0.01)* pdef)
                 pdef = pdef-defrange
@@ -1549,9 +1566,9 @@ class Pve(discord.Cog, name="PVE系統"):
                 mdmg = 0
             else:
                 mdmg = mdmg - pdef
-            return int(mdmg)
+            return int(mdmg), dmgstr
 
-        async def use_item(self, item, embed: discord.Embed, msg: discord.Message, interaction: discord.Interaction):
+        async def use_item(self, item, embed: discord.Embed, msg: discord.Message, interaction: discord.ApplicationContext):
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, self.interaction.user.id)
             user = self.interaction.user
             checknum, numa = await function_in.check_item(self, user.id, item)
@@ -2005,7 +2022,7 @@ class Pve(discord.Cog, name="PVE系統"):
             else:
                 return True
 
-        async def normal_attack_button_callback(self, button, interaction: discord.Interaction):
+        async def normal_attack_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2170,7 +2187,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def defense_button_callback(self, button, interaction: discord.Interaction):
+        async def defense_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2264,7 +2281,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_1_button_callback(self, button, interaction: discord.Interaction):
+        async def item_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2352,7 +2369,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_2_button_callback(self, button, interaction: discord.Interaction):
+        async def item_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2440,7 +2457,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_3_button_callback(self, button, interaction: discord.Interaction):
+        async def item_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2528,7 +2545,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_4_button_callback(self, button, interaction: discord.Interaction):
+        async def item_4_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2616,7 +2633,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_5_button_callback(self, button, interaction: discord.Interaction):
+        async def item_5_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2704,7 +2721,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_1_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2817,7 +2834,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_2_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2931,7 +2948,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_3_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3045,7 +3062,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
             
-        async def exit_button_callback(self, button, interaction: discord.Interaction):
+        async def exit_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -3140,7 +3157,7 @@ class Pve(discord.Cog, name="PVE系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能打別人的怪物啦!', ephemeral=True)
                 return False

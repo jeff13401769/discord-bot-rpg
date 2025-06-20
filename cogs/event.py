@@ -109,7 +109,7 @@ class Event(discord.Cog, name="活動系統"):
             search = await function_in.sql_search("rpg_system", "last_channel", ["guild_id"], [guild.id])
             if search:
                 if guild.id == config.guild:
-                    channel = guild.get_channel(1198808045979959346)
+                    channel = guild.get_channel(1382639415918329896)
                 else:
                     channel = guild.get_channel(search[1])
                 if channel:

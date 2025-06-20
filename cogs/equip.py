@@ -15,22 +15,23 @@ class Equip(discord.Cog, name="裝備系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @discord.slash_command(guild_only=True, name="裝備", description="編輯裝備囉")
-    async def 裝備(self, interaction: discord.Interaction,
-        equip_type: Option(
-            int,
-            required=True,
-            name="裝備類型",
-            description="選擇一個類型",
-            choices=[
-                OptionChoice(name="武器/頭盔/胸甲/護腿/鞋子", value=1),
-                OptionChoice(name="戒指/披風/副手/項鍊/護身符", value=2),
-                OptionChoice(name="戰鬥道具欄位", value=3),
-                OptionChoice(name="技能欄位", value=4),
-                OptionChoice(name="卡牌欄位", value=5)
-            ]
-        ) # type: ignore
-    ):
+    @commands.slash_command(name="裝備", description="編輯裝備囉",
+        options=[
+            discord.Option(
+                int,
+                name="裝備類型",
+                description="選擇一個類型",
+                required=True,
+                choices=[
+                    OptionChoice(name="武器/頭盔/胸甲/護腿/鞋子", value=1),
+                    OptionChoice(name="戒指/披風/副手/項鍊/護身符", value=2),
+                    OptionChoice(name="戰鬥道具欄位", value=3),
+                    OptionChoice(name="技能欄位", value=4),
+                    OptionChoice(name="卡牌欄位", value=5)
+                ]
+            )
+        ])
+    async def 裝備(self, interaction: discord.ApplicationContext, equip_type: int):
         user = interaction.user
         search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
         if not search:

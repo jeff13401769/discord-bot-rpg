@@ -1,15 +1,11 @@
-import asyncio
 import random
 from random import choice
 import datetime
 import time
 import pytz
-import os
-import yaml
-
-import certifi
 import discord
 from discord import Option, OptionChoice
+from discord.ext import commands
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -19,49 +15,52 @@ class Auction_House(discord.Cog, name="拍賣行"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="拍賣", description="拍賣行")
-    async def 拍賣(self, interaction: discord.Interaction,
-        func: Option(
-            str,
-            required=True,
-            name="功能",
-            description="請選擇要使用的功能",
-            choices = [
-                OptionChoice(name="購買", value="buy"),
-                OptionChoice(name="販賣", value="sell"),
-                OptionChoice(name="下架", value="unbuy")
-            ]
-        ), # type: ignore
-        auction_id: Option(
-            int,
-            required=False,
-            name="拍賣品id",
-            description="當選擇購買或下架時, 請輸入要購買或下架的拍賣品id"
-        ), # type: ignore
-        item: Option(
-            str,
-            required=False,
-            name="物品名稱",
-            description="當選擇販賣時, 要販賣的物品名稱"
-        ), # type: ignore
-        price: Option(
-            int,
-            required=False,
-            name="物品價格",
-            description="當選擇販賣時, 要販賣的物品價格"
-        ), # type: ignore
-        amount: Option(
-            int,
-            required=False,
-            name="物品數量",
-            description="當選擇販賣時, 要販賣的物品數量",
-            default=1
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="拍賣", description="拍賣行",
+        options=[
+            discord.Option(
+                str,
+                name="功能",
+                description="請選擇要使用的功能",
+                required=True,
+                choices = [
+                    OptionChoice(name="購買", value="buy"),
+                    OptionChoice(name="販賣", value="sell"),
+                    OptionChoice(name="下架", value="unbuy")
+                ]
+            ),
+            discord.Option(
+                int,
+                name="拍賣品id",
+                description="當選擇購買或下架時, 請輸入要購買或下架的拍賣品id",
+                required=False
+            ),
+            discord.Option(
+                str,
+                name="物品名稱",
+                description="當選擇販賣時, 要販賣的物品名稱",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="物品價格",
+                description="當選擇販賣時, 要販賣的物品價格",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="物品數量",
+                description="當選擇販賣時, 要販賣的物品數量, 未填默認為1",
+                required=False
+            )
+        ]
+    )
+    async def 拍賣(self, interaction: discord.ApplicationContext, func: str, auction_id: int, item: str, price: int, amount: int =1):
+        await interaction.defer()
+        if not amount:
+            amount = 1
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
-        channel = self.bot.get_channel(1198810105261600879)
+        channel = self.bot.get_channel(1382638616857022635)
         if not checkreg:
             return
         if func == "buy":
@@ -167,7 +166,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             await channel.send(embed=embed)
 
     class ah_sell_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, item, amount, item_type, price, ah_id, channel):
+        def __init__(self, interaction: discord.ApplicationContext, item, amount, item_type, price, ah_id, channel):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.item = item
@@ -199,7 +198,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             user = interaction.user
             await interaction.response.edit_message(view=self)
@@ -229,7 +228,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             await function_in.checkactioning(self, interaction.user, "return")
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -238,7 +237,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             await function_in.checkactioning(self, interaction.user, "return")
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能幫別人選擇上架拍賣!', ephemeral=True)
                 return False
@@ -246,7 +245,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
                 return True
         
     class ah_buy_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, item, amount, item_type, price, ah_id, ah_seller, channel):
+        def __init__(self, interaction: discord.ApplicationContext, item, amount, item_type, price, ah_id, ah_seller, channel):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.item = item
@@ -279,7 +278,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -312,7 +311,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             await function_in.checkactioning(self, interaction.user, "return")
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -321,7 +320,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             await function_in.checkactioning(self, self.interaction.user, "return")
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能幫別人選擇是否購買!', ephemeral=True)
                 return False

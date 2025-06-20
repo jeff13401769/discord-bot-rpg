@@ -27,36 +27,40 @@ import mysql.connector
 class Pets(discord.Cog, name="寵物系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
-    @discord.user_command(guild_only=True, name="查看寵物")
-    async def 查看寵物(self, interaction: discord.Interaction,
-        player: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇一位玩家, 不填默認自己"
-        ), # type: ignore
-    ):
+    @discord.user_command(name="查看寵物",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇一位玩家, 不填默認自己",
+                required=False
+            )
+        ]
+    )
+    async def 查看寵物(self, interaction: discord.ApplicationContext, player: discord.Member):
         await self.寵物(interaction, player, 0)
 
-    @discord.slash_command(guild_only=True, name="寵物", description="寵物系統")
-    async def 寵物(self, interaction: discord.Interaction,
-        player: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇一位玩家, 不填默認自己"
-        ), # type: ignore
-        func: Option(
-            int,
-            name="功能",
-            description="選擇一個功能, 不填默認查看",
-            required=False,
-            choices=[
-                OptionChoice(name="查看", value=0),
-                OptionChoice(name="出戰", value=1),
-            ] # type: ignore
-        )=0
-    ):
+    @commands.slash_command(name="寵物", description="寵物系統",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇一位玩家, 不填默認自己",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="功能",
+                description="選擇一個功能, 不填默認查看",
+                required=False,
+                choices=[
+                    OptionChoice(name="查看", value=0),
+                    OptionChoice(name="出戰", value=1)
+                ],
+            )
+        ]
+    )
+    async def 寵物(self, interaction: discord.ApplicationContext, player:  discord.Member, func: int = 0):
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -67,7 +71,7 @@ class Pets(discord.Cog, name="寵物系統"):
                 return
             user = player
         if func == 0:
-            await interaction.response.defer()
+            await interaction.defer()
             petlist = ["寵物一", "寵物二", "寵物三"]
             embed = discord.Embed(title=f"{user.name} 的寵物", color=0xFF0000)
             if user.avatar:

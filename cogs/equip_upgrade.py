@@ -1,5 +1,6 @@
 import random
 import functools
+import asyncio
 
 import discord
 from discord import Option, OptionChoice
@@ -13,28 +14,30 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="強化", description="強化裝備")
-    async def 強化(self, interaction: discord.Interaction,
-        name: Option(
-            str,
-            required=True,
-            name="裝備名稱",
-            description="輸入欲強化的裝備名稱"
-        ), # type: ignore
-        material: Option(
-            str,
-            required=True,
-            name="素材",
-            description="填入相同道具名稱(未強化), 或輸入欲使用的強化晶球名稱"
-        ), # type: ignore
-        support: Option(
-            str,
-            required=False,
-            name="輔助道具",
-            description="填入欲使用的輔助道具名稱, 或不填以不使用輔助道具"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="強化", description="強化裝備",
+        options=[
+            discord.Option(
+                str,
+                name="裝備名稱",
+                description="輸入欲強化的裝備名稱",
+                required=True
+            ),
+            discord.Option(
+                str,
+                name="素材",
+                description="填入相同道具名稱(未強化), 或輸入欲使用的強化晶球名稱",
+                required=True
+            ),
+            discord.Option(
+                str,
+                name="輔助道具",
+                description="填入欲使用的輔助道具名稱, 或不填以不使用輔助道具",
+                required=False
+            )
+        ]
+    )
+    async def 強化(self, interaction: discord.ApplicationContext, name: str, material: str, support: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -275,7 +278,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
         await interaction.followup.send(embed=embed, view=self.upgrade_menu(interaction, name, chance, suss_item, fail_item, material, money, support))
         
     class upgrade_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, item, chance, suss_item, fail_item, material, money, support):
+        def __init__(self, interaction: discord.ApplicationContext, item, chance, suss_item, fail_item, material, money, support):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.item = item
@@ -311,25 +314,25 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.remove_item(self.button1)
             self.remove_item(self.button2)
             await interaction.response.edit_message(view=self)
             msg = interaction.message
-            #hammer = 1
-            #nohammer = 9
-            #for i in range(nohammer):
-            #    hammermsg = ''
-            #    for c in range(hammer):
-            #        hammermsg += "🔨"
-            #    for b in range(nohammer):
-            #        hammermsg += "⌛"
-            #    hammer+=1
-            #    nohammer-=1
-            #    embed = discord.Embed(title=f'<:strengthen:1149172469329035354> {interaction.user.name} 強化中...', color=0xFFE153)
-            #    embed.add_field(name=hammermsg, value="\u200b", inline=False)
-            #    await msg.edit(embed=embed)
-            #    await asyncio.sleep(0.15)
+            hammer = 1
+            nohammer = 9
+            for i in range(nohammer):
+                hammermsg = ''
+                for c in range(hammer):
+                    hammermsg += "🔨"
+                for b in range(nohammer):
+                    hammermsg += "⌛"
+                hammer+=1
+                nohammer-=1
+                embed = discord.Embed(title=f'<:strengthen:1149172469329035354> {interaction.user.name} 強化中...', color=0xFFE153)
+                embed.add_field(name=hammermsg, value="\u200b", inline=False)
+                await msg.edit(embed=embed)
+                await asyncio.sleep(0.15)
                 
             chance = self.chance * 0.01
             search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [interaction.user.id])
@@ -412,7 +415,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             await function_in.checkactioning(self, self.interaction.user, "return")
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.remove_item(self.button1)
             self.remove_item(self.button2)
             await interaction.response.edit_message(view=self)
@@ -422,29 +425,31 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             await function_in.checkactioning(self, self.interaction.user, "return")
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能幫別人選擇強化!', ephemeral=True)
                 return False
             else:
                 return True
     
-    @discord.slash_command(guild_only=True, name="附魔", description="附魔裝備")
-    async def 附魔(self, interaction: discord.Interaction,
-        name: Option(
-            str,
-            required=True,
-            name="裝備名稱",
-            description="輸入欲附魔的裝備名稱"
-        ), # type: ignore
-        material: Option(
-            str,
-            required=False,
-            name="素材",
-            description="填入附魔材料, 不輸入則為隨機附魔"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="附魔", description="附魔裝備",
+        options=[
+            discord.Option(
+                str,
+                name="裝備名稱",
+                description="輸入欲附魔的裝備名稱",
+                required=True
+            ),
+            discord.Option(
+                str,
+                name="素材",
+                description="填入附魔材料, 不輸入則為隨機附魔",
+                required=False
+            )
+        ]
+    )
+    async def 附魔(self, interaction: discord.ApplicationContext, name: str, material: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -554,7 +559,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
         await interaction.followup.send(embed=embed, view=self.enchant_menu(interaction, name, enchant_list, material, money))
         
     class enchant_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, item, enchant_list, material, money):
+        def __init__(self, interaction: discord.ApplicationContext, item, enchant_list, material, money):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.item = item
@@ -587,26 +592,26 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.remove_item(self.button1)
             self.remove_item(self.button2)
             await interaction.response.edit_message(view=self)
             msg = interaction.message
             user = interaction.user
-            #hammer = 1
-            #nohammer = 9
-            #for i in range(nohammer):
-            #    hammermsg = ''
-            #    for c in range(hammer):
-            #        hammermsg += "🔮"
-            #    for b in range(nohammer):
-            #        hammermsg += "⌛"
-            #    hammer+=1
-            #    nohammer-=1
-            #    embed = discord.Embed(title=f'🔮 {user.name} 附魔中...', color=0xFFE153)
-            #    embed.add_field(name=hammermsg, value="\u200b", inline=False)
-            #    await msg.edit(embed=embed)
-            #    await asyncio.sleep(0.15)
+            hammer = 1
+            nohammer = 9
+            for i in range(nohammer):
+                hammermsg = ''
+                for c in range(hammer):
+                    hammermsg += "🔮"
+                for b in range(nohammer):
+                    hammermsg += "⌛"
+                hammer+=1
+                nohammer-=1
+                embed = discord.Embed(title=f'🔮 {user.name} 附魔中...', color=0xFFE153)
+                embed.add_field(name=hammermsg, value="\u200b", inline=False)
+                await msg.edit(embed=embed)
+                await asyncio.sleep(0.15)
             
             enchant_list = self.enchant_list
             enchant_name = await function_in.lot(self, enchant_list)
@@ -630,7 +635,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             await function_in.checkactioning(self, user, "return")
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.remove_item(self.button1)
             self.remove_item(self.button2)
             await interaction.response.edit_message(view=self)
@@ -640,7 +645,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             await function_in.checkactioning(self, self.interaction.user, "return")
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能幫別人選擇附魔!', ephemeral=True)
                 return False

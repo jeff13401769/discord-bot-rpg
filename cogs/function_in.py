@@ -20,7 +20,7 @@ class function_in(discord.Cog, name="模塊導入1"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    async def checkreg(self, interaction: discord.Interaction, user_id: int):
+    async def checkreg(self, interaction: discord.ApplicationContext, user_id: int):
         search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if not search:
             if user_id == interaction.user.id:
@@ -30,7 +30,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             return False
         return True
 
-    async def checkaction(self, interaction: discord.Interaction, user_id, cd):
+    async def checkaction(self, interaction: discord.ApplicationContext, user_id, cd):
         checka = await function_in.checkreg(self, interaction, user_id)
         if not checka:
             return False
@@ -103,17 +103,17 @@ class function_in(discord.Cog, name="模塊導入1"):
         check_special = await function_in.check_special(self, user_id, players_class)
         if check_special:
             special_exp = 2
-        if players_level < 12:
-            expfull = int(19.5 * 1.95 ** players_level) * special_exp
-        else:
-            expfull = int((17 * players_level) ** 1.7) * special_exp
+        #if players_level < 12:
+        #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
+        #else:
+        expfull = int((17 * players_level) ** 1.7) * special_exp
                 
         exp+=players_exp
         while exp >= expfull:
-            if players_level < 12:
-                expfull = int(19.5 * 1.95 ** players_level) * special_exp
-            else:
-                expfull = int((17 * players_level) ** 1.7) * special_exp
+            #if players_level < 12:
+            #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
+            #else:
+            expfull = int((17 * players_level) ** 1.7) * special_exp
             exp -= expfull
             players_level+=1
             player_attr_point+=1
@@ -148,6 +148,8 @@ class function_in(discord.Cog, name="模塊導入1"):
 
     async def remove_hunger(self, user_id, hunger: int = 1):
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
+        if not hunger:
+            hunger = 1
         players_hunger -= hunger
         if players_hunger < 0:
             players_hunger = 0
@@ -224,13 +226,15 @@ class function_in(discord.Cog, name="模塊導入1"):
     async def is_gm(self, user_id):
         search = await function_in.sql_search("rpg_system", "gm", ["user_id"], [user_id])
         if search:
-            return True
+            return search[1]
         return False
     
     async def give_item(self, user_id, name: str, num: int=1):
         data, floder_name, floder_name1, item_type1 = await function_in.search_for_file(self, name, False)
         backpack = await function_in.sql_findall("rpg_backpack", f"{user_id}")
         a = False
+        if not num or type(num) is not int:
+            num = 1
         for item in backpack:
             if item[0] == name:
                 num += item[2]
@@ -425,7 +429,7 @@ class function_in(discord.Cog, name="模塊導入1"):
                 if lazy:
                     return data
                 return data, floder_name, floder_name1, item_type
-        folders_to_search = ["特殊", "戰士", "弓箭手", "法師", "刺客"]
+        folders_to_search = ["特殊", "戰士", "弓箭手", "法師", "刺客","玉兔"]
         for floder_name in folders_to_search:
             yaml_path = os.path.join(base_path, "rpg", "職業", f"{floder_name}.yml")
             if os.path.exists(yaml_path):

@@ -29,16 +29,17 @@ class Pvp(discord.Cog, name="PVP系統"):
         self.bot: discord.Bot = bot
 
     @commands.cooldown(1, 600, commands.BucketType.user)
-    @discord.slash_command(guild_only=True, name="決鬥", description="與其他玩家決鬥")
-    async def 決鬥(self, interaction: discord.Interaction,
-        player: Option(
-            discord.Member,
-            required=True,
-            name="玩家",
-            description="選擇一名玩家發出決鬥邀請",
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="決鬥", description="與其他玩家決鬥",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="功能",
+                description="選擇一名玩家發出決鬥邀請",
+                required=True
+            )
+        ])
+    async def 決鬥(self, interaction: discord.ApplicationContext, player: discord.Member):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -84,14 +85,14 @@ class Pvp(discord.Cog, name="PVP系統"):
         await msg.reply(f"{user.mention} {player.mention}")
 
     @決鬥.error
-    async def 決鬥_error(self, interaction: discord.Interaction, error: Exception):
+    async def 決鬥_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
     
     class pvp_accept_menu(discord.ui.View):
-        def __init__(self, bot, interaction: discord.Interaction, player_1: discord.Member, player_2: discord.Member):
+        def __init__(self, bot, interaction: discord.ApplicationContext, player_1: discord.Member, player_2: discord.Member):
             super().__init__(timeout=30)
             self.player_1 = player_1
             self.player_2 = player_2
@@ -122,7 +123,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 await function_in.checkactioning(self, self.player_2, "return")
                 self.stop()
         
-        async def accept_button_callback(self, interaction: discord.Interaction):
+        async def accept_button_callback(self, interaction: discord.ApplicationContext):
             await interaction.response.edit_message(view=None)
             msg = interaction.message
             embed = discord.Embed(title=f"{interaction.user.display_name} 接受了決鬥邀請!", color=0x79FF79)
@@ -252,7 +253,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             await msg.edit(embed=embed, view=Pvp.pvp_menu(interaction, self.player_1, self.player_2, self.player_2, self.player_1, msg, embed, self.bot, a2, b2, c2, d2, e2, f2, g2, h2, a1, b1, c1, d1, e1, f1, g1, h1, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0))
             self.stop()
 
-        async def deny_button_callback(self, interaction: discord.Interaction):
+        async def deny_button_callback(self, interaction: discord.ApplicationContext):
             await interaction.response.edit_message(view=None)
             msg = interaction.message
             embed = discord.Embed(title=f"{interaction.user.display_name} 拒絕了決鬥邀請!", color=0xFF7979)
@@ -261,7 +262,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             await function_in.checkactioning(self, self.player_2, "return")
             self.stop()
         
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.player_2:
                 await interaction.response.send_message('你不能替他人決定是否接受決鬥!', ephemeral=True)
                 return False
@@ -269,7 +270,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 return True
             
     class pvp_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, 
+        def __init__(self, interaction: discord.ApplicationContext, 
             players_1: discord.Member, players_2: discord.Member,
             now_player: discord.Member, next_player: discord.Member,
             original_msg, embed: discord.Embed, bot: discord.Bot,
@@ -1422,7 +1423,7 @@ class Pvp(discord.Cog, name="PVP系統"):
 
             return players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit,  players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger
 
-        async def normal_attack_button_callback(self, button, interaction: discord.Interaction):
+        async def normal_attack_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1514,7 +1515,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_1_button_callback(self, button, interaction: discord.Interaction):
+        async def item_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1562,7 +1563,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_2_button_callback(self, button, interaction: discord.Interaction):
+        async def item_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1610,7 +1611,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_3_button_callback(self, button, interaction: discord.Interaction):
+        async def item_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1658,7 +1659,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_4_button_callback(self, button, interaction: discord.Interaction):
+        async def item_4_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1706,7 +1707,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def item_5_button_callback(self, button, interaction: discord.Interaction):
+        async def item_5_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1754,7 +1755,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_1_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_1_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1807,7 +1808,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_2_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_2_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1860,7 +1861,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
 
-        async def skill_3_button_callback(self, button, interaction: discord.Interaction):
+        async def skill_3_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -1914,7 +1915,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def exit_button_callback(self, button, interaction: discord.Interaction):
+        async def exit_button_callback(self, button, interaction: discord.ApplicationContext):
             try:
                 await interaction.response.edit_message(view=self)
                 msg = interaction.message
@@ -1933,7 +1934,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             except (discord.errors.ApplicationCommandInvokeError, discord.errors.NotFound) as e:
                 pass
         
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user == self.next_player:
                 await interaction.response.send_message('尚未輪到你, 請等待對方完成動作!', ephemeral=True)
                 return False

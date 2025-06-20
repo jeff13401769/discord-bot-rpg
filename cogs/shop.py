@@ -21,28 +21,29 @@ class Shop(discord.Cog, name="商店"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @discord.slash_command(guild_only=True, name="商店", description="看看商店有賣什麼吧")
+    @commands.slash_command(name="商店", description="看看商店有賣什麼吧",
+        options=[
+            discord.Option(
+                int,
+                name="商店名稱",
+                description="選擇一間商店查看, 不輸入則顯示所有商店",
+                required=False,
+                choices=[
+                    OptionChoice(name="藥水商店", value=1),
+                    OptionChoice(name="道具商店", value=2),
+                    OptionChoice(name="技能書商店", value=3),
+                    OptionChoice(name="裝備商店", value=4),
+                    OptionChoice(name="武器商店", value=5),
+                    OptionChoice(name="任務商店", value=6),
+                    OptionChoice(name="世界商店", value=7),
+                    OptionChoice(name="決鬥商店", value=8),
+                    OptionChoice(name="質點商城", value=9)
+                ]
+            )
+        ])
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def 商店(self, interaction: discord.Interaction,
-        shop: Option(
-            int,
-            required=False,
-            name="商店名稱",
-            description="選擇一間商店查看, 不輸入則顯示所有商店",
-            choices=[
-                OptionChoice(name="藥水商店", value=1),
-                OptionChoice(name="道具商店", value=2),
-                OptionChoice(name="技能書商店", value=3),
-                OptionChoice(name="裝備商店", value=4),
-                OptionChoice(name="武器商店", value=5),
-                OptionChoice(name="任務商店", value=6),
-                OptionChoice(name="世界商店", value=7),
-                OptionChoice(name="決鬥商店", value=8),
-                OptionChoice(name="質點商城", value=9)
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    async def 商店(self, interaction: discord.ApplicationContext, shop: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -62,7 +63,7 @@ class Shop(discord.Cog, name="商店"):
             embed.add_field(name="📃任務商店", value="這裡賣的東西, 都只能用任務點數購買", inline=False)
             embed.add_field(name="<:king:1154993624765956156> 世界商店", value="這裡賣的東西, 都只能用世界幣購買", inline=False)
             embed.add_field(name="<a:sword:1219469485875138570> 決鬥商店", value="這裡賣的東西, 都只能用決鬥點數購買", inline=False)
-            embed.add_field(name="<:Dnitro_boost:1000595924109758524> 質點商城", value="這裡賣的東西, 都只能用奇異質點購買", inline=False)
+            embed.add_field(name="<:rpg_boost:1382689893129388073> 質點商城", value="這裡賣的東西, 都只能用奇異質點購買", inline=False)
             await interaction.followup.send(embed=embed)
         else:
             base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -93,7 +94,7 @@ class Shop(discord.Cog, name="商店"):
                 embed = discord.Embed(title='<a:sword:1219469485875138570> 決鬥商店', description="這裡賣的東西, 都只能用決鬥點數購買", color=0x80FFFF)
             if shop == 9:
                 shop_name = "質點商城"
-                embed = discord.Embed(title='<:Dnitro_boost:1000595924109758524> 質點商城', description="這裡賣的東西, 都只能用奇異質點購買", color=0x80FFFF)
+                embed = discord.Embed(title='<:rpg_boost:1382689893129388073> 質點商城', description="這裡賣的東西, 都只能用奇異質點購買", color=0x80FFFF)
             try:
                 with open(yaml_path, "r", encoding="utf-8") as f:
                     data = yaml.safe_load(f)
@@ -114,32 +115,36 @@ class Shop(discord.Cog, name="商店"):
             await interaction.followup.send(embed=embed)
 
     @商店.error
-    async def 商店_error(self, interaction: discord.Interaction, error: Exception):
+    async def 商店_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
     
-    @discord.slash_command(guild_only=True, name="販售", description="賣東西給系統")
-    async def 販售(self, interaction: discord.Interaction,
-        name: Option(
-            str,
-            required=True,
-            name="物品名稱",
-            description="請輸入你要購買的物品名稱"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="販售數量",
-            description="輸入你要販售的數量,此欄不填默認為1"
-        ) = 1 # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="販售", description="賣東西給系統",
+        options=[
+            discord.Option(
+                str,
+                name="物品名稱",
+                description="請輸入你要購買的物品名稱",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="販售數量",
+                description="輸入你要販售的數量, 不填默認為1",
+                required=False
+            )
+        ]
+    )
+    async def 販售(self, interaction: discord.ApplicationContext, name: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
@@ -179,43 +184,47 @@ class Shop(discord.Cog, name="商店"):
         await function_in.give_money(self, user, "money", price, "販賣")
         await interaction.followup.send(f'你成功販售了 {num} 個 `{name}` 給系統, 你獲得了 {price}元!')
 
-    @discord.slash_command(guild_only=True, name="購買", description="買東西囉")
-    async def 購買(self, interaction: discord.Interaction,
-        type: Option(
-            int,
-            required=True,
-            name="商店名",
-            description="選擇你要購買的東西在哪間商店裡",
-            choices=[
-                OptionChoice(name="藥水商店", value=0),
-                OptionChoice(name="道具商店", value=1),
-                OptionChoice(name="技能書商店", value=2),
-                OptionChoice(name="裝備商店", value=3),
-                OptionChoice(name="武器商店", value=4),
-                OptionChoice(name="任務商店", value=5),
-                OptionChoice(name="世界商店", value=6),
-                OptionChoice(name="決鬥商店", value=7),
-                OptionChoice(name="質點商城", value=8)
-            ]
-        ), # type: ignore
-        name: Option(
-            str,
-            required=True,
-            name="物品名稱",
-            description="請輸入你要購買的物品名稱"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="購買數量",
-            description="輸入你要購買的數量,此欄不填默認為1"
-        ) = 1 # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="購買", description="買東西囉",
+        options=[
+            discord.Option(
+                int,
+                name="商店名",
+                description="選擇你要購買的東西在哪間商店裡",
+                required=True,
+                choices=[
+                    OptionChoice(name="藥水商店", value=0),
+                    OptionChoice(name="道具商店", value=1),
+                    OptionChoice(name="技能書商店", value=2),
+                    OptionChoice(name="裝備商店", value=3),
+                    OptionChoice(name="武器商店", value=4),
+                    OptionChoice(name="任務商店", value=5),
+                    OptionChoice(name="世界商店", value=6),
+                    OptionChoice(name="決鬥商店", value=7),
+                    OptionChoice(name="質點商城", value=8)
+                ],
+            ),
+            discord.Option(
+                str,
+                name="物品名稱",
+                description="請輸入你要購買的物品名稱",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="購買數量",
+                description="輸入你要購買的數量, 不填默認為1",
+                required=False
+            )
+        ]
+    )
+    async def 購買(self, interaction: discord.ApplicationContext, type: int, name: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')

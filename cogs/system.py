@@ -39,6 +39,8 @@ class System(discord.Cog, name="主系統"):
     
     @discord.Cog.listener()
     async def on_application_command(self, interaction: discord.Interaction):
+        if interaction.guild is None:
+            return
         search = await function_in.sql_search("rpg_system", "last_channel", ["guild_id"], [interaction.guild.id])
         if not search:
             await function_in.sql_insert("rpg_system", "last_channel", ["guild_id", "channel_id"], [interaction.guild.id, interaction.channel.id])
@@ -50,13 +52,13 @@ class System(discord.Cog, name="主系統"):
     
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.channel.id in {1135806185476460585, 1148794532142518283, 1198807348647579710, 1198810105261600879}:
+        if msg.channel.id in {1382636864602767460, 1382637390832730173, 1382638422971383861, 1382638616857022635}:
             await msg.publish()
             self.bot.log.info(f'已自動發布訊息\n連結: {msg.jump_url}')
 
-    @discord.slash_command(guild_only=True, name="註冊", description="註冊帳號")
-    async def 註冊(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="註冊", description="註冊帳號")
+    async def 註冊(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         player = interaction.user
         search = await function_in.sql_search("rpg_system", "banlist", ["user_id"], [player.id])
         if search:
@@ -71,9 +73,9 @@ class System(discord.Cog, name="主系統"):
         embed.add_field(name="請選擇你的職業", value="\u200b", inline=False)
         await interaction.followup.send(embed=embed, view=System.register(self.bot, interaction, player))
 
-    @discord.slash_command(guild_only=True, name="復活", description="復活自己")
-    async def 復活(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="復活", description="復活自己")
+    async def 復活(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -91,55 +93,58 @@ class System(discord.Cog, name="主系統"):
         embed.add_field(name=f"🌎 世界復活", value="復活後不會損失任何經驗(僅限被世界王殺死時使用)", inline=True)
         await interaction.followup.send(embed=embed, view=self.respawn_menu(interaction, players_level))
 
-    @discord.slash_command(guild_only=True, name="交易", description="與別人交易")
+    @commands.slash_command(name="交易", description="與別人交易",
+        options=[
+            discord.Option(
+                str,
+                name="交易選項",
+                description="請選擇要交易晶幣或是物品",
+                required=True,
+                choices=[
+                    OptionChoice(name="晶幣", value="晶幣"),
+                    OptionChoice(name="水晶", value="水晶"),
+                    OptionChoice(name="物品", value="物品")
+                ]
+            ),
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="請選擇一個要交易的玩家",
+                required=True
+            ),
+            discord.Option(
+                str,
+                name="物品",
+                description="當交易選項為物品時請於此輸入要交易的物品",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="金額或數量",
+                description="當交易選項為晶幣或水晶時請於此輸入要交易的金額; 若是物品則填入交易數量, 不填默認為1",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="手續費",
+                description="手續費是否由您支付? (物品交易一件10晶幣, 晶幣或水晶交易收取10%手續費) 未填時默認由您支付",
+                required=False,
+                choices=[
+                    OptionChoice(name="是", value=1),
+                    OptionChoice(name="否, 由對方支付", value=0)
+                ]
+            )
+        ]
+    )
     @commands.cooldown(1, 300, commands.BucketType.user)
-    async def 交易(self, interaction: discord.Interaction,
-        func: Option(
-            str,
-            required=True,
-            name="交易選項",
-            description="請選擇要交易晶幣或是物品",
-            choices=[
-                OptionChoice(name="晶幣", value="晶幣"),
-                OptionChoice(name="水晶", value="水晶"),
-                OptionChoice(name="物品", value="物品")
-            ]
-        ), # type: ignore
-        players: Option(
-            discord.Member,
-            required=True,
-            name="玩家",
-            description="請選擇一個要交易的玩家"
-        ), # type: ignore
-        item: Option(
-            str,
-            required=False,
-            name="物品",
-            description="當交易選項為物品時請於此輸入要交易的物品"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="金額或數量",
-            description="當交易選項為晶幣或水晶時請於此輸入要交易的金額; 若是物品則填入交易數量, 不填默認為1"
-        ), # type: ignore
-        fee: Option(
-            int,
-            required=False,
-            name="手續費",
-            description="手續費是否由您支付? (物品交易一件10晶幣, 晶幣或水晶交易收取10%手續費)",
-            choices=[
-                OptionChoice(name="是", value=1),
-                OptionChoice(name="否, 由對方支付", value=0)
-            ],
-            default=1
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    async def 交易(self, interaction: discord.ApplicationContext, func: str, players: discord.Member, item: str, num: int, fee: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not fee:
+            dee = 1
         checkreg = await function_in.checkreg(self, interaction, players.id)
         if not checkreg:
             return
@@ -244,30 +249,32 @@ class System(discord.Cog, name="主系統"):
             await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, fee, item, num))
             
     @交易.error
-    async def 交易_error(self, interaction: discord.Interaction, error: Exception):
+    async def 交易_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
 
-    @discord.slash_command(guild_only=True, name="傳送", description="切換至其他地圖")
-    async def 傳送(self, interaction: discord.Interaction,
-        map: Option(
-            str,
-            required=True,
-            name="地圖",
-            description="選擇一張地圖",
-            choices=[
-                OptionChoice(name="Lv1-10翠葉林地", value="翠葉林地"),
-                OptionChoice(name="Lv11-20無盡山脊", value="無盡山脊"),
-                OptionChoice(name="Lv21-30極寒之地", value="極寒之地"),
-                OptionChoice(name="Lv31-40熔岩深谷", value="熔岩深谷"),
-                OptionChoice(name="Lv41-50矮人礦山", value="矮人礦山"),
-                OptionChoice(name="Lv51-60幽暗迷宮", value="幽暗迷宮"),
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="傳送", description="切換至其他地圖",
+        options=[
+            discord.Option(
+                str,
+                name="地圖",
+                description="選擇一張地圖",
+                required=True,
+                choices=[
+                    OptionChoice(name="Lv1-10翠葉林地", value="翠葉林地"),
+                    OptionChoice(name="Lv11-20無盡山脊", value="無盡山脊"),
+                    OptionChoice(name="Lv21-30極寒之地", value="極寒之地"),
+                    OptionChoice(name="Lv31-40熔岩深谷", value="熔岩深谷"),
+                    OptionChoice(name="Lv41-50矮人礦山", value="矮人礦山"),
+                    OptionChoice(name="Lv51-60幽暗迷宮", value="幽暗迷宮")
+                ],
+            )
+        ]
+    )
+    async def 傳送(self, interaction: discord.ApplicationContext, map: str):
+        await interaction.defer()
         user = interaction.user
         checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_傳送)
         if not checkaction:
@@ -286,10 +293,10 @@ class System(discord.Cog, name="主系統"):
         await function_in.sql_update("rpg_players", "players", "map", map, "user_id", user.id)
         await interaction.followup.send(f'你成功傳送到 `{map}` !')
 
-    @discord.slash_command(guild_only=True, name="背包", description="查看你的背包")
+    @commands.slash_command(name="背包", description="查看你的背包")
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def 背包(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    async def 背包(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -553,32 +560,36 @@ class System(discord.Cog, name="主系統"):
 
 
     @背包.error
-    async def 背包_error(self, interaction: discord.Interaction, error: Exception):
+    async def 背包_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
 
-    @discord.slash_command(guild_only=True, name="使用", description="使用道具")
-    async def 使用(self, interaction: discord.Interaction,
-        name: Option(
-            str,
-            required=True,
-            name="道具名稱",
-            description="輸入你想使用的道具名稱"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="使用數量",
-            description="輸入你想使用的道具數量, 不填則默認為1, 最多一次可使用10個"
-        ) = 1 # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="使用", description="使用道具",
+        options=[
+            discord.Option(
+                str,
+                name="道具名稱",
+                description="輸入你想使用的道具名稱",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="使用數量",
+                description="輸入你想使用的道具數量, 不填則默認為1, 最多一次可使用10個",
+                required=False
+            )
+        ]
+    )
+    async def 使用(self, interaction: discord.ApplicationContext, name: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
@@ -611,6 +622,9 @@ class System(discord.Cog, name="主系統"):
             checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_使用)
             if not checkaction:
                 return
+        if not data:
+            await interaction.followup.send('系統發生錯誤! 若使用該物品持續發生錯誤, 請嘗試一次僅使用1個!')
+            return
         await function_in.remove_item(self, user.id, name, num)
         quest=False
         embed = discord.Embed(title=f'你成功使用了 {num} 個 `{name}`', color=0x0000c6)
@@ -718,7 +732,7 @@ class System(discord.Cog, name="主系統"):
                     if expc:
                         embed.add_field(name=expc, value=f"\u200b", inline=False)
                 if "屬性重置" in attname:
-                    await function_in.sql_update("rpg_players", "players", "attr_point", players_level*3, "user_id", user.id)
+                    await function_in.sql_update("rpg_players", "players", "attr_point", players_level, "user_id", user.id)
                     await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
                     await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
                     await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
@@ -894,7 +908,7 @@ class System(discord.Cog, name="主系統"):
                     else:
                         await function_in.sql_update("rpg_food", f"{user.id}", "time_stamp", time_stamp, "food", food)
                     embed.add_field(name=f"你成功食用了 {food} !", value=f"\u200b", inline=False)
-                if "飢餓度回復" in attname:
+                if "飽食度回復" in attname:
                     players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
                     players_hunger += value
                     if players_hunger > 100:
@@ -968,9 +982,10 @@ class System(discord.Cog, name="主系統"):
         msg = await interaction.followup.send(embed=embed)
         if quest:
             await Quest_system.add_quest(self, user, "賺錢", "道具", value, msg)
-    @discord.slash_command(guild_only=True, name="休息", description="休息一下, 回個血~")
-    async def 休息(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+
+    @commands.slash_command(name="休息", description="休息一下, 回個血~")
+    async def 休息(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_休息)
         if not checkaction:
@@ -987,16 +1002,16 @@ class System(discord.Cog, name="主系統"):
         if reg < 30:
             reg = 30
         a, b = await function_in.heal(self, user.id, "hp", reg)
+        await function_in.remove_hunger(self, user.id)
+        players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if a == "Full":
-            await interaction.followup.send(f'你休息了一下後發現, 身體本來就很好, 💖不需要休息💖')
-            await function_in.remove_hunger(self, user.id)
+            await interaction.followup.send(f'你休息了一下後發現, 身體本來就很好, 💖不需要休息💖!\n目前飽食度剩餘 {players_hunger}')
         else:
-            await interaction.followup.send(f'你休息了一下, 感覺身體好了一些! 💗你回復了 {a} 點血量💗!')
-            await function_in.remove_hunger(self, user.id)
+            await interaction.followup.send(f'你休息了一下, 感覺身體好了一些! 💗你回復了 {a} 點血量💗!\n目前飽食度剩餘 {players_hunger}')
 
-    @discord.slash_command(guild_only=True, name="冥想", description="冥想一下, 回個魔~")
-    async def 冥想(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="冥想", description="冥想一下, 回個魔~")
+    async def 冥想(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_冥想)
         if not checkaction:
@@ -1013,24 +1028,26 @@ class System(discord.Cog, name="主系統"):
         if reg < 30:
             reg = 30
         a, b = await function_in.heal(self, user.id, "mana", reg)
+        await function_in.remove_hunger(self, user.id)
+        players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if a == "Full":
-            await interaction.followup.send(f'你冥想了一下後發現, 精神本來就很好, ✨不需要冥想✨')
-            await function_in.remove_hunger(self, user.id)
+            await interaction.followup.send(f'你冥想了一下後發現, 精神本來就很好, ✨不需要冥想✨!\n目前飽食度剩餘 {players_hunger}')
         else:
-            await interaction.followup.send(f'你冥想了一下, 感覺精神好了一些! 💦你回復了 {a} 點魔力💦!')
-            await function_in.remove_hunger(self, user.id)
+            await interaction.followup.send(f'你冥想了一下, 感覺精神好了一些! 💦你回復了 {a} 點魔力💦!\n目前飽食度剩餘 {players_hunger}')
 
-    @discord.slash_command(guild_only=True, name="wiki", description="查看裝備、材料、道具")
+    @commands.slash_command(name="wiki", description="查看裝備、材料、道具",
+        options=[
+            discord.Option(
+                str,
+                name="名稱",
+                description="輸入要查詢的名稱",
+                required=True
+            )
+        ]
+    )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def wiki(self, interaction: discord.Interaction,
-        name: Option(
-            str,
-            required=True,
-            name="名稱",
-            description="輸入要查詢的名稱"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    async def wiki(self, interaction: discord.ApplicationContext, name: str):
+        await interaction.defer()
         checkreg = await function_in.checkreg(self, interaction, interaction.user.id)
         if not checkreg:
             return
@@ -1148,15 +1165,15 @@ class System(discord.Cog, name="主系統"):
         await interaction.followup.send(embed=embed)
 
     @wiki.error
-    async def wiki_error(self, interaction: discord.Interaction, error: Exception):
+    async def wiki_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
     
-    @discord.slash_command(guild_only=True, name="任務", description="任務")
-    async def 任務(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="任務", description="任務")
+    async def 任務(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -1239,39 +1256,41 @@ class System(discord.Cog, name="主系統"):
             await function_in.sql_insert("rpg_players", "quest", ["user_id", "qtype", "qname", "qnum", "qnum_1", "qdaily_money", "qdaily_exp", "qdaily_qp"], [user.id, quest_type, quest_name, quest_num, 0, quest_daily["money"], quest_daily["exp"], quest_daily["qp"]])
         await interaction.followup.send(embed=embed)
     
-    @discord.slash_command(guild_only=True, name="工作", description="查看或使用工作相關")
-    async def 工作(self, interaction: discord.Interaction,
-        ltype: Option(
-            str,
-            required=True,
-            name="類別",
-            description="選擇你想做的事",
-            choices=[
-                OptionChoice(name="伐木",value="伐木"),
-                OptionChoice(name="挖礦",value="挖礦"),
-                OptionChoice(name="釣魚",value="釣魚"),
-                OptionChoice(name="種田",value="種田"),
-                OptionChoice(name="狩獵",value="狩獵"),
-                OptionChoice(name="普通採藥",value="普通採藥"),
-                OptionChoice(name="特殊採藥",value="特殊採藥"),
-            ]
-        ), # type: ignore
-        func: Option(
-            int,
-            required=True,
-            name="次數",
-            description="請選擇要進行的次數",
-            choices=[
-                OptionChoice(name="一次", value=1),
-                OptionChoice(name="五次", value=5),
-                OptionChoice(name="十次", value=10),
-                OptionChoice(name="三十次", value=30),
-                OptionChoice(name="五十次", value=50),
-                OptionChoice(name="一百次", value=100),
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="工作", description="查看或使用工作相關",
+        options=[
+            discord.Option(
+                str,
+                name="類別",
+                description="選擇你想做的事",
+                required=True,
+                choices=[
+                    OptionChoice(name="伐木",value="伐木"),
+                    OptionChoice(name="挖礦",value="挖礦"),
+                    OptionChoice(name="釣魚",value="釣魚"),
+                    OptionChoice(name="種田",value="種田"),
+                    OptionChoice(name="狩獵",value="狩獵"),
+                    OptionChoice(name="普通採藥",value="普通採藥"),
+                    OptionChoice(name="特殊採藥",value="特殊採藥")
+                ]
+            ),
+            discord.Option(
+                int,
+                name="次數",
+                description="請選擇要進行的次數",
+                required=True,
+                choices=[
+                    OptionChoice(name="一次", value=1),
+                    OptionChoice(name="五次", value=5),
+                    OptionChoice(name="十次", value=10),
+                    OptionChoice(name="三十次", value=30),
+                    OptionChoice(name="五十次", value=50),
+                    OptionChoice(name="一百次", value=100)
+                ]
+            )
+        ]
+    )
+    async def 工作(self, interaction: discord.ApplicationContext, ltype: str, func: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -1303,9 +1322,10 @@ class System(discord.Cog, name="主系統"):
                 await interaction.followup.send(f"{item} 不存在於資料庫! 請聯繫GM處理!")
                 return
             await function_in.give_item(self, user.id, item)
-            msg = await interaction.followup.send(f"你辛苦的{lifemsg}後, 得到了1個{item}")
             await Quest_system.add_quest(self, user, "工作", lifemsg1, func, msg)
             await function_in.remove_hunger(self, user.id)
+            players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            msg = await interaction.followup.send(f"你辛苦的{lifemsg}後, 得到了1個{item}\n目前飽食度剩餘 {players_hunger}")
             return
         msg1 = await interaction.followup.send(f'正在進行大量{ltype}中, 請稍後')
         msg = f"你辛苦的{lifemsg}後, 得到了下列物品:\n"
@@ -1325,20 +1345,21 @@ class System(discord.Cog, name="主系統"):
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp1 = int(time.mktime(struct_time))
+        if func == 5:
+            await function_in.remove_hunger(self, user.id, 3)
+        elif func == 10:
+            await function_in.remove_hunger(self, user.id, 6)
+        elif func == 30:
+            await function_in.remove_hunger(self, user.id, 15)
+        elif func == 50:
+            await function_in.remove_hunger(self, user.id, 20)
+        elif func == 100:
+            await function_in.remove_hunger(self, user.id, 40)
         use_time = await function_in_in.time_calculate(time_stamp1-time_stamp)
-        msg+=f"\n總共花費了 {use_time}"
+        players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+        msg+=f"\n總共花費了 {use_time}\n目前飽食度剩餘 {players_hunger}"
         await Quest_system.add_quest(self, user, "工作", lifemsg1, func, msg1)
         await msg1.edit(msg)
-        if func == 5:
-            await function_in.remove_hunger(self, user.id, 2)
-        elif func == 10:
-            await function_in.remove_hunger(self, user.id, 4)
-        elif func == 30:
-            await function_in.remove_hunger(self, user.id, 6)
-        elif func == 50:
-            await function_in.remove_hunger(self, user.id, 9)
-        elif func == 100:
-            await function_in.remove_hunger(self, user.id, 15)
         chance = {
             "成功": int(func),
             "失敗": int(1000-func)
@@ -1428,16 +1449,18 @@ class System(discord.Cog, name="主系統"):
         item = await function_in.lot(self, lot_list)
         return item, lmsg, lmsg1
     
-    @discord.slash_command(guild_only=True, name="升級", description="升級技能")
-    async def 升級(self, interaction: discord.Interaction,
-        skill_name: Option(
-            str,
-            required=True,
-            name="技能名稱",
-            description="輸入要升級的技能名稱"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="升級", description="升級技能",
+        options=[
+            discord.Option(
+                str,
+                name="技能名稱",
+                description="輸入要升級的技能名稱",
+                required=True
+            )
+        ]
+    )
+    async def 升級(self, interaction: discord.ApplicationContext, skill_name: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -1478,9 +1501,9 @@ class System(discord.Cog, name="主系統"):
         await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point-search[1], "user_id", user.id)
         await interaction.followup.send(f"你成功消耗了 {search[1]} 點天賦點升級了 {skill_name} 技能! 技能等級 {search[1]+1}!")
 
-    @discord.slash_command(guild_only=True, name="屬性點", description="屬性加點")
-    async def 屬性點(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="屬性點", description="屬性加點")
+    async def 屬性點(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -1503,9 +1526,9 @@ class System(discord.Cog, name="主系統"):
         embed.add_field(name=f"你當前還有 {players_attr_point+players_add_attr_point} 點屬性點", value="\u200b", inline=False)
         await interaction.followup.send(embed=embed, view=System.attr_up(interaction))
     
-    @discord.slash_command(guild_only=True, name="經驗加倍", description="查看當前經驗加倍")
-    async def 經驗加倍(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="經驗加倍", description="查看當前經驗加倍")
+    async def 經驗加倍(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -1544,34 +1567,40 @@ class System(discord.Cog, name="主系統"):
             embed.add_field(name="當前個人經驗加倍剩餘時間:", value=f"{exp_time}", inline=False)
         await interaction.followup.send(embed=embed)
     
-    @discord.slash_command(guild_only=True, name="fix", description="修復資料")
-    async def fix(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="fix", description="修復資料")
+    async def fix(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         await function_in.fixplayer(self, user.id)
         await interaction.followup.send('已修復完您的資料!')
     
-    @discord.slash_command(guild_only=True, name="垃圾桶", description="丟棄物品")
-    async def 垃圾桶(self, interaction: discord.Interaction,
-        item: Option(
-            str,
-            required=True,
-            name="物品",
-            description="選擇你要丟棄的物品"
-        ), # type: ignore
-        num: Option(
-            int,
-            required=False,
-            name="數量",
-            description="選擇你要丟棄的數量",
-            default=1
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="垃圾桶", description="丟棄物品",
+        options=[
+            discord.Option(
+                str,
+                name="物品",
+                description="選擇你要丟棄的物品",
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="數量",
+                description="選擇你要丟棄的數量, 不填默認為1",
+                required=False,
+                choices=[
+                    OptionChoice(name="查看好感度", value=0)
+                ]
+            )
+        ]
+    )
+    async def 垃圾桶(self, interaction: discord.ApplicationContext, item: str, num: int):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        if not num:
+            num = 1
         data = await function_in.search_for_file(self, item)
         if not data:
             await interaction.followup.send(f"`{item}` 不存在於資料庫! 請聯繫GM處理!")
@@ -1607,7 +1636,7 @@ class System(discord.Cog, name="主系統"):
             return expa
     
     class register(discord.ui.View):
-        def __init__(self, bot: discord.Bot, interaction: discord.Interaction, player: discord.Member):
+        def __init__(self, bot: discord.Bot, interaction: discord.ApplicationContext, player: discord.Member):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.bot = bot
@@ -1630,31 +1659,31 @@ class System(discord.Cog, name="主系統"):
             self.disable_all_items()
             await self.interaction.followup.send('選擇職業超時! 請重新選擇!', view=None)
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             await self.class_select(interaction, "戰士")
             self.stop()
         
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             await self.class_select(interaction, "弓箭手")
             self.stop()
         
-        async def button3_callback(self, button, interaction: discord.Interaction):
+        async def button3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             await self.class_select(interaction, "法師")
             self.stop()
 
-        async def button4_callback(self, button, interaction: discord.Interaction):
+        async def button4_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             await self.class_select(interaction, "刺客")
             self.stop()
         
-        async def class_select(self, interaction: discord.Interaction, players_class):
+        async def class_select(self, interaction: discord.ApplicationContext, players_class):
             user = self.player
             await function_in.register_player(self, user.id, players_class)
             embed = discord.Embed(title=f'{user.name} 註冊成功!', color=0x28FF28)
@@ -1677,7 +1706,7 @@ class System(discord.Cog, name="主系統"):
                 await user.add_roles(role)
             self.stop()
         
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你無法替他人選擇職業!', ephemeral=True)
                 return False
@@ -1685,7 +1714,7 @@ class System(discord.Cog, name="主系統"):
                 return True
 
     class trade(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, player: discord.Member, func: str, fee: int, num, numa=None):
+        def __init__(self, interaction: discord.ApplicationContext, player: discord.Member, func: str, fee: int, num, numa=None):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.player = player
@@ -1721,7 +1750,7 @@ class System(discord.Cog, name="主系統"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -1765,16 +1794,16 @@ class System(discord.Cog, name="主系統"):
             await function_in.checkactioning(self, interaction.user, "return")
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
-            await interaction.response.defer()
+            await interaction.defer()
             embed = discord.Embed(title=f'{interaction.user.name} 交易失敗', color=0xFF2D2D)
             embed.add_field(name=f"{interaction.user} 已取消交易!", value=f"\u200b", inline=False)
             await interaction.followup.edit_message(interaction.message.id, embed=embed, view=None)
             await function_in.checkactioning(self, interaction.user, "return")
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能干涉交易!', ephemeral=True)
                 return False
@@ -1782,7 +1811,7 @@ class System(discord.Cog, name="主系統"):
                 return True
 
     class respawn_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, players_level):
+        def __init__(self, interaction: discord.ApplicationContext, players_level):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.players_level = players_level
@@ -1919,7 +1948,7 @@ class System(discord.Cog, name="主系統"):
                 return True
 
     class attr_up(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction):
+        def __init__(self, interaction: discord.ApplicationContext):
             super().__init__(timeout=20)
             self.interaction = interaction
             self.button1 = discord.ui.Button(emoji="<:str:1087788396447010956>", label="力量+1", style=discord.ButtonStyle.blurple, custom_id="button1")
@@ -1984,7 +2013,7 @@ class System(discord.Cog, name="主系統"):
                 await function_in.checkactioning(self, self.interaction.user, "return")
                 self.stop()
 
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2000,7 +2029,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2016,7 +2045,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button3_callback(self, button, interaction: discord.Interaction):
+        async def button3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2032,7 +2061,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button4_callback(self, button, interaction: discord.Interaction):
+        async def button4_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2048,7 +2077,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button5_callback(self, button, interaction: discord.Interaction):
+        async def button5_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2064,7 +2093,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button6_callback(self, button, interaction: discord.Interaction):
+        async def button6_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2080,7 +2109,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button7_callback(self, button, interaction: discord.Interaction):
+        async def button7_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2096,7 +2125,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button8_callback(self, button, interaction: discord.Interaction):
+        async def button8_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2112,7 +2141,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button9_callback(self, button, interaction: discord.Interaction):
+        async def button9_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2128,7 +2157,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button10_callback(self, button, interaction: discord.Interaction):
+        async def button10_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2144,7 +2173,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button11_callback(self, button, interaction: discord.Interaction):
+        async def button11_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2160,7 +2189,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button12_callback(self, button, interaction: discord.Interaction):
+        async def button12_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2176,7 +2205,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button13_callback(self, button, interaction: discord.Interaction):
+        async def button13_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2192,7 +2221,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button14_callback(self, button, interaction: discord.Interaction):
+        async def button14_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2208,7 +2237,7 @@ class System(discord.Cog, name="主系統"):
                 self.stop()
                 pass
 
-        async def button15_callback(self, button, interaction: discord.Interaction):
+        async def button15_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             try:
                 await interaction.response.edit_message(view=self)
@@ -2251,7 +2280,7 @@ class System(discord.Cog, name="主系統"):
             embed.add_field(name=f"你當前還有 {players_attr_point+players_add_attr_point} 點屬性點", value="\u200b", inline=False)
             return embed
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能加點別人的屬性!', ephemeral=True)
                 return False

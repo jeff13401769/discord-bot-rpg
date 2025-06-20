@@ -16,31 +16,33 @@ class Lottery(discord.Cog, name="轉蛋"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
         
-    @discord.slash_command(guild_only=True, name="轉蛋", description="查看裝備、材料、道具")
+    @commands.slash_command(name="轉蛋", description="查看裝備、材料、道具",
+        options=[
+            discord.Option(
+                str,
+                name="轉蛋機",
+                description="選一台要抽的轉蛋機",
+                required=True,
+                choices=[
+                    OptionChoice(name="新的開始!", value="新的開始!"),
+                    OptionChoice(name="常駐轉蛋", value="常駐轉蛋")
+                ],
+            ),
+            discord.Option(
+                int,
+                name="抽數",
+                required=True,
+                choices=[
+                    OptionChoice(name="查看抽獎機介紹", value=-1),
+                    OptionChoice(name="單抽", value=1),
+                    OptionChoice(name="十抽", value=10)
+                ],
+            )
+        ]
+    )
     @commands.cooldown(1, 20, commands.BucketType.user)
-    async def 轉蛋(self, interaction: discord.Interaction,
-        func: Option(
-            str,
-            required=True,
-            name="轉蛋機",
-            description="選一台要抽的轉蛋機",
-            choices=[
-                OptionChoice(name="新的開始!", value="新的開始!"),
-                OptionChoice(name="常駐轉蛋", value="常駐轉蛋")
-            ]
-        ), # type: ignore
-        num: Option(
-            int,
-            required=True,
-            name="抽數",
-            choices=[
-                OptionChoice(name="查看抽獎機介紹", value=-1),
-                OptionChoice(name="單抽", value=1),
-                OptionChoice(name="十抽", value=10)
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    async def 轉蛋(self, interaction: discord.ApplicationContext, func: str, num: int):
+        await interaction.defer()
         if num == -1:
             embed = discord.Embed(title=f'抽獎機 {func}', color=0x6A6AFF)
             checkreg = await function_in.checkreg(self, interaction, interaction.user.id)
@@ -106,13 +108,13 @@ class Lottery(discord.Cog, name="轉蛋"):
         await Lottery.lottery(self, interaction, interaction.user, func, num, msg)
 
     @轉蛋.error
-    async def 轉蛋_error(self, interaction: discord.Interaction, error: Exception):
+    async def 轉蛋_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
 
-    async def lottery(self, interaction: discord.Interaction, user: discord.Member, func, num, msg: discord.Message):
+    async def lottery(self, interaction: discord.ApplicationContext, user: discord.Member, func, num, msg: discord.Message):
         prizes = {}
         if func == "新的開始!":
             prizes = {

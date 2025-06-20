@@ -21,15 +21,15 @@ class Help(discord.Cog, name="幫助"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="幫助", description="遊戲幫助及指南")
-    async def 幫助(self, interaction: discord.Interaction):
+    @commands.slash_command(name="幫助", description="遊戲幫助及指南")
+    async def 幫助(self, interaction: discord.ApplicationContext):
         embed = discord.Embed(title=':book: 遊戲幫助', description="不知道怎麼玩嗎? 來看看幫助吧", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
         embed.set_thumbnail(url=self.bot.user.avatar.url)
         embed.add_field(name="歡迎來到《幻境之旅 RPG》的世界!", value="\u200b", inline=False)
         embed.add_field(name="剛開始是不是不知道該怎麼開始遊玩呢!", value="\u200b", inline=False)
         embed.add_field(name="就由我來教你吧!", value="\u200b", inline=False)
         embed.add_field(name="首先, 需要先輸入指令 `/註冊` 指令來註冊一個身分!", value="\u200b", inline=False)
-        embed.add_field(name="接著, 先輸入 `/禮包碼 禮包碼:new_player_gogo` 來取得新手禮包!", value="\u200b", inline=False)
+        embed.add_field(name="接著, 先輸入 `/禮包碼 禮包碼:vip666` 來取得新手禮包!", value="\u200b", inline=False)
         embed.add_field(name="然後拿著禮包給予的晶幣, 輸入 `/商店` 來查看要購買的東西, 並輸入 `/購買` 來購買物品", value="\u200b", inline=False)
         embed.add_field(name="最後買好後, 再到 `/裝備` 並根據要裝備的類型, 選擇並於送出後跳出的表單填入要裝備的裝備名稱就好啦!", value="\u200b", inline=False)
         embed.add_field(name="接著, 就可以到野外使用指令 `/攻擊` 來打怪啦!", value="\u200b", inline=False)
@@ -39,7 +39,7 @@ class Help(discord.Cog, name="幫助"):
         await interaction.response.send_message(embed=embed, view=self.help_menu(interaction, guild, self.bot.user.avatar.url),ephemeral=True)
 
     class help_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, guild: discord.Guild, url):
+        def __init__(self, interaction: discord.ApplicationContext, guild: discord.Guild, url):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.guild = guild
@@ -77,15 +77,15 @@ class Help(discord.Cog, name="幫助"):
             self.button11 = discord.ui.Button(emoji="🚪", label="副本", style=discord.ButtonStyle.blurple, custom_id="button11")
             self.button11.callback = functools.partial(self.button11_callback, interaction)
             self.add_item(self.button11)
-            self.button12 = discord.ui.Button(emoji="🍗", label="飢餓度", style=discord.ButtonStyle.blurple, custom_id="button12")
+            self.button12 = discord.ui.Button(emoji="🍗", label="飽食度", style=discord.ButtonStyle.blurple, custom_id="button12")
             self.button12.callback = functools.partial(self.button12_callback, interaction)
             self.add_item(self.button12)
             self.web_link_button = discord.ui.Button(label="官方網站", style=discord.ButtonStyle.link, url="https://www.rbctw.net")
             self.add_item(self.web_link_button)
             self.discord_link_button = discord.ui.Button(label="官方Discord群", style=discord.ButtonStyle.link, url="https://www.rbctw.net/discord")
             self.add_item(self.discord_link_button)
-            self.discord_craft_list_button = discord.ui.Button(label="合成配方", style=discord.ButtonStyle.link, url="https://www.rbctw.net/rpg_craft_list")
-            self.add_item(self.discord_craft_list_button)
+            self.discord_wiki_button = discord.ui.Button(label="線上Wiki", style=discord.ButtonStyle.link, url="https://www.rbctw.net/wiki")
+            self.add_item(self.discord_wiki_button)
 
         async def on_timeout(self):
             await super().on_timeout()
@@ -99,7 +99,7 @@ class Help(discord.Cog, name="幫助"):
             else:
                 self.stop()
         
-        async def button1_callback(self, button, interaction: discord.Interaction):
+        async def button1_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="指令表(一)", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -125,11 +125,11 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button2_callback(self, button, interaction: discord.Interaction):
+        async def button2_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="指令表(二)", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
-            embed.add_field(name="/禮包碼", value="有禮包? 太香啦! 只是沒有VIP666喔!", inline=False)
+            embed.add_field(name="/禮包碼", value="有禮包? 太香啦!", inline=False)
             embed.add_field(name="/轉蛋", value="阿..... 萬惡的轉蛋....", inline=False)
             embed.add_field(name="/簽到", value="每天簽到都會有獎勵喔!", inline=False)
             embed.add_field(name="/寵物", value="看看自己或別人出陣的寵物, 也可以決定派出甚麼寵物!", inline=False)
@@ -143,7 +143,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         
-        async def button3_callback(self, button, interaction: discord.Interaction):
+        async def button3_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="戰鬥介紹", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -163,7 +163,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button4_callback(self, button, interaction: discord.Interaction):
+        async def button4_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="野外設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -176,14 +176,14 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="更改地圖的方式為使用指令 `/傳送` 並於後面的選項選擇欲前往的地圖名稱即可!", value="\u200b", inline=False)
             embed.add_field(name="請特別注意, 本遊戲設有冷卻條, 傳送的冷卻為60秒", value="\u200b", inline=False)
             embed.add_field(name="於官方伺服器內時, 將不需要使用指令, 直接前往欲前往的地圖名稱之頻道即可, 不須等待冷卻, 同時, 若原本已使用指令前往某地區, 於該特定頻道內也會強制設定為該地圖", value="\u200b", inline=False)
-            channel = self.guild.get_channel(1198808217396990062)
+            channel = self.guild.get_channel(1382640133487984691) #翠業林地
             embed.add_field(name=f"例如: 原本在翠葉林地, 於 {channel.mention} 使用 `/攻擊` 時, 將會屏蔽原本的設定, 自動召喚出 {channel.name} 的怪物, 且不會因為地圖轉換而進入冷卻, 但當不在官方伺服器內遊玩時, 將會自動回到翠葉林地, 不會受到影響", value="\u200b", inline=False)
             embed.add_field(name=f"找不到怪物怎麼辦? 可以到官方Discord群, 於右上角搜尋框像下面圖片一樣, 並把怪物名稱改成你想要找的怪物, 這樣就可以找到了喔!", value="\u200b", inline=False)            
             embed.set_image(url="https://cdn.discordapp.com/attachments/983627773736271902/1154463603299201137/image.png")
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button5_callback(self, button, interaction: discord.Interaction):
+        async def button5_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="冷卻設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -201,7 +201,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button6_callback(self, button, interaction: discord.Interaction):
+        async def button6_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="強化系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -222,7 +222,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button7_callback(self, button, interaction: discord.Interaction):
+        async def button7_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="附魔系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -243,7 +243,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button8_callback(self, button, interaction: discord.Interaction):
+        async def button8_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="裝備系統設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -260,7 +260,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button9_callback(self, button, interaction: discord.Interaction):
+        async def button9_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="世界BOSS設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -275,7 +275,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 
-        async def button10_callback(self, button, interaction: discord.Interaction):
+        async def button10_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="拍賣行設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -289,7 +289,7 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         
-        async def button11_callback(self, button, interaction: discord.Interaction):
+        async def button11_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             embed = discord.Embed(title=':book: 遊戲幫助', description="副本設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
@@ -306,26 +306,26 @@ class Help(discord.Cog, name="幫助"):
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         
-        async def button12_callback(self, button, interaction: discord.Interaction):
+        async def button12_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
-            embed = discord.Embed(title=':book: 遊戲幫助', description="飢餓度設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
+            embed = discord.Embed(title=':book: 遊戲幫助', description="飽食度設定", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
             embed.set_thumbnail(url=self.url)
-            embed.add_field(name="每個人初始飢餓度為100", value="\u200b", inline=False)
+            embed.add_field(name="每個人初始飽食度為100", value="\u200b", inline=False)
             embed.add_field(name="不會低於0, 也不會高於100", value="\u200b", inline=False)
             embed.add_field(name="每10分鐘會自行恢復3點", value="\u200b", inline=False)
-            embed.add_field(name="飢餓度可透過使用料理來回復", value="\u200b", inline=False)
-            embed.add_field(name="飢餓度高於80時, 物理/魔法攻擊力提升20%, 閃避/爆擊率提升10%", value="\u200b", inline=False)
-            embed.add_field(name="飢餓度低於50時, 物理/魔法攻擊力降低20%, 閃避/爆擊率降低10%", value="\u200b", inline=False)
-            embed.add_field(name="飢餓度低於30時, 物理/魔法攻擊力降低40%, 閃避/爆擊率降低25%", value="\u200b", inline=False)
-            embed.add_field(name="飢餓度低於10時, 物理/魔法攻擊力降低65%, 閃避/爆擊率降低50%, 最大血量降低30%", value="\u200b", inline=False)
-            embed.add_field(name="進行以下行為時, 會降低飢餓度:", value="\u200b", inline=False)
+            embed.add_field(name="飽食度可透過使用料理來回復", value="\u200b", inline=False)
+            embed.add_field(name="飽食度高於80時, 物理/魔法攻擊力提升20%, 閃避/爆擊率提升10%", value="\u200b", inline=False)
+            embed.add_field(name="飽食度低於50時, 物理/魔法攻擊力降低20%, 閃避/爆擊率降低10%", value="\u200b", inline=False)
+            embed.add_field(name="飽食度低於30時, 物理/魔法攻擊力降低40%, 閃避/爆擊率降低25%", value="\u200b", inline=False)
+            embed.add_field(name="飽食度低於10時, 物理/魔法攻擊力降低65%, 閃避/爆擊率降低50%, 最大血量降低30%", value="\u200b", inline=False)
+            embed.add_field(name="進行以下行為時, 會降低飽食度:", value="\u200b", inline=False)
             embed.add_field(name="攻擊(使用指令`/攻擊`時扣除)", value="-1", inline=False)
             embed.add_field(name="副本(使用指令`/副本`並且確認進入時扣除)", value="-5", inline=False)
-            embed.add_field(name="工作", value="次數為1/5/10/30/50/100, 消耗1/2/4/6/9/15", inline=False)
+            embed.add_field(name="工作", value="次數為1/5/10/30/50/100, 消耗1/3/6/15/20/40", inline=False)
             embed.add_field(name="烹飪", value="-1", inline=False)
             embed.add_field(name="休息", value="-1", inline=False)
             embed.add_field(name="冥想", value="-1", inline=False)
-            embed.add_field(name="當前飢餓度可於 `/資訊` 查看", value="\u200b", inline=False)
+            embed.add_field(name="當前飽食度可於 `/資訊` 查看", value="\u200b", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 

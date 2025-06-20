@@ -19,17 +19,18 @@ class Kits(discord.Cog, name="禮包碼"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="禮包碼", description="使用禮包碼")
+    @commands.slash_command(name="禮包碼", description="使用禮包碼",
+        options=[
+            discord.Option(
+                str,
+                name="禮包碼",
+                description="輸入欲兌換的禮包碼",
+                required=True
+            )
+        ])
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def 禮包碼(self, interaction: discord.Interaction,
-        code: Option(
-            str,
-            required=True,
-            name="禮包碼",
-            description="輸入欲兌換的禮包碼"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    async def 禮包碼(self, interaction: discord.ApplicationContext, code: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -48,13 +49,13 @@ class Kits(discord.Cog, name="禮包碼"):
             return
 
     @禮包碼.error
-    async def 禮包碼_error(self, interaction: discord.Interaction, error: Exception):
+    async def 禮包碼_error(self, interaction: discord.ApplicationContext, error: Exception):
         if error.retry_after is not None:
             time = await function_in_in.time_calculate(int(error.retry_after))
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
         
-    async def open_kits(self, interaction: discord.Interaction, user: discord.Member, code):
+    async def open_kits(self, interaction: discord.ApplicationContext, user: discord.Member, code):
         if code == "vip666":
             await function_in.give_item(self, user.id, "一小瓶紅藥水", 10)
             await function_in.give_item(self, user.id, "一瓶紅藥水", 5)

@@ -18,57 +18,59 @@ class Guild(discord.Cog, name="公會"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="公會", description="查看公會資訊")
-    async def 公會(self, interaction: discord.Interaction,
-        func: Option(
-            str,
-            required=True,
-            name="功能",
-            description="選擇功能",
-            choices=[
-                OptionChoice(name="查看公會資訊", value="查看公會資訊"),
-                OptionChoice(name="申請加入公會", value="申請加入公會"),
-                OptionChoice(name="創建公會", value="創建公會"),
-                OptionChoice(name="學習公會技能", value="學習公會技能"),
-                OptionChoice(name="任務", value="任務"),
-                OptionChoice(name="管理", value="管理"),
-            ]
-        ), # type: ignore
-        name: Option(
-            str,
-            required=False,
-            name="名稱",
-            description="本欄位請按照提示輸入"
-        ), # type: ignore
-        member: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇玩家, 只有功能選擇管理時才需要"
-        ), # type: ignore
-        accept: Option(
-            str,
-            required=False,
-            name="是否同意",
-            description="僅回復公會申請時需要",
-            choices=[
-                OptionChoice(name="同意", value="同意"),
-                OptionChoice(name="拒絕", value="拒絕")
-            ]
-        ), # type: ignore
-        promote: Option(
-            str,
-            required=False,
-            name="玩家權限管理",
-            description="選擇玩家權限, 只有功能選擇管理並且需要更改玩家權限時才需要",
-            choices=[
-                OptionChoice(name="副會長", value="副會長"),
-                OptionChoice(name="普通成員", value="普通成員"),
-                OptionChoice(name="踢出公會", value="踢出公會")
-            ]
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="公會", description="查看公會資訊",
+        options=[
+            discord.Option(
+                str,
+                name="功能",
+                description="選擇一個功能",
+                required=True,
+                choices=[
+                    OptionChoice(name="查看公會資訊", value="查看公會資訊"),
+                    OptionChoice(name="申請加入公會", value="申請加入公會"),
+                    OptionChoice(name="創建公會", value="創建公會"),
+                    OptionChoice(name="學習公會技能", value="學習公會技能"),
+                    OptionChoice(name="任務", value="任務"),
+                    OptionChoice(name="管理", value="管理")
+                ],
+            ),
+            discord.Option(
+                str,
+                name="名稱",
+                description="本欄位請按照提示輸入",
+                required=False
+            ),
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇玩家, 只有功能選擇管理時才需要",
+                required=False
+            ),
+            discord.Option(
+                str,
+                name="是否同意",
+                description="僅回復公會申請時需要",
+                required=False,
+                choices=[
+                    OptionChoice(name="同意", value="同意"),
+                    OptionChoice(name="拒絕", value="拒絕")
+                ],
+            ),
+            discord.Option(
+                str,
+                name="玩家權限管理",
+                description="選擇玩家權限, 只有功能選擇管理並且需要更改玩家權限時才需要",
+                required=False,
+                choices=[
+                    OptionChoice(name="副會長", value="副會長"),
+                    OptionChoice(name="普通成員", value="普通成員"),
+                    OptionChoice(name="踢出公會", value="踢出公會")
+                ],
+            )
+        ]
+    )
+    async def 公會(self, interaction: discord.ApplicationContext, func: str, name: str, member: discord.Member, accept: str, promote: str):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -118,15 +120,19 @@ class Guild(discord.Cog, name="公會"):
         elif func == "創建公會":
             if not guild_info:
                 check_money = await function_in.check_money(self, user, "money", 100000)
-                check_item = await function_in.check_item(self, user.id, "冰霜巨龍的鱗片", 1)
+                check_itema = await function_in.check_item(self, user.id, "冰霜巨龍的鱗片", 1)
+                check_itemb = await function_in.check_item(self, user.id, "炎獄魔龍的鱗片", 1)
                 if players_level < 20:
                     await interaction.followup.send("你的等級不足20, 無法創建公會!")
                     return
                 if not check_money:
                     await interaction.followup.send("你的金幣不足 100000, 無法創建公會!")
                     return
-                if not check_item:
+                if not check_itema:
                     await interaction.followup.send("你的冰霜巨龍的鱗片不足 1, 無法創建公會!")
+                    return
+                if not check_itemb:
+                    await interaction.followup.send("你的炎獄魔龍的鱗片不足 1, 無法創建公會!")
                     return
                 if not name:
                     await interaction.followup.send("請輸入欲創建的公會名稱!")
@@ -141,6 +147,7 @@ class Guild(discord.Cog, name="公會"):
                 if not search:
                     await function_in.remove_money(self, user, "money", 100000)
                     await function_in.remove_item(self, user.id, "冰霜巨龍的鱗片", 1)
+                    await function_in.remove_item(self, user.id, "炎獄魔龍的鱗片", 1)
                     await function_in.sql_update("rpg_players", "players", "guild_name", name, "user_id", user.id)
                     await function_in.sql_insert("rpg_guild", "all", ["guild_name", "owner_id", "level", "exp", "money"], [name, user.id, 1, 0, 0])
                     await function_in.sql_create_table("rpg_guild", f"{name}", ["user_id", "position"], ["BIGINT", "TEXT"], "user_id")
@@ -328,7 +335,7 @@ class Guild(discord.Cog, name="公會"):
                     await user.send(f"你在 `{guild_info}` 公會的職位被設定為 {promote}!")
     
     class guild_admin_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, bot: discord.Bot, guild_name: str, position: str):
+        def __init__(self, interaction: discord.ApplicationContext, bot: discord.Bot, guild_name: str, position: str):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.guild_name = guild_name
@@ -359,7 +366,7 @@ class Guild(discord.Cog, name="公會"):
                 await self.interaction.followup.send('公會管理選單已關閉')
                 self.stop()
 
-        async def guild_invite_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_invite_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=None)
             msg = interaction.message
@@ -391,7 +398,7 @@ class Guild(discord.Cog, name="公會"):
             await user.send(invite_list)
             self.stop()
         
-        async def guild_member_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_member_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=None)
             msg = interaction.message
@@ -416,7 +423,7 @@ class Guild(discord.Cog, name="公會"):
             await msg.edit(embed=embed)
             self.stop()
         
-        async def guild_disband_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_disband_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=None)
             msg = interaction.message
@@ -425,7 +432,7 @@ class Guild(discord.Cog, name="公會"):
             await msg.edit(embed=embed, view=Guild.guild_disband_accept_menu(interaction, self.bot, self.guild_name))
             self.stop()
 
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能使用別人的公會管理選單!', ephemeral=True)
                 return False
@@ -433,7 +440,7 @@ class Guild(discord.Cog, name="公會"):
                 return True
     
     class guild_disband_accept_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, bot: discord.Bot, guild_name: str):
+        def __init__(self, interaction: discord.ApplicationContext, bot: discord.Bot, guild_name: str):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.guild_name = guild_name
@@ -460,7 +467,7 @@ class Guild(discord.Cog, name="公會"):
                 await self.interaction.followup.send('公會選單已關閉')
                 self.stop()
         
-        async def guild_disband_accept_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_disband_accept_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=None)
             msg = interaction.message
@@ -478,7 +485,7 @@ class Guild(discord.Cog, name="公會"):
                 await user.send(f"你所在的 `{self.guild_name}` 公會已經解散!")
             self.stop()
         
-        async def guild_disband_cancel_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_disband_cancel_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=None)
             msg = interaction.message
@@ -487,7 +494,7 @@ class Guild(discord.Cog, name="公會"):
             await msg.edit(embed=embed)
             self.stop()
             
-        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        async def interaction_check(self, interaction: discord.ApplicationContext) -> bool:
             if interaction.user != self.interaction.user:
                 await interaction.response.send_message('你不能替他人決定是否解散公會!', ephemeral=True)
                 return False
@@ -495,7 +502,7 @@ class Guild(discord.Cog, name="公會"):
                 return True
     
     class guild_menu(discord.ui.View):
-        def __init__(self, interaction: discord.Interaction, bot: discord.Bot, guild_name: str):
+        def __init__(self, interaction: discord.ApplicationContext, bot: discord.Bot, guild_name: str):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.guild_name = guild_name
@@ -522,7 +529,7 @@ class Guild(discord.Cog, name="公會"):
                 await self.interaction.followup.send('公會選單已關閉')
                 self.stop()
         
-        async def guild_info_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_info_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -542,7 +549,7 @@ class Guild(discord.Cog, name="公會"):
             await msg.edit(embed=embed, view=Guild.guild_menu(interaction, self.bot, self.guild_name))
             self.stop()
         
-        async def guild_skill_button_callback(self, button, interaction: discord.Interaction):
+        async def guild_skill_button_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message

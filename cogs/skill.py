@@ -41,6 +41,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_mana = int(players_max_mana * (int(remove_mana)*0.01))
         if skill_mana > players_mana:
             return "但因為魔力不夠, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+        await function_in.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
         search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
         skill_lvl = search[1]
         monster_def = int(math.floor(monster_def *(random.randint(7, 13) *0.1)))
@@ -230,6 +231,16 @@ class Skill(discord.Cog, name="技能系統"):
             remove_def = True
             remove_def_round = 30
             remove_def_range = 75
+        if skill == "真●無想的一刀":
+            dmg = int(((players_AD*100)+(players_AP*200))*(skill_lvl*10))
+            dmg -= monster_def
+            if dmg < 1:
+                dmg = 0
+            skill_type_damage = dmg
+        if skill == "真●玉兔搗藥":
+            hp = (players_AP*(skill_lvl*10))
+            await function_in.heal(self, user.id, "hp", hp)
+            skill_type_reg = hp
         
         if not fire:
             fire_round = 0
@@ -255,7 +266,6 @@ class Skill(discord.Cog, name="技能系統"):
             remove_def_round = 0
             remove_def_range = 0
 
-        await function_in.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
         return False, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range, remove_def, remove_def_round, remove_def_range
 
 def setup(client: discord.Bot):

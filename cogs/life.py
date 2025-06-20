@@ -18,43 +18,57 @@ class Life(discord.Cog, name="生活系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.user_command(name="查看生活", description="生活系統")
-    async def 查看生活(self, interaction: discord.Interaction,
-        member: Option(
-            discord.Member,
-            required=True,
-            name="玩家",
-            description="選擇玩家"
-        ) # type: ignore
-    ):
+    @discord.user_command(name="查看生活", description="生活系統",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇要查看的玩家",
+                required=False
+            )
+        ])
+    async def 查看生活(self, interaction: discord.ApplicationContext, member: discord.Member):
         await self.生活(interaction, 0, None, member)
     
-    @discord.slash_command(guild_only=True, name="生活", description="生活系統")
-    async def 生活(self, interaction: discord.Interaction,
-        func: Option(
-            int,
-            required=True,
-            name="功能",
-            description="選擇功能",
-            choices=[
-                OptionChoice(name="查看生活等級", value=0),
-                OptionChoice(name="烹飪", value=1),
-            ]
-        ), # type: ignore
-        name: Option(
-            str,
-            required=False,
-            name="名稱",
-            description="本欄位請按照提示輸入"
-        ), # type: ignore
-        member: Option(
-            discord.Member,
-            required=False,
-            name="玩家",
-            description="選擇玩家"
-        ) # type: ignore
-    ):
-        await interaction.response.defer()
+    @commands.slash_command(name="生活", description="生活系統",
+        options=[
+            discord.Option(
+                int,
+                name="功能",
+                description="選擇一個功能",
+                required=True,
+                choices=[
+                    OptionChoice(name="查看生活等級", value=0),
+                    OptionChoice(name="烹飪", value=1)
+                ],
+            ),
+            discord.Option(
+                str,
+                name="名稱",
+                description="本欄位請按照提示輸入",
+                required=False
+            ),
+            discord.Option(
+                int,
+                name="次數",
+                description="輸入需要執行的次數",
+                required=False,
+                choices=[
+                    OptionChoice(name="1次", value=1),
+                    OptionChoice(name="5次", value=5),
+                    OptionChoice(name="10次", value=10)
+                ]
+            ),
+            discord.Option(
+                discord.Member,
+                name="玩家",
+                description="選擇要查看的玩家",
+                required=False
+            )
+        ]
+    )
+    async def 生活(self, interaction: discord.ApplicationContext, func: int, name: str, num: int, member: discord.Member):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
@@ -62,6 +76,8 @@ class Life(discord.Cog, name="生活系統"):
         if func == 0:
             if member:
                 user = member
+        if not num:
+            num = 1
         search = await function_in.sql_search("rpg_players", "life", ["user_id"], [user.id])
         if not search:
             await function_in.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
@@ -70,6 +86,7 @@ class Life(discord.Cog, name="生活系統"):
         else:
             cook_lv = search[1]
             cook_exp = search[2]
+        cook_lv = int(cook_lv)
         if func == 0:
             embed = discord.Embed(title=f"{user.name} 的生活等級", color=0x4DFFFF)
             lifelv = await self.lifelv(cook_lv)
@@ -100,12 +117,12 @@ class Life(discord.Cog, name="生活系統"):
                 await function_in.checkactioning(self, user, "return")
                 return
             materials = create_list[name]
-            check, msg = await self.cook_item_required_check(materials, user)
+            check, msg = await self.cook_item_required_check(materials, user, num)
             if not check:
                 await interaction.followup.send("烹飪 `"+ name + "` " +msg)
                 await function_in.checkactioning(self, user, "return")            
                 return
-            check, msg = await self.cook_item_remove(materials, user)
+            check, msg = await self.cook_item_remove(materials, user, num)
             if not check:
                 await interaction.followup.send(msg)
                 await function_in.checkactioning(self, user, "return")
@@ -145,25 +162,37 @@ class Life(discord.Cog, name="生活系統"):
                 "失敗": 100-suss_rate-cook_lv,
                 "變異": cook_lv
             }
-            check = await function_in.lot(self, check)
-            if check == "成功":
-                await function_in.give_item(self, user.id, name)
-                embed = discord.Embed(title=f"{user.name} 的烹飪", color=0x28FF28)
-                embed.add_field(name=f"你成功烹飪了 {name} !", value=f'你獲得了 {suss_exp} 烹飪經驗!', inline=False)
-                await self.生活經驗(user, "cook", suss_exp)
-            elif check == "變異":
-                await function_in.give_item(self, user.id, name)
-                embed = discord.Embed(title=f"{user.name} 的烹飪", color=0x28FF28)
-                embed.add_field(name=f"你成功烹飪了 {name} !", value=f'你獲得了 {suss_exp} 烹飪經驗!', inline=False)
+            suss = 0
+            lost = 0
+            bigsuss = 0
+            embed = discord.Embed(title=f"{user.name} 的烹飪", color=0x28FF28)
+            for i in range(num):
+                checka = await function_in.lot(self, check)
+                if checka == "成功":
+                    suss += 1
+                elif checka == "變異":
+                    bigsuss += 1
+                else:
+                    lost += 1
+            await function_in.remove_hunger(self, user.id, num)
+            players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            if suss >= 1:
+                embed.add_field(name=f"你成功烹飪了 {suss} 個 {name} !", value=f'你獲得了 {suss_exp*suss} 烹飪經驗!', inline=False)
+                await function_in.give_item(self, user.id, name, suss)
+                await self.生活經驗(user, "cook", suss_exp*suss)
+            if bigsuss >= 1:
                 #embed.add_field(name="烹飪", value=f'你烹飪了 {name} , 但是變異了!', inline=False)
-                await self.生活經驗(user, "cook", suss_exp)
-            else:
-                embed = discord.Embed(title=f"{user.name} 的烹飪", color=0xFF0000)
-                embed.add_field(name=f"你烹飪 {name} 失敗了!", value=f'你獲得了 {fail_exp} 烹飪經驗!', inline=False)
-                await self.生活經驗(user, "cook", fail_exp)
+                embed.add_field(name=f"你成功烹飪了 {bigsuss} 個 {name} !", value=f'你獲得了 {suss_exp*bigsuss} 烹飪經驗!', inline=False)
+                await function_in.give_item(self, user.id, name, bigsuss)
+                await self.生活經驗(user, "cook", suss_exp*bigsuss)
+            if lost >= 1:
+                embed.add_field(name=f"你烹飪 {lost} 個 {name} 失敗了!", value=f'你獲得了 {fail_exp*lost} 烹飪經驗!', inline=False)
+                await self.生活經驗(user, "cook", fail_exp*lost)
+            
+            embed.add_field(name=f"目前飽食度剩餘 {players_hunger}", value="\u200b", inline=False)
+                
             await msg.edit(embed=embed)
             await function_in.checkactioning(self, user, "return")
-            await function_in.remove_hunger(self, user.id)
             
     
     async def 生活經驗(self, user: discord.Member, ltype, exp: int):
@@ -185,30 +214,30 @@ class Life(discord.Cog, name="生活系統"):
             await function_in.sql_update("rpg_players", "life", f"{ltype}_lv", lv, "user_id", user.id)
             await function_in.sql_update("rpg_players", "life", f"{ltype}_exp", exp, "user_id", user.id)
     
-    async def cook_item_required_check(self, itemlist, user: discord.Member):
+    async def cook_item_required_check(self, itemlist, user: discord.Member, number: int):
         req_msg = ""
         for item, num in itemlist.items():
             data = await function_in.search_for_file(self, item)
             if not data:
                 req_msg += f"{item} 不存在於資料庫! 請聯繫GM! "
                 continue
-            checknum, numa = await function_in.check_item(self, user.id, item, num)
+            checknum, numa = await function_in.check_item(self, user.id, item, num*number)
             if not checknum:
                 if numa <= 0:
-                    req_msg +=  f"{item} 需要 {num} 個, 你沒有 {item} ! "
+                    req_msg +=  f"{item} 需要 {num*number} 個, 你沒有 {item} ! "
                 else:
-                    req_msg +=  f"{item} 需要 {num} 個, 你只有 {numa} 個! "
+                    req_msg +=  f"{item} 需要 {num*number} 個, 你只有 {numa} 個! "
 
         if req_msg == "":
             return True, None
         return False, req_msg
     
-    async def cook_item_remove(self, itemlist, user: discord.Member):
+    async def cook_item_remove(self, itemlist, user: discord.Member, number: int):
         for item, num in itemlist.items():
             data = await function_in.search_for_file(self, item)
             if not data:
                 return False, f"{item} 不存在於資料庫! 請聯繫GM!"
-            await function_in.remove_item(self, user.id, item, num)
+            await function_in.remove_item(self, user.id, item, num*number)
         return True, None
     
     async def lifelv(self, lv):

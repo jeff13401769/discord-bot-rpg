@@ -2,6 +2,7 @@ import datetime
 import time
 import psutil
 from ping3 import ping, verbose_ping
+import requests
 
 import discord
 import pytz
@@ -73,6 +74,15 @@ class Task(discord.Cog, name="後台1"):
     async def task(self):
         self.Time += 1
         now = datetime.datetime.now(pytz.timezone("Asia/Taipei"))
+        requests.get(
+                url="https://status.rbctw.net/api/push/z1U2fYdovd",
+                params={
+                    "status": "up",
+                    "msg": "OK",
+                    "ping": f"{round(self.bot.latency*1000)}"
+                },
+                timeout=5
+        )
         if now.minute < 1:
             self.bot.log.info("[排程] 開始自動修正所有玩家資料")
             players = await function_in.sql_findall("rpg_players", "players")
@@ -105,7 +115,7 @@ class Task(discord.Cog, name="後台1"):
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_5", 1)
                 self.bot.log.info("[排程] 每日副本重置完畢!")
 
-        channel = self.bot.get_channel(1198810105261600879)
+        channel = self.bot.get_channel(1382638616857022635)
         ah_list = await function_in.sql_findall("rpg_ah", "all")
         for ah_info in ah_list:
             ah_id = ah_info[0]
@@ -177,24 +187,6 @@ class Task(discord.Cog, name="後台1"):
                         if food_time < time_stamp:
                             await function_in.sql_delete("rpg_food", f"{players_id}", "food", food_info[0])
         
-        gm_list = await function_in.sql_findall("rpg_system", "gm")
-        if gm_list:
-            for gm in gm_list:
-                gm_id = gm[0]
-                gm_mode = gm[2]
-                if gm_mode:
-                    gm_time_stamp = gm[3]
-                    now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
-                    timeString = now_time
-                    struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
-                    time_stamp = int(time.mktime(struct_time))
-                    if gm_time_stamp < time_stamp:
-                        await function_in.sql_update("rpg_system", "gm", "mode", False, "user_id", gm_id)
-                        await function_in.sql_update("rpg_system", "gm", "time_stamp", 0, "user_id", gm_id)
-                        user = self.bot.get_user(gm_id)
-                        if user:
-                            await user.send(f'你的GM模式已自動關閉!')
-        
         event_list = await function_in.sql_findall("rpg_event", "random_event")
         if event_list:
             for event_info in event_list:
@@ -231,11 +223,14 @@ class Task(discord.Cog, name="後台1"):
                         search = await function_in.sql_search("rpg_system", "last_channel", ["guild_id"], [guild.id])
                         if search:
                             if guild.id == config.guild:
-                                channel = guild.get_channel(1198808045979959346)
+                                channel = guild.get_channel(1382639415918329896)
                             else:
                                 channel = guild.get_channel(search[1])
                             if channel:
-                                await channel.send(embed=embed)
+                                try:
+                                    await channel.send(embed=embed)
+                                except:
+                                    pass
                             else:
                                 sent = False
                                 text_channels = guild.text_channels
@@ -287,7 +282,7 @@ class Task(discord.Cog, name="後台1"):
                 for boss_name in self.boss_list:
                     await function_in.sql_delete("rpg_worldboss", "boss", "monster_name", f"**世界BOSS** {boss_name}")
                     await function_in.sql_drop_table("rpg_worldboss", f"**世界BOSS** {boss_name}")
-                    channel = self.bot.get_channel(1198807348647579710)
+                    channel = self.bot.get_channel(1382637390832730173)
                     monster = await Monster.summon_mob(self, None, None, None, False, boss_name)
                     if not monster:
                         self.bot.log.warn(f"{boss_name} 召喚失敗!")
@@ -312,7 +307,7 @@ class Task(discord.Cog, name="後台1"):
                 self.bot.log.info("[排程] 世界BOSS自動生成完畢")
             elif now.hour in {13, 22}:
                 for boss_name in self.boss_list:
-                    channel = self.bot.get_channel(1198807348647579710)
+                    channel = self.bot.get_channel(1382637390832730173)
                     search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [f"**世界BOSS** {boss_name}"])
                     if search:
                         await function_in.sql_delete("rpg_worldboss", "boss", "monster_name", f"**世界BOSS** {boss_name}")

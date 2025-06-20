@@ -21,9 +21,9 @@ class Daily(discord.Cog, name="簽到"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(guild_only=True, name="簽到", description="簽到囉")
-    async def 簽到(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="簽到", description="簽到囉")
+    async def 簽到(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if checkreg:

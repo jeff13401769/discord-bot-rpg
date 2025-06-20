@@ -22,9 +22,9 @@ class Activity(discord.Cog, name="全服活動系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @discord.slash_command(name="活動", description="查看全服活動")
-    async def 活動(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+    @commands.slash_command(name="活動", description="查看全服活動")
+    async def 活動(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
         embed = discord.Embed(title="全伺服器限時活動", color=0xff0000)
         embed.add_field(name="伺服器正式公測, 全民狂歡", value="活動期間, 全伺服器怪物經驗值/金幣增加 50%!", inline=False)
         embed.add_field(name="全伺服器一起集氣完成以下任務, 更多獎勵等著你!", value="\u200b", inline=False)
