@@ -157,10 +157,13 @@ class Life(discord.Cog, name="生活系統"):
                 suss_exp = 50
                 fail_exp = 10
                 suss_rate = 15
+            bigsusschance = cook_lv
+            if bigsusschance > 20:
+                bigsusschance = 20
             check = {
                 "成功": suss_rate,
                 "失敗": 100-suss_rate-cook_lv,
-                "變異": cook_lv
+                "變異": bigsusschance
             }
             suss = 0
             lost = 0
@@ -181,10 +184,15 @@ class Life(discord.Cog, name="生活系統"):
                 await function_in.give_item(self, user.id, name, suss)
                 await self.生活經驗(user, "cook", suss_exp*suss)
             if bigsuss >= 1:
-                #embed.add_field(name="烹飪", value=f'你烹飪了 {name} , 但是變異了!', inline=False)
-                embed.add_field(name=f"你成功烹飪了 {bigsuss} 個 {name} !", value=f'你獲得了 {suss_exp*bigsuss} 烹飪經驗!', inline=False)
-                await function_in.give_item(self, user.id, name, bigsuss)
-                await self.生活經驗(user, "cook", suss_exp*bigsuss)
+                data = await function_in.search_for_file(self, f"變異{name}")
+                if not data:
+                    embed.add_field(name=f"你成功烹飪了 {bigsuss} 個 {name} !", value=f'你獲得了 {suss_exp*bigsuss} 烹飪經驗!', inline=False)
+                    await function_in.give_item(self, user.id, name, bigsuss)
+                    await self.生活經驗(user, "cook", suss_exp*bigsuss)
+                else:
+                    embed.add_field(name=f"你烹飪的 {bigsuss} 個 {name} 變異了!", value=f'你獲得了 {(suss_exp*1.5)*bigsuss} 烹飪經驗', inline=False)
+                    await function_in.give_item(self, user.id, f"變異{name}", bigsuss)
+                    await self.生活經驗(user, "cook", (suss_exp*1.5)*bigsuss)
             if lost >= 1:
                 embed.add_field(name=f"你烹飪 {lost} 個 {name} 失敗了!", value=f'你獲得了 {fail_exp*lost} 烹飪經驗!', inline=False)
                 await self.生活經驗(user, "cook", fail_exp*lost)

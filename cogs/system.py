@@ -384,7 +384,7 @@ class System(discord.Cog, name="主系統"):
                     sheet2[f'B{b+1}'] = num
                 else:
                     await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
-            if item_type == "技能書類":
+            if item_type == "技能書":
                 if num > 0:
                     if c < 1:
                         msg3 += f"{name}: {num}個"

@@ -113,7 +113,10 @@ class Event(discord.Cog, name="活動系統"):
                 else:
                     channel = guild.get_channel(search[1])
                 if channel:
-                    await channel.send(embed=embed)
+                    try:
+                        await channel.send(embed=embed)
+                    except:
+                        pass
                 else:
                     sent = False
                     text_channels = guild.text_channels
