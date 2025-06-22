@@ -178,6 +178,17 @@ class Skill(discord.Cog, name="技能系統"):
             poison = True
             poison_round = 3
             poison_dmg = int(dmg*0.4)
+        if skill == "賭徒之刃":
+            a = random.randint(1, 3)
+            if a == 1:
+                dmg = int(players_AD*0.75)
+            elif a == 2:
+                dmg = 0
+            else:
+                dmg = int(players_AD*3)
+            skill_type_damage = dmg
+            dmg -= monster_def
+            cd = cd - (skill_lvl-1)
         if skill == "神聖光芒":
             dmg = int((players_AP*1.2)*skill_lvl)
             dmg -= monster_def
@@ -207,7 +218,7 @@ class Skill(discord.Cog, name="技能系統"):
             fire_round = 1
             fire_dmg = int(dmg*0.5)
         if skill == "邪破彈":
-            dmg = int((skill_lvl*150)+(((players_AP*2)*skill_lvl)*0.7))
+            dmg = int((skill_lvl*50)+(((players_AP*1.5)*skill_lvl)*0.9))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0

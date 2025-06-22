@@ -81,15 +81,20 @@ class function_in(discord.Cog, name="模塊導入1"):
         if skill_name == "所有被動":
             pass
         else:
+            data, a, b, c = await function_in.search_for_file(self, skill_name, False)
             search = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])
             if search:
                 skill_level = search[1]
                 skill_exp = search[2]+1
-                while int(skill_level*100) < skill_exp:
-                    skill_exp -= int(skill_level*100)
-                    skill_level += 1
-                    await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                if data['等級上限'] > skill_level:
                     await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                    while int(skill_level*100) < skill_exp:
+                        skill_exp -= int(skill_level*100)
+                        skill_level += 1
+                        if skill_level >= data['等級上限']:
+                            skill_exp = 0
+                        await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                        await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
             else:
                 return
     
@@ -117,7 +122,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             exp -= expfull
             players_level+=1
             player_attr_point+=1
-            player_skill_point+=1
+            player_skill_point+=2
             await function_in.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
             await function_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
             await function_in.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)
@@ -140,7 +145,7 @@ class function_in(discord.Cog, name="模塊導入1"):
                     with open(yaml_path, "r", encoding="utf-8") as f:
                         data = yaml.safe_load(f)
                     for skill_name, skill_info in data[f"{floder_name}"].items():
-                        if skill_info["技能等級"] <= level:
+                        if skill_info["技能等級"] == level:
                             book_list.append(f"技能書-{skill_name}")
         if book_list:
             return random.choice(book_list)
@@ -799,8 +804,8 @@ class function_in(discord.Cog, name="模塊導入1"):
                 skills_dodge += skill_info[1]*15
                 skills_crit_damage += skill_info[1]*50
             if skill_info[0] == "弓手之心" and skill_info[1] > 0:
-                skills_crit_chance += skill_info[1]*2
-                skills_crit_damage += skill_info[1]*5.5
+                skills_crit_chance += skill_info[1]*1.5
+                skills_crit_damage += skill_info[1]*3.5
             if skill_info[0] == "戰士的蠻力" and skill_info[1] > 0:
                 skills_str += skill_info[1]*3
             if skill_info[0] == "致命精通" and skill_info[1] > 0:
