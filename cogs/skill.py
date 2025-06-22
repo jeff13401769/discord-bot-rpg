@@ -138,14 +138,14 @@ class Skill(discord.Cog, name="技能系統"):
                 dmg = 0
             skill_type_damage = dmg
         if skill == "蓄力矢":
-            dmg = int((players_AD*(skill_lvl*1.5))+(skill_lvl*60))
+            dmg = int((players_AD*(skill_lvl*2))+(skill_lvl*20))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0
             skill_type_damage = dmg
             poison = True
-            poison_round = 4
-            poison_dmg = int(dmg*0.45)
+            poison_round = 2
+            poison_dmg = int(dmg*0.3)
         if skill == "大刀闊斧":
             remove_hp = int(players_max_hp * 0.1)
             if players_hp <= remove_hp:
@@ -163,14 +163,14 @@ class Skill(discord.Cog, name="技能系統"):
                 stun = True
                 stun_round = 2
         if skill == "精準射擊":
-            dmg = int((players_AD*3)*(skill_lvl*2))
+            dmg = int((players_AD*2)*(skill_lvl*2))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0
             skill_type_damage = dmg
             absolute_hit = True
         if skill == "毒刺":
-            dmg = int((players_AD*(skill_lvl*0.5))+(skill_lvl*40))
+            dmg = int((players_AD*(skill_lvl*0.5))+(skill_lvl*65))
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0
@@ -181,7 +181,7 @@ class Skill(discord.Cog, name="技能系統"):
         if skill == "賭徒之刃":
             a = random.randint(1, 3)
             if a == 1:
-                dmg = int(players_AD*0.75)
+                dmg = int(players_AD*0.85)
             elif a == 2:
                 dmg = 0
             else:
@@ -225,7 +225,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_type_damage = dmg
             wither = True
             wither_round = 2
-            wither_dmg = int(dmg*0.5)
+            wither_dmg = int(dmg*0.3)
         if skill == "淨化":
             remove_dmg = True
             remove_def = True

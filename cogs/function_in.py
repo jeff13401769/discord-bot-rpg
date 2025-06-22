@@ -824,7 +824,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             if skill_info[0] == "隱匿" and skill_info[1] > 0:
                 skills_dodge += skill_info[1]*6
             if skill_info[0] == "靈巧身法" and skill_info[1] > 0:
-                skills_dodge += skill_info[1]*6
+                skills_dodge += skill_info[1]*3
         
         players_food_max_hp = int(0)
         players_food_max_mana = int(0)
