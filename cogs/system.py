@@ -123,28 +123,16 @@ class System(discord.Cog, name="主系統"):
                 name="金額或數量",
                 description="當交易選項為晶幣或水晶時請於此輸入要交易的金額; 若是物品則填入交易數量, 不填默認為1",
                 required=False
-            ),
-            discord.Option(
-                int,
-                name="手續費",
-                description="手續費是否由您支付? (物品交易一件10晶幣, 晶幣或水晶交易收取10%手續費) 未填時默認由您支付",
-                required=False,
-                choices=[
-                    OptionChoice(name="是", value=1),
-                    OptionChoice(name="否, 由對方支付", value=0)
-                ]
             )
         ]
     )
     @commands.cooldown(1, 300, commands.BucketType.user)
-    async def 交易(self, interaction: discord.ApplicationContext, func: str, players: discord.Member, item: str, num: int, fee: int):
+    async def 交易(self, interaction: discord.ApplicationContext, func: str, players: discord.Member, item: str, num: int):
         await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
-        if not fee:
-            dee = 1
         checkreg = await function_in.checkreg(self, interaction, players.id)
         if not checkreg:
             return
@@ -155,10 +143,6 @@ class System(discord.Cog, name="主系統"):
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
             return
-        if fee == 1:
-            feemsg = "手續費將由您支付"
-        else:
-            feemsg = "手續費將由本款項內扣除"
         
         if func == "晶幣":
             if not num:
@@ -171,21 +155,17 @@ class System(discord.Cog, name="主系統"):
             embed = discord.Embed(title=f'{user.name} 請確認是否交易...', color=0x9F35FF)
             embed.add_field(name=f"交易對象", value=f"{players.mention}", inline=False)
             embed.add_field(name=f"交易金額", value=f"{num}晶幣", inline=False)
-            if fee == 1:
-                gold = num
-            else:
-                gold = round(num * 0.9)
+            gold = num
             fee_gold = round(num * 0.1)
             embed.add_field(name=f"交易對象將能獲得 {gold} 晶幣", value="\u200b", inline=False)
             embed.add_field(name=f"手續費", value=f"{fee_gold} 晶幣(10%)", inline=False)
-            embed.add_field(name=f"{feemsg}", value="\u200b", inline=False)
             embed.add_field(name=f"是否接受?", value="\u200b", inline=False)
             embed.add_field(name=f"請在一分鐘內選擇, 逾時自動取消", value="\u200b", inline=False)
             checkactioning, stat = await function_in.checkactioning(self, user, "交易")
             if not checkactioning:
                 await interaction.followup.send(f'你當前正在 {stat} 中, 無法交易!')
                 return
-            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, fee, num, fee))
+            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, num))
         if func == "水晶":
             if not num:
                 await interaction.followup.send('請於 `金額` 選項輸入欲交易的金額!')
@@ -197,21 +177,17 @@ class System(discord.Cog, name="主系統"):
             embed = discord.Embed(title=f'{user.name} 請確認是否交易...', color=0x9F35FF)
             embed.add_field(name=f"交易對象", value=f"{players.mention}", inline=False)
             embed.add_field(name=f"交易金額", value=f"{num} 水晶", inline=False)
-            if fee == 1:
-                gold = num
-            else:
-                gold = round(num * 0.9)
+            gold = num
             fee_gold = round(num * 0.1)
             embed.add_field(name=f"交易對象將能獲得 {gold} 水晶", value="\u200b", inline=False)
             embed.add_field(name=f"手續費", value=f"{fee_gold} 水晶(10%)", inline=False)
-            embed.add_field(name=f"{feemsg}", value="\u200b", inline=False)
             embed.add_field(name=f"是否接受?", value="\u200b", inline=False)
             embed.add_field(name=f"請在一分鐘內選擇, 逾時自動取消", value="\u200b", inline=False)
             checkactioning, stat = await function_in.checkactioning(self, user, "交易")
             if not checkactioning:
                 await interaction.followup.send(f'你當前正在 {stat} 中, 無法交易!')
                 return
-            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, fee, num, fee))
+            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, num))
         if func == "物品":
             if not item:
                 await interaction.followup.send('請於 `物品` 選項輸入欲交易的物品!')
@@ -239,14 +215,13 @@ class System(discord.Cog, name="主系統"):
             embed.add_field(name=f"交易物品", value=f"{item}", inline=False)
             embed.add_field(name=f"交易件數", value=f"{num}", inline=False)
             embed.add_field(name=f"手續費", value=f"{gold}晶幣", inline=False)
-            embed.add_field(name=f"{feemsg}", value="\u200b", inline=False)
             embed.add_field(name=f"是否接受?", value="\u200b", inline=False)
             embed.add_field(name=f"請在一分鐘內選擇, 逾時自動取消", value="\u200b", inline=False)
             checkactioning, stat = await function_in.checkactioning(self, user, "交易")
             if not checkactioning:
                 await interaction.followup.send(f'你當前正在 {stat} 中, 無法交易!')
                 return
-            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, fee, item, num))
+            await interaction.followup.send(embed=embed, view=self.trade(interaction, players, func, item, num))
             
     @交易.error
     async def 交易_error(self, interaction: discord.ApplicationContext, error: Exception):
@@ -1714,12 +1689,11 @@ class System(discord.Cog, name="主系統"):
                 return True
 
     class trade(discord.ui.View):
-        def __init__(self, interaction: discord.ApplicationContext, player: discord.Member, func: str, fee: int, num, numa=None):
+        def __init__(self, interaction: discord.ApplicationContext, player: discord.Member, func: str, num, numa=None):
             super().__init__(timeout=60)
             self.interaction = interaction
             self.player = player
             self.func = func
-            self.fee = fee
             if func == "晶幣":
                 self.money = num
             elif func == "水晶":
@@ -1755,40 +1729,32 @@ class System(discord.Cog, name="主系統"):
             await interaction.response.edit_message(view=self)
             msg = interaction.message
             if self.func == "晶幣":
-                if self.fee == 1:
-                    gold = self.money
-                    gold1 = round(self.money*1.1)
-                else:
-                    gold = round(self.money*0.9)
-                    gold1 = self.money
+                gold = self.money
+                gold1 = round(self.money*1.1)
+                gold2 = round(self.money*0.1)
                 await function_in.remove_money(self, interaction.user, "money", gold1)
                 await function_in.give_money(self, self.player, "money", gold, "交易", msg)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
                 embed.add_field(name=f"{interaction.user} 付出 {gold1} 晶幣", value=f"\u200b", inline=False)
                 embed.add_field(name=f"{self.player} 獲得 {gold} 晶幣", value=f"\u200b", inline=False)
+                embed.add_field(name=f"{interaction.user} 支付了 {gold2} 晶幣 手續費", value=f"\u200b", inline=False)
             elif self.func == "水晶":
-                if self.fee == 1:
-                    gold = self.money
-                    gold1 = round(self.money*1.1)
-                else:
-                    gold = round(self.money*0.9)
-                    gold1 = self.money
+                gold = self.money
+                gold1 = round(self.money*1.1)
+                gold2 = round(self.money*0.1)
                 await function_in.remove_money(self, interaction.user, "diamond", gold1)
                 await function_in.give_money(self, self.player, "diamond", gold, "交易", msg)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
                 embed.add_field(name=f"{interaction.user} 付出 {gold1} 水晶", value=f"\u200b", inline=False)
                 embed.add_field(name=f"{self.player} 獲得 {gold} 水晶", value=f"\u200b", inline=False)
+                embed.add_field(name=f"{interaction.user} 支付了 {gold2} 水晶 手續費", value=f"\u200b", inline=False)
             elif self.func == "物品":
-                if self.fee == 1:
-                    fee_player = interaction.user
-                else:
-                    fee_player = self.player
-                await function_in.remove_money(self, fee_player, "money", self.num*10)
+                await function_in.remove_money(self, interaction.user, "money", self.num*10)
                 await function_in.remove_item(self, interaction.user.id, self.item, self.num)
                 await function_in.give_item(self, self.player.id, self.item, self.num)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
                 embed.add_field(name=f"{interaction.user} 減少{self.num}個 `{self.item}`", value=f"\u200b", inline=False)
-                embed.add_field(name=f"{fee_player} 付出{self.num*10}晶幣手續費", value=f"\u200b", inline=False)
+                embed.add_field(name=f"{interaction.user} 付出{self.num*10}晶幣手續費", value=f"\u200b", inline=False)
                 embed.add_field(name=f"{self.player} 獲得{self.num}個 `{self.item}`", value=f"\u200b", inline=False)
             await msg.edit(view=None, embed=embed)
             await function_in.checkactioning(self, interaction.user, "return")
