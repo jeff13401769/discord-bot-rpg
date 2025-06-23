@@ -1010,7 +1010,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round}回合內將受到{self.player_異常_寒冷_dmg}點寒冷傷害", value="\u200b", inline=False)
                     
                 if skill == "風花雪月":
-                    reg_hp = int(self.monster_maxhp * 0.4)
+                    reg_hp = int(self.monster_maxhp * 0.3)
                     monster_hpa += reg_hp
                     if monster_hpa >= self.monster_maxhp:
                         monster_hpa = self.monster_maxhp

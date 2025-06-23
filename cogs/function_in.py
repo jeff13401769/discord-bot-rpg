@@ -809,7 +809,8 @@ class function_in(discord.Cog, name="模塊導入1"):
             if skill_info[0] == "戰士的蠻力" and skill_info[1] > 0:
                 skills_str += skill_info[1]*3
             if skill_info[0] == "致命精通" and skill_info[1] > 0:
-                skills_crit_damage += skill_info[1]*7
+                skills_crit_damage += skill_info[1]*8
+                skills_ndef += skill_info[1]*1.5
             if skill_info[0] == "鋼鐵意志" and skill_info[1] > 0:
                 skills_max_hp += skill_info[1]*60
             if skill_info[0] == "劍之意志" and skill_info[1] > 0:

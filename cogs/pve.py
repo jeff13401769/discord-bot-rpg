@@ -62,12 +62,16 @@ class Pve(discord.Cog, name="PVE系統"):
         if players_hp <= 0:
             await interaction.followup.send('請先至神殿復活後再進行任何活動!')
             return
-        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_攻擊)
+        checkmoney = await function_in.check_money(self, user.id, "money", 1000)
+        if not checkmoney:
+            await interaction.followup.send('使用訓練場1次需要1000晶幣!')
+            return
+        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_傷害測試)
         if not checkaction:
             return
-        checkactioning, stat = await function_in.checkactioning(self, user, "攻擊")
+        checkactioning, stat = await function_in.checkactioning(self, user, "傷害測試")
         if not checkactioning:
-            await interaction.followup.send(f'你當前正在 {stat} 中, 無法攻擊!')
+            await interaction.followup.send(f'你當前正在 {stat} 中, 無法傷害測試!')
             return
         if invincible == 1:
             monster_name = "強化版訓練用假人"
@@ -156,7 +160,10 @@ class Pve(discord.Cog, name="PVE系統"):
         embed.add_field(name=f"技能二: {skill2}", value=f"冷卻時間: {g}", inline=True)
         embed.add_field(name=f"技能三: {skill3}", value=f"冷卻時間: {h}", inline=True)
         guild = self.bot.get_guild(config.guild)
-        await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, 10, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, None, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0))
+        await function_in.remove_hunger(self, user.id)
+        await function_in.remove_money(self, user, "money", 1000)
+        msg = await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, 10, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, None, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0))
+        await msg.reply('你成功花費1000晶幣來使用一次訓練假人!')
 
     @commands.slash_command(name="攻擊", description="攻擊一隻怪物",
         options=[
@@ -957,7 +964,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round}回合內將受到{self.player_異常_寒冷_dmg}點寒冷傷害", value="\u200b", inline=False)
                     
                 if skill == "風花雪月":
-                    reg_hp = int(self.monster_maxhp * 0.4)
+                    reg_hp = int(self.monster_maxhp * 0.3)
                     monster_hpa += reg_hp
                     if monster_hpa >= self.monster_maxhp:
                         monster_hpa = self.monster_maxhp

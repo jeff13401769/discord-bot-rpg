@@ -196,6 +196,7 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="/休息", value=f"{config.cd_休息}秒", inline=False)
             embed.add_field(name="/冥想", value=f"{config.cd_冥想}秒", inline=False)
             embed.add_field(name="/攻擊", value=f"{config.cd_攻擊}秒", inline=False)
+            embed.add_field(name="/傷害測試", value=f"{config.cd_傷害測試}秒", inline=False)
             embed.add_field(name="/傳送", value=f"{config.cd_傳送}秒", inline=False)
             embed.add_field(name="備註: 當使用特定道具時, 該道具介紹內有提到 `使用本道具可無視冷卻時間且不會產生冷卻時間` 時, 可在冷卻時使用, 並且於使用後不會進入冷卻", value="\u200b", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))

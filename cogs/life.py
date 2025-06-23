@@ -190,9 +190,9 @@ class Life(discord.Cog, name="生活系統"):
                     await function_in.give_item(self, user.id, name, bigsuss)
                     await self.生活經驗(user, "cook", suss_exp*bigsuss)
                 else:
-                    embed.add_field(name=f"你烹飪的 {bigsuss} 個 {name} 變異了!", value=f'你獲得了 {(suss_exp*1.5)*bigsuss} 烹飪經驗', inline=False)
+                    embed.add_field(name=f"你烹飪的 {bigsuss} 個 {name} 變異了!", value=f'你獲得了 {(int(suss_exp*1.5)*bigsuss)} 烹飪經驗', inline=False)
                     await function_in.give_item(self, user.id, f"變異{name}", bigsuss)
-                    await self.生活經驗(user, "cook", (suss_exp*1.5)*bigsuss)
+                    await self.生活經驗(user, "cook", int(suss_exp*1.5)*bigsuss)
             if lost >= 1:
                 embed.add_field(name=f"你烹飪 {lost} 個 {name} 失敗了!", value=f'你獲得了 {fail_exp*lost} 烹飪經驗!', inline=False)
                 await self.生活經驗(user, "cook", fail_exp*lost)

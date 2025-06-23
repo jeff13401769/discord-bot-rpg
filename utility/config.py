@@ -12,6 +12,7 @@ class Config(BaseModel):
     player: int
     noavatar: str
     cd_攻擊: int
+    cd_傷害測試: int
     cd_生活: int
     cd_工作: int
     cd_休息: int
