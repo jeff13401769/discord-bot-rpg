@@ -877,6 +877,33 @@ class function_in(discord.Cog, name="模塊導入1"):
                     if f"{food}" == "海鮮大雜燴":
                         players_food_AD+=500
                         players_food_max_hp+=500
+                    if f"{food}" == "變異紅燒鰻魚":
+                        players_food_AD+=300
+                        players_food_AP+=300
+                    if f"{food}" == "變異佛跳牆":
+                        players_food_AD+=4000
+                        players_food_AP+=4000
+                        players_food_crit_chance+=200
+                        players_food_crit_damage+=200
+                        players_food_max_hp+=6000
+                        players_food_max_mana+=6000
+                    if f"{food}" == "變異星辰露":
+                        players_food_AP+=500
+                        players_food_max_mana+=1000
+                        players_food_crit_chance+=30
+                    if f"{food}" == "變異奶油培根義大利麵":
+                        players_food_max_hp+=2000
+                        players_food_def+=300
+                    if f"{food}" == "變異海皇魚翅燴蔬":
+                        players_food_AD+=1600
+                        players_food_AP+=1600
+                        players_food_crit_chance+=100
+                        players_food_crit_damage+=200
+                        players_food_max_hp+=3000
+                        players_food_def+=1000
+                    if f"{food}" == "變異海鮮大雜燴":
+                        players_food_AD+=1000
+                        players_food_max_hp+=1000
         
         players_guild_str = int(0)
         players_guild_int = int(0)
