@@ -604,356 +604,363 @@ class System(discord.Cog, name="主系統"):
         quest=False
         embed = discord.Embed(title=f'你成功使用了 {num} 個 `{name}`', color=0x0000c6)
         for i in range(num):
-            for attname, value in data.get(name).get("給予道具", {}).items():
-                await function_in.give_item(self, user.id, attname, value)
-                embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
-            for attname, value in data.get(name).get("給予裝備", {}).items():
-                await function_in.give_item(self, user.id, attname, value)
-                embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
-            for attname, value in data.get(name).get("給予武器", {}).items():
-                await function_in.give_item(self, user.id, attname, value)
-                embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
-            for attname, value in data.get(name).get("給予飾品", {}).items():
-                await function_in.give_item(self, user.id, attname, value)
-                embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
-            for attname, value in data.get(name).get("學會技能", {}).items():
-                if players_skill_point <= 0:
-                    embed.add_field(name=f"你沒有天賦點了, 無法學習 {attname} 技能!", value=f"\u200b", inline=False)
-                    await function_in.give_item(self, user.id, name)
-                    continue
-                embed.add_field(name=f"技能書燒了起來, 一股黑煙竄進了你的身體", value=f"\u200b", inline=False)
-                dataa, class_name, a, b = await function_in.search_for_file(self, attname, False)
-                if not dataa:
-                    embed.add_field(name=f"技能 {attname} 不存在於資料庫! 請聯繫GM處理!", value=f"\u200b", inline=False)
-                    continue
-                if "本技能全職業皆可學習" not in dataa["技能介紹"]:
-                    if class_name != players_class:
-                        embed.add_field(name=f"你無法學會 {attname} 技能! 你的職業為 {players_class}! 該技能需要 {class_name} 職業才能學習!", value=f"\u200b", inline=False)
-                        continue
-                search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [attname])
-                if search:
-                    embed.add_field(name=f"你已經學會了 {attname} 技能, 無法再次學習!", value=f"\u200b", inline=False)
-                    continue
-                await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level", "exp"], [attname, 1, 0])
-                players_skill_point-=1
-                await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
-                embed.add_field(name=f"你成功學會了 {attname} 技能!", value=f"\u200b", inline=False)
-            for attname, value in data.get(name).get("增加屬性", {}).items():
-                if "回復" in attname:
-                    if attname == "血量回復值":
-                        if value == "回滿":
-                            embed.add_field(name=f"你的血量回滿了!", value=f"\u200b", inline=False)
-                            await function_in.heal(self, user.id, "hp", "max")
-                            continue
-                        a, b = await function_in.heal(self, user.id, "hp", value)
-                        if a == "Full":
-                            embed.add_field(name=f"你喝完藥水後, 發現血量本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
-                        else:
-                            if b == "Full":
-                                embed.add_field(name=f"恢復了 {a} HP! ({a-value})", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"恢復了 {a} HP!", value=f"\u200b", inline=False)
-                    elif attname == "魔力回復值":
-                        if value == "回滿":
-                            embed.add_field(name=f"你的魔力回滿了!", value=f"\u200b", inline=False)
-                            await function_in.heal(self, user.id, "mana", "max")
-                            continue
-                        a, b = await function_in.heal(self, user.id, "mana", value)
-                        if a == "Full":
-                            embed.add_field(name=f"你喝完藥水後, 發現魔力本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
-                        else:
-                            if b == "Full":
-                                embed.add_field(name=f"恢復了 {a} MP! ({a-value})", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"恢復了 {a} MP!", value=f"\u200b", inline=False)
-                    elif attname == "血量回復百分比":
-                        hps = int(players_max_hp * (value*0.01))
-                        a, b = await function_in.heal(self, user.id, "hp", hps)
-                        if a == "Full":
-                            embed.add_field(name=f"你喝完藥水後, 發現血量本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
-                        else:
-                            if b == "Full":
-                                embed.add_field(name=f"恢復了 {a} HP! ({a-value})", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"恢復了 {a} HP!", value=f"\u200b", inline=False)
-                    elif attname == "魔力回復百分比":
-                        manas = int(players_max_mana * (value*0.01))
-                        a, b = await function_in.heal(self, user.id, "mana", manas)
-                        if a == "Full":
-                            embed.add_field(name=f"你喝完藥水後, 發現魔力本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
-                        else:
-                            if b == "Full":
-                                embed.add_field(name=f"恢復了 {a} MP! ({a-value})", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"恢復了 {a} MP!", value=f"\u200b", inline=False)
-                if "行動條冷卻時間" in attname:
-                    if value == "歸零":
-                        embed.add_field(name=f"你的行動條歸零了! 你感覺到充滿了體力!", value=f"\u200b", inline=False)
-                        await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
-                if "晶幣" in attname:
-                    await function_in.give_money(self, user, "money", value, "使用道具")
-                    embed.add_field(name=f"你獲得了 {value} 晶幣!", value=f"\u200b", inline=False)
-                    quest=value
-                if "卡片" in attname:
-                    card = await function_in.card_packet(self, attname)
-                    await function_in.give_item(self, user.id, card)
-                    embed.add_field(name=f"你獲得了 {card}!", value=f"\u200b", inline=False)
-                if "對敵人造成傷害" in attname:
-                    await function_in.give_item(self, user.id, name)
-                    embed.add_field(name="該道具只能裝備於戰鬥道具欄位, 並於戰鬥中透過快捷欄使用!", value=f"\u200b", inline=False)
-                if "獲得經驗" in attname:
-                    expc = await function_in.give_exp(self, user.id, value)
-                    embed.add_field(name=f"你獲得了 {value} EXP!", value=f"\u200b", inline=False)
-                    if expc:
-                        embed.add_field(name=expc, value=f"\u200b", inline=False)
-                if "屬性重置" in attname:
-                    await function_in.sql_update("rpg_players", "players", "attr_point", players_level, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
-                    embed.add_field(name="成功重置所有屬性點!", value=f"\u200b", inline=False)
-                if "屬性點增加" in attname:
-                    players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-                    await function_in.sql_update("rpg_players", "players", "add_attr_point", players_add_attr_point+value, "user_id", user.id)
-                    embed.add_field(name=f"成功獲得 {value} 點屬性點!", value=f"\u200b", inline=False)
-                if "全屬性增加" in attname:
-                    search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
-                    players_all_attr_point = search[20]
-                    if int(players_level*0.1)*5 < players_all_attr_point:
-                        embed.add_field(name=f"你當前已無法在使用更多的 {name}!", value=f"\u200b", inline=False)
-                    else:
-                        await function_in.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
-                        embed.add_field(name=f"力量+{value}!\n智慧+{value}!\n敏捷+{value}!\n體質+{value}!\n幸運+{value}!", value=f"\u200b", inline=False)
-                if "任務放棄" in attname:
-                    search = await function_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
-                    if not search:
-                        embed.add_field(name="你使用了任務放棄證明後才發現\n你根本沒有接任務阿...", value=f"\u200b", inline=False)
-                    else:
-                        await function_in.sql_delete("rpg_players", "quest", "user_id", user.id)
-                        embed.add_field(name="你成功放棄了當前任務!", value=f"\u200b", inline=False)
-                if "水晶" in attname:
-                    if value == "0-20":
-                        diamond1 = random.randint(0, 20)
-                        embed.add_field(name=f"你獲得了 {diamond1} 顆水晶!", value=f"\u200b", inline=False)
-                        await function_in.give_money(self, user, "diamond", diamond1, "道具")
-                if "BOSS召喚" in attname:
-                    await function_in.sql_update("rpg_players", "players", "boss", True, "user_id", user.id)
-                    embed.add_field(name=f"你下次攻擊必定召喚出Boss!", value=f"\u200b", inline=False)
-                if "簽到禮包" in attname:
-                    lot_list = {
-                        "普通卡包": 60,
-                        "晶幣袋(100元)": 40,
-                        "晶幣袋(1000元)": 30,
-                        "晶幣袋(2000元)": 20,
-                        "晶幣袋(5000元)": 10,
-                        "小型經驗包": 10,
-                        "稀有卡包": 5,
-                        "超級好運卷軸": 5,
-                        "Boss召喚卷": 5,
-                        "魔法石": 5,
-                        "詛咒之石": 2,
-                        "晶幣袋(10000元)": 1,
-                    }
-                    item = await function_in.lot(self, lot_list)
-                    data = await function_in.search_for_file(self, item)
-                    if not data:
-                        item = "簽到禮包"
-                    embed.add_field(name=f"你獲得了1個 {item} !", value=f"\u200b", inline=False)
-                    await function_in.give_item(self, user.id, item)
-                if "卡牌欄位解鎖" in attname:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位2"])
-                    slot2 = search[1]
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位3"])
-                    slot3 = search[1]
-                    if "普通" in attname:
-                        if slot2 == "未解鎖":
-                            await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位2")
-                            embed.add_field(name=f"你成功解鎖了卡牌欄位2!", value=f"\u200b", inline=False)
-                        else:
-                            embed.add_field(name=f"你的卡牌欄位2已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
-                    elif "高級" in attname:
-                        if slot2 == "未解鎖":
-                            embed.add_field(name=f"你的卡牌欄位2尚未解鎖! {name} 燒毀了...", value=f"\u200b", inline=False)
-                        else:
-                            if slot3 == "未解鎖":
-                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位3")
-                                embed.add_field(name=f"你成功解鎖了卡牌欄位3!", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"你的卡牌欄位3已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
-                if "經驗加倍" in attname:
-                    now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
-                    timeString = now_time
-                    struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
-                    time_stamp = int(time.mktime(struct_time)) + 3600
-                    if "全服" in attname:
-                        search = await function_in.sql_search("rpg_exp", "all", ["user_id"], [user.id])
-                        if not search:
-                            await function_in.sql_insert("rpg_exp", "all", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
-                            embed.add_field(name=f"你成功啟用了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
-                        else:
-                            exp_time_stamp = search[1]
-                            exp = search[2]
-                            if exp == value:
-                                await function_in.sql_update("rpg_exp", "all", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
-                                embed.add_field(name=f"你成功增加了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"你的全服經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
-                                await function_in.give_item(self, user.id, name)
-                    else:
-                        search = await function_in.sql_search("rpg_exp", "player", ["user_id"], [user.id])
-                        if not search:
-                            await function_in.sql_insert("rpg_exp", "player", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
-                            embed.add_field(name=f"你成功啟用了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
-                        else:
-                            exp_time_stamp = search[1]
-                            exp = search[2]
-                            if exp == value:
-                                await function_in.sql_update("rpg_exp", "player", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
-                                embed.add_field(name=f"你成功增加了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
-                            else:
-                                embed.add_field(name=f"你的個人經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
-                                await function_in.give_item(self, user.id, name)
-                if "掉落物" in attname:
-                    prizes = {
-                        "魔法石": 3000,
-                        "水晶箱": 2200,
-                        "Boss召喚卷": 1800,
-                        "屬性增加藥水": 1450,
-                        "史詩卡包": 1250,
-                        "傳說卡包": 50,
-                        "神性之石": 30,
-                        "奇異質點": 1,
-                        "「古樹之森」副本入場卷": 1000,
-                        "「寒冰之地」副本入場卷": 1000,
-                        "「黑暗迴廊」副本入場卷": 1000,
-                        "「惡夢迷宮」副本入場卷": 1000,
-                    }
-                    if "冰霜巨龍" in attname:
-                        prizes["冰霜巨龍的鱗片"] = 1500
-                        prizes["冰霜巨龍的寶箱"] = 1500
-                        prizes["冰霜幼龍"] = 1,
-                        prizes["初級天賦領悟書"] = 10
-                    if "炎獄魔龍" in attname:
-                        prizes["炎獄魔龍的鱗片"] = 1500
-                        prizes["炎獄魔龍的寶箱"] = 1500
-                        prizes["炎獄幼龍"] = 1,
-                        prizes["初級天賦領悟書"] = 10
-                    if "魅魔女王" in attname:
-                        prizes["魅魔女王的緊身衣碎片"] = 1500
-                        prizes["魅魔女王的寶箱"] = 1500
-                        prizes["魅魔女王的皮鞭"] = 1
-                        prizes["中級天賦領悟書"] = 15
-                    
-                    item = await function_in.lot(self, prizes)
-                    await function_in.give_item(self, user.id, item)
-                    embed.add_field(name=f"你獲得了 {item} !", value=f"\u200b", inline=False)
-                if "副本" in attname:
-                    dungeon = attname.replace("副本", "")
-                    search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
-                    if not search:
-                        await function_in.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1"], [user.id, 1])
-                    if dungeon == "古樹之森":
-                        a = 1
-                    if dungeon == "寒冰之地":
-                        a = 2
-                    if dungeon == "黑暗迴廊":
-                        a = 3
-                    if dungeon == "惡夢迷宮":
-                        a = 4
-                    if dungeon == "夢魘級惡夢迷宮":
-                        a = 5
-                    search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
-                    await function_in.sql_update("rpg_players", "dungeon", f"dungeon_{a}", search[a]+1, "user_id", user.id)
-                    embed.add_field(name=f"你的{dungeon}副本次數+1!", value=f"\u200b", inline=False)
-                if "料理_" in attname:
-                    food = attname.replace("料理_", "")
-                    check = await function_in.sql_check_table("rpg_food", f"{user.id}")
-                    if not check:
-                        await function_in.sql_create_table("rpg_food", f"{user.id}", ["food", "time_stamp"], ["VARCHAR(100)", "BIGINT"], "food")
-                    search = await function_in.sql_search("rpg_food", f"{user.id}", ["food"], [food])
-                    now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
-                    timeString = now_time
-                    struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
-                    time_stamp = int(time.mktime(struct_time))
-                    time_stamp = time_stamp + 3600
-                    if not search:
-                        await function_in.sql_insert("rpg_food", f"{user.id}", ["food", "time_stamp"], [food, time_stamp])
-                    else:
-                        await function_in.sql_update("rpg_food", f"{user.id}", "time_stamp", time_stamp, "food", food)
-                    embed.add_field(name=f"你成功食用了 {food} !", value=f"\u200b", inline=False)
-                if "飽食度回復" in attname:
-                    players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-                    players_hunger += value
-                    if players_hunger > 100:
-                        players_hunger = 100
-                    await function_in.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user.id)
-                    embed.add_field(name=f"你回復了 {value} 點飽食度!", value=f"\u200b", inline=False)
-                if "強化層數" in attname:
-                    search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
-                    if value == 0:
-                        if not search:
-                            await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, 0])
-                        else:
-                            await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", 0, "user_id", user.id)
-                        await interaction.followup.send(f"你成功將強化層數堆疊歸零!")
-                        continue
-                    if search:
-                        if search[1] > 0:
-                            embed.add_field(name="你當前已擁有強化層數!", value=f"\u200b", inline=False)
-                            await function_in.give_item(self, user.id, name)
-                            continue
-                        else:
-                            await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", value, "user_id", user.id)
-                    else:
-                        await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, value])
-                    embed.add_field(name=f"你的強化層數為 {value} 層!", value=f"\u200b", inline=False)
-                if "轉職" in attname:
-                    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-                    yaml_path = os.path.join(base_path, "rpg", "職業", f"{value}.yml")
-                    try:
-                        with open(yaml_path, "r", encoding="utf-8") as f:
-                            data = yaml.safe_load(f)
-                    except Exception as e:
-                        await interaction.followup.send(f"職業 {value} 不存在! 請聯繫GM處理!")
+            if "給予道具" in data.get(name, {}):
+                for attname, value in data.get(name).get("給予道具", {}).items():
+                    await function_in.give_item(self, user.id, attname, value)
+                    embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
+            if "給予裝備" in data.get(name, {}):
+                for attname, value in data.get(name).get("給予裝備", {}).items():
+                    await function_in.give_item(self, user.id, attname, value)
+                    embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
+            if "給予武器" in data.get(name, {}):
+                for attname, value in data.get(name).get("給予武器", {}).items():
+                    await function_in.give_item(self, user.id, attname, value)
+                    embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
+            if "給予飾品" in data.get(name, {}):
+                for attname, value in data.get(name).get("給予飾品", {}).items():
+                    await function_in.give_item(self, user.id, attname, value)
+                    embed.add_field(name=f"你獲得了 {value} 個 {attname}!", value=f"\u200b", inline=False)
+            if "學會技能" in data.get(name, {}):
+                for attname, value in data.get(name).get("學會技能", {}).items():
+                    if players_skill_point <= 0:
+                        embed.add_field(name=f"你沒有天賦點了, 無法學習 {attname} 技能!", value=f"\u200b", inline=False)
                         await function_in.give_item(self, user.id, name)
                         continue
-                    await function_in.sql_update("rpg_players", "players", "class", value, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "level", 1, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "exp", 1, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "attr_point", 3, "user_id", user.id)
-                    await function_in.sql_update("rpg_players", "players", "skill_point", 1, "user_id", user.id)
-                    await function_in.sql_deleteall("rpg_skills", f"{user.id}")
-                    await function_in.sql_deleteall("rpg_equip", f"{user.id}")
-                    item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
-                    for item_type in item_type_list:
-                        await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "無"])
-                    await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], ["卡牌欄位1", "無"])
-                    item_type_list = ["卡牌欄位2","卡牌欄位3"]
-                    for item_type in item_type_list:
-                        await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "未解鎖"])
-                    embed.add_field(name=f"你成功轉職為 {value}!", value=f"\u200b", inline=False)
-                if "清除資料" in attname:
-                    await function_in.delete_player(self, user.id, True)
-                    embed.add_field(name=f"你的所有資料已被清除!", value=f"\u200b", inline=False)
-                if "給予隨機職業技能書" in attname:
-                    book = await function_in.get_skill_book(self, value)
-                    await function_in.give_item(self, user.id, book)
-                    embed.add_field(name=f"你獲得了 {book}!", value=f"\u200b", inline=False)
-                if "領悟天賦點" in attname:
-                    a = random.randint(1, 100)
-                    if value > a:
-                        players_skill_point+=1
-                        await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
-                        embed.add_field(name="你成功領悟到天賦點! 天賦點+1!", value=f"\u200b", inline=False)
-                    else:
-                        embed.add_field(name="你沒有領悟到天賦點...", value=f"\u200b", inline=False)
+                    embed.add_field(name=f"技能書燒了起來, 一股黑煙竄進了你的身體", value=f"\u200b", inline=False)
+                    dataa, class_name, a, b = await function_in.search_for_file(self, attname, False)
+                    if not dataa:
+                        embed.add_field(name=f"技能 {attname} 不存在於資料庫! 請聯繫GM處理!", value=f"\u200b", inline=False)
+                        continue
+                    if "本技能全職業皆可學習" not in dataa["技能介紹"]:
+                        if class_name != players_class:
+                            embed.add_field(name=f"你無法學會 {attname} 技能! 你的職業為 {players_class}! 該技能需要 {class_name} 職業才能學習!", value=f"\u200b", inline=False)
+                            continue
+                    search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [attname])
+                    if search:
+                        embed.add_field(name=f"你已經學會了 {attname} 技能, 無法再次學習!", value=f"\u200b", inline=False)
+                        continue
+                    await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level", "exp"], [attname, 1, 0])
+                    players_skill_point-=1
+                    await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
+                    embed.add_field(name=f"你成功學會了 {attname} 技能!", value=f"\u200b", inline=False)
+            if "增加屬性" in data.get(name, {}):
+                for attname, value in data.get(name).get("增加屬性", {}).items():
+                    if "回復" in attname:
+                        if attname == "血量回復值":
+                            if value == "回滿":
+                                embed.add_field(name=f"你的血量回滿了!", value=f"\u200b", inline=False)
+                                await function_in.heal(self, user.id, "hp", "max")
+                                continue
+                            a, b = await function_in.heal(self, user.id, "hp", value)
+                            if a == "Full":
+                                embed.add_field(name=f"你喝完藥水後, 發現血量本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
+                            else:
+                                if b == "Full":
+                                    embed.add_field(name=f"恢復了 {a} HP! ({a-value})", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"恢復了 {a} HP!", value=f"\u200b", inline=False)
+                        elif attname == "魔力回復值":
+                            if value == "回滿":
+                                embed.add_field(name=f"你的魔力回滿了!", value=f"\u200b", inline=False)
+                                await function_in.heal(self, user.id, "mana", "max")
+                                continue
+                            a, b = await function_in.heal(self, user.id, "mana", value)
+                            if a == "Full":
+                                embed.add_field(name=f"你喝完藥水後, 發現魔力本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
+                            else:
+                                if b == "Full":
+                                    embed.add_field(name=f"恢復了 {a} MP! ({a-value})", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"恢復了 {a} MP!", value=f"\u200b", inline=False)
+                        elif attname == "血量回復百分比":
+                            hps = int(players_max_hp * (value*0.01))
+                            a, b = await function_in.heal(self, user.id, "hp", hps)
+                            if a == "Full":
+                                embed.add_field(name=f"你喝完藥水後, 發現血量本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
+                            else:
+                                if b == "Full":
+                                    embed.add_field(name=f"恢復了 {a} HP! ({a-value})", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"恢復了 {a} HP!", value=f"\u200b", inline=False)
+                        elif attname == "魔力回復百分比":
+                            manas = int(players_max_mana * (value*0.01))
+                            a, b = await function_in.heal(self, user.id, "mana", manas)
+                            if a == "Full":
+                                embed.add_field(name=f"你喝完藥水後, 發現魔力本來就是滿的, 藥力流失了...", value=f"\u200b", inline=False)
+                            else:
+                                if b == "Full":
+                                    embed.add_field(name=f"恢復了 {a} MP! ({a-value})", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"恢復了 {a} MP!", value=f"\u200b", inline=False)
+                    if "行動條冷卻時間" in attname:
+                        if value == "歸零":
+                            embed.add_field(name=f"你的行動條歸零了! 你感覺到充滿了體力!", value=f"\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
+                    if "晶幣" in attname:
+                        await function_in.give_money(self, user, "money", value, "使用道具")
+                        embed.add_field(name=f"你獲得了 {value} 晶幣!", value=f"\u200b", inline=False)
+                        quest=value
+                    if "卡片" in attname:
+                        card = await function_in.card_packet(self, attname)
+                        await function_in.give_item(self, user.id, card)
+                        embed.add_field(name=f"你獲得了 {card}!", value=f"\u200b", inline=False)
+                    if "對敵人造成傷害" in attname:
+                        await function_in.give_item(self, user.id, name)
+                        embed.add_field(name="該道具只能裝備於戰鬥道具欄位, 並於戰鬥中透過快捷欄使用!", value=f"\u200b", inline=False)
+                    if "獲得經驗" in attname:
+                        expc = await function_in.give_exp(self, user.id, value)
+                        embed.add_field(name=f"你獲得了 {value} EXP!", value=f"\u200b", inline=False)
+                        if expc:
+                            embed.add_field(name=expc, value=f"\u200b", inline=False)
+                    if "屬性重置" in attname:
+                        await function_in.sql_update("rpg_players", "players", "attr_point", players_level, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
+                        embed.add_field(name="成功重置所有屬性點!", value=f"\u200b", inline=False)
+                    if "屬性點增加" in attname:
+                        players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+                        await function_in.sql_update("rpg_players", "players", "add_attr_point", players_add_attr_point+value, "user_id", user.id)
+                        embed.add_field(name=f"成功獲得 {value} 點屬性點!", value=f"\u200b", inline=False)
+                    if "全屬性增加" in attname:
+                        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+                        players_all_attr_point = search[20]
+                        if int(players_level*0.1)*5 < players_all_attr_point:
+                            embed.add_field(name=f"你當前已無法在使用更多的 {name}!", value=f"\u200b", inline=False)
+                        else:
+                            await function_in.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
+                            embed.add_field(name=f"力量+{value}!\n智慧+{value}!\n敏捷+{value}!\n體質+{value}!\n幸運+{value}!", value=f"\u200b", inline=False)
+                    if "任務放棄" in attname:
+                        search = await function_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
+                        if not search:
+                            embed.add_field(name="你使用了任務放棄證明後才發現\n你根本沒有接任務阿...", value=f"\u200b", inline=False)
+                        else:
+                            await function_in.sql_delete("rpg_players", "quest", "user_id", user.id)
+                            embed.add_field(name="你成功放棄了當前任務!", value=f"\u200b", inline=False)
+                    if "水晶" in attname:
+                        if value == "0-20":
+                            diamond1 = random.randint(0, 20)
+                            embed.add_field(name=f"你獲得了 {diamond1} 顆水晶!", value=f"\u200b", inline=False)
+                            await function_in.give_money(self, user, "diamond", diamond1, "道具")
+                    if "BOSS召喚" in attname:
+                        await function_in.sql_update("rpg_players", "players", "boss", True, "user_id", user.id)
+                        embed.add_field(name=f"你下次攻擊必定召喚出Boss!", value=f"\u200b", inline=False)
+                    if "簽到禮包" in attname:
+                        lot_list = {
+                            "普通卡包": 60,
+                            "晶幣袋(100元)": 40,
+                            "晶幣袋(1000元)": 30,
+                            "晶幣袋(2000元)": 20,
+                            "晶幣袋(5000元)": 10,
+                            "小型經驗包": 10,
+                            "稀有卡包": 5,
+                            "超級好運卷軸": 5,
+                            "Boss召喚卷": 5,
+                            "魔法石": 5,
+                            "詛咒之石": 2,
+                            "晶幣袋(10000元)": 1,
+                        }
+                        for i in range(num):
+                            item = await function_in.lot(self, lot_list)
+                            data = await function_in.search_for_file(self, item)
+                            if not data:
+                                item = "簽到禮包"
+                            embed.add_field(name=f"你獲得了1個 {item} !", value=f"\u200b", inline=False)
+                            await function_in.give_item(self, user.id, item)
+                    if "卡牌欄位解鎖" in attname:
+                        search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位2"])
+                        slot2 = search[1]
+                        search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位3"])
+                        slot3 = search[1]
+                        if "普通" in attname:
+                            if slot2 == "未解鎖":
+                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位2")
+                                embed.add_field(name=f"你成功解鎖了卡牌欄位2!", value=f"\u200b", inline=False)
+                            else:
+                                embed.add_field(name=f"你的卡牌欄位2已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
+                        elif "高級" in attname:
+                            if slot2 == "未解鎖":
+                                embed.add_field(name=f"你的卡牌欄位2尚未解鎖! {name} 燒毀了...", value=f"\u200b", inline=False)
+                            else:
+                                if slot3 == "未解鎖":
+                                    await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位3")
+                                    embed.add_field(name=f"你成功解鎖了卡牌欄位3!", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"你的卡牌欄位3已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
+                    if "經驗加倍" in attname:
+                        now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
+                        timeString = now_time
+                        struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
+                        time_stamp = int(time.mktime(struct_time)) + 3600
+                        if "全服" in attname:
+                            search = await function_in.sql_search("rpg_exp", "all", ["user_id"], [user.id])
+                            if not search:
+                                await function_in.sql_insert("rpg_exp", "all", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
+                                embed.add_field(name=f"你成功啟用了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
+                            else:
+                                exp_time_stamp = search[1]
+                                exp = search[2]
+                                if exp == value:
+                                    await function_in.sql_update("rpg_exp", "all", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
+                                    embed.add_field(name=f"你成功增加了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"你的全服經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
+                                    await function_in.give_item(self, user.id, name)
+                        else:
+                            search = await function_in.sql_search("rpg_exp", "player", ["user_id"], [user.id])
+                            if not search:
+                                await function_in.sql_insert("rpg_exp", "player", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
+                                embed.add_field(name=f"你成功啟用了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
+                            else:
+                                exp_time_stamp = search[1]
+                                exp = search[2]
+                                if exp == value:
+                                    await function_in.sql_update("rpg_exp", "player", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
+                                    embed.add_field(name=f"你成功增加了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
+                                else:
+                                    embed.add_field(name=f"你的個人經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
+                                    await function_in.give_item(self, user.id, name)
+                    if "掉落物" in attname:
+                        prizes = {
+                            "魔法石": 3000,
+                            "水晶箱": 2200,
+                            "Boss召喚卷": 1800,
+                            "屬性增加藥水": 1450,
+                            "史詩卡包": 1250,
+                            "傳說卡包": 50,
+                            "神性之石": 30,
+                            "奇異質點": 1,
+                            "「古樹之森」副本入場卷": 1000,
+                            "「寒冰之地」副本入場卷": 1000,
+                            "「黑暗迴廊」副本入場卷": 1000,
+                            "「惡夢迷宮」副本入場卷": 1000,
+                        }
+                        if "冰霜巨龍" in attname:
+                            prizes["冰霜巨龍的鱗片"] = 1500
+                            prizes["冰霜巨龍的寶箱"] = 1500
+                            prizes["冰霜幼龍"] = 1,
+                            prizes["初級天賦領悟書"] = 10
+                        if "炎獄魔龍" in attname:
+                            prizes["炎獄魔龍的鱗片"] = 1500
+                            prizes["炎獄魔龍的寶箱"] = 1500
+                            prizes["炎獄幼龍"] = 1,
+                            prizes["初級天賦領悟書"] = 10
+                        if "魅魔女王" in attname:
+                            prizes["魅魔女王的緊身衣碎片"] = 1500
+                            prizes["魅魔女王的寶箱"] = 1500
+                            prizes["魅魔女王的皮鞭"] = 1
+                            prizes["中級天賦領悟書"] = 15
+                        
+                        item = await function_in.lot(self, prizes)
+                        await function_in.give_item(self, user.id, item)
+                        embed.add_field(name=f"你獲得了 {item} !", value=f"\u200b", inline=False)
+                    if "副本" in attname:
+                        dungeon = attname.replace("副本", "")
+                        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+                        if not search:
+                            await function_in.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1"], [user.id, 1])
+                        if dungeon == "古樹之森":
+                            a = 1
+                        if dungeon == "寒冰之地":
+                            a = 2
+                        if dungeon == "黑暗迴廊":
+                            a = 3
+                        if dungeon == "惡夢迷宮":
+                            a = 4
+                        if dungeon == "夢魘級惡夢迷宮":
+                            a = 5
+                        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+                        await function_in.sql_update("rpg_players", "dungeon", f"dungeon_{a}", search[a]+1, "user_id", user.id)
+                        embed.add_field(name=f"你的{dungeon}副本次數+1!", value=f"\u200b", inline=False)
+                    if "料理_" in attname:
+                        food = attname.replace("料理_", "")
+                        check = await function_in.sql_check_table("rpg_food", f"{user.id}")
+                        if not check:
+                            await function_in.sql_create_table("rpg_food", f"{user.id}", ["food", "time_stamp"], ["VARCHAR(100)", "BIGINT"], "food")
+                        search = await function_in.sql_search("rpg_food", f"{user.id}", ["food"], [food])
+                        now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
+                        timeString = now_time
+                        struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
+                        time_stamp = int(time.mktime(struct_time))
+                        time_stamp = time_stamp + 3600
+                        if not search:
+                            await function_in.sql_insert("rpg_food", f"{user.id}", ["food", "time_stamp"], [food, time_stamp])
+                        else:
+                            await function_in.sql_update("rpg_food", f"{user.id}", "time_stamp", time_stamp, "food", food)
+                        embed.add_field(name=f"你成功食用了 {food} !", value=f"\u200b", inline=False)
+                    if "飽食度回復" in attname:
+                        players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+                        players_hunger += value
+                        if players_hunger > 100:
+                            players_hunger = 100
+                        await function_in.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user.id)
+                        embed.add_field(name=f"你回復了 {value} 點飽食度!", value=f"\u200b", inline=False)
+                    if "強化層數" in attname:
+                        search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
+                        if value == 0:
+                            if not search:
+                                await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, 0])
+                            else:
+                                await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", 0, "user_id", user.id)
+                            await interaction.followup.send(f"你成功將強化層數堆疊歸零!")
+                            continue
+                        if search:
+                            if search[1] > 0:
+                                embed.add_field(name="你當前已擁有強化層數!", value=f"\u200b", inline=False)
+                                await function_in.give_item(self, user.id, name)
+                                continue
+                            else:
+                                await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", value, "user_id", user.id)
+                        else:
+                            await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, value])
+                        embed.add_field(name=f"你的強化層數為 {value} 層!", value=f"\u200b", inline=False)
+                    if "轉職" in attname:
+                        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                        yaml_path = os.path.join(base_path, "rpg", "職業", f"{value}.yml")
+                        try:
+                            with open(yaml_path, "r", encoding="utf-8") as f:
+                                data = yaml.safe_load(f)
+                        except Exception as e:
+                            await interaction.followup.send(f"職業 {value} 不存在! 請聯繫GM處理!")
+                            await function_in.give_item(self, user.id, name)
+                            continue
+                        await function_in.sql_update("rpg_players", "players", "class", value, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "level", 1, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "exp", 1, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "attr_point", 3, "user_id", user.id)
+                        await function_in.sql_update("rpg_players", "players", "skill_point", 1, "user_id", user.id)
+                        await function_in.sql_deleteall("rpg_skills", f"{user.id}")
+                        await function_in.sql_deleteall("rpg_equip", f"{user.id}")
+                        item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
+                        for item_type in item_type_list:
+                            await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "無"])
+                        await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], ["卡牌欄位1", "無"])
+                        item_type_list = ["卡牌欄位2","卡牌欄位3"]
+                        for item_type in item_type_list:
+                            await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "未解鎖"])
+                        embed.add_field(name=f"你成功轉職為 {value}!", value=f"\u200b", inline=False)
+                    if "清除資料" in attname:
+                        await function_in.delete_player(self, user.id, True)
+                        embed.add_field(name=f"你的所有資料已被清除!", value=f"\u200b", inline=False)
+                    if "給予隨機職業技能書" in attname:
+                        book = await function_in.get_skill_book(self, value)
+                        await function_in.give_item(self, user.id, book)
+                        embed.add_field(name=f"你獲得了 {book}!", value=f"\u200b", inline=False)
+                    if "領悟天賦點" in attname:
+                        a = random.randint(1, 100)
+                        if value > a:
+                            players_skill_point+=1
+                            await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
+                            embed.add_field(name="你成功領悟到天賦點! 天賦點+1!", value=f"\u200b", inline=False)
+                        else:
+                            embed.add_field(name="你沒有領悟到天賦點...", value=f"\u200b", inline=False)
         msg = await interaction.followup.send(embed=embed)
         if quest:
             await Quest_system.add_quest(self, user, "賺錢", "道具", value, msg)
