@@ -22,7 +22,7 @@ from cogs.function_in_in import function_in_in
 from cogs.skill import Skill
 from cogs.quest import Quest_system
 from cogs.pets import Pets
-from cogs.event import Event
+from cogs.verify import Verify
 
 class Pvp(discord.Cog, name="PVP系統"):
     def __init__(self, bot):
@@ -47,6 +47,13 @@ class Pvp(discord.Cog, name="PVP系統"):
         checkreg = await function_in.checkreg(self, interaction, player.id)
         if not checkreg:
             return False
+        check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
+        if check_verify:
+            if not check_verifya:
+                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+            else:
+                await interaction.followup.send('驗證碼已發送至您的私聊')
+            return
         if player.id == user.id:
             await interaction.followup.send('你不能與自己決鬥!')
             return

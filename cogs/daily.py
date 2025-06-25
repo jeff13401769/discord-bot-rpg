@@ -16,6 +16,7 @@ from discord.ext import commands, tasks
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
+from cogs.verify import Verify
 
 class Daily(discord.Cog, name="簽到"):
     def __init__(self, bot):
@@ -27,6 +28,13 @@ class Daily(discord.Cog, name="簽到"):
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if checkreg:
+            check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
+            if check_verify:
+                if not check_verifya:
+                    await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+                else:
+                    await interaction.followup.send('驗證碼已發送至您的私聊')
+                return
             search = await function_in.sql_search("rpg_system", "daily", ["user_id"], [user.id])
 
             now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')

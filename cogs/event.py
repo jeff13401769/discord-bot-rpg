@@ -18,6 +18,7 @@ from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.quest import Quest_system
+from cogs.verify import Verify
 
 class Event(discord.Cog, name="活動系統"):
     def __init__(self, bot):
@@ -164,6 +165,13 @@ class Event(discord.Cog, name="活動系統"):
         if message.guild is None:
             return
         if not f"{message.content}" in ["伐木", "挖礦", "釣魚", "普通採藥", "特殊採藥", "打怪", "種田", "狩獵"]:
+            return
+        check_verify, check_verifya = await Verify.check_verify_status(self, message.author.id)
+        if check_verify:
+            if not check_verifya:
+                await message.reply('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本')
+            else:
+                await message.reply('驗證碼已發送至您的私聊')
             return
         search = await function_in.sql_search("rpg_players", "players", ["user_id"], [message.author.id])
         if not search:

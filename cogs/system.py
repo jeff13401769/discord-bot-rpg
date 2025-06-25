@@ -24,7 +24,7 @@ from cogs.lottery import Lottery
 from cogs.skill import Skill
 from cogs.quest import Quest_system
 from cogs.event import Event
-
+from cogs.verify import Verify
 class System(discord.Cog, name="主系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
@@ -562,6 +562,13 @@ class System(discord.Cog, name="主系統"):
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
+            return
+        check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
+        if check_verify:
+            if not check_verifya:
+                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+            else:
+                await interaction.followup.send('驗證碼已發送至您的私聊')
             return
         if not num:
             num = 1
@@ -1160,6 +1167,13 @@ class System(discord.Cog, name="主系統"):
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
+        if check_verify:
+            if not check_verifya:
+                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+            else:
+                await interaction.followup.send('驗證碼已發送至您的私聊')
+            return
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
@@ -1277,6 +1291,13 @@ class System(discord.Cog, name="主系統"):
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
+        check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
+        if check_verify:
+            if not check_verifya:
+                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+            else:
+                await interaction.followup.send('驗證碼已發送至您的私聊')
+            return
         if ltype == "特殊採藥":
             if func > 30:
                 await interaction.followup.send(f'{ltype} 單次最多只能使用30次採集!')
@@ -1344,7 +1365,7 @@ class System(discord.Cog, name="主系統"):
         await msg1.edit(msg)
         chance = {
             "成功": int(func),
-            "失敗": int(1000-func)
+            "失敗": int(5000-func)
         }
         chance = await function_in.lot(self, chance)
         if f"{chance}" == "成功":
