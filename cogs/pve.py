@@ -1542,7 +1542,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     level_limit = 20
                 pdmg = int(pdmg + (pdmg*(level_limit*0.01)))
             if pdmg < mdef:
-                pdmg = 0
+                pdmg = 1
             else:
                 pdmg = pdmg - mdef
             return int(pdmg)
@@ -1587,7 +1587,7 @@ class Pve(discord.Cog, name="PVE系統"):
                         hp100 = 0.4
                     mdmg = mdmg-int(mdmg*hp100)
             if mdmg < pdef:
-                mdmg = 0
+                mdmg = 1
             else:
                 mdmg = mdmg - pdef
             return int(mdmg), dmgstr
@@ -2219,7 +2219,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 user = interaction.user
                 embed = discord.Embed(title=f'{user.name} 召喚出來的怪物', color=0xff5151)
                 players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-                defa = random.randint(110, 180) *0.01
+                defa = random.randint(300, 400) *0.01
                 player_def = int(math.floor(players_def *defa))
                 defa *= 100
                 defa = int(defa)

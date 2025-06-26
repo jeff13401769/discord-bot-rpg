@@ -1485,7 +1485,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                                 "獲得(當前等級x25)晶幣",
                                 "血量回滿",
                                 "魔力回滿",
-                                "血量歸一",
+                                "血量歸三",
                                 "魔力歸零",
                                 "3回合內減少50%傷害",
                                 "3回合內減少50%防禦",
@@ -1587,7 +1587,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     level_limit = 20
                 pdmg = int(pdmg + (pdmg*(level_limit*0.01)))
             if pdmg < mdef:
-                pdmg = 0
+                pdmg = 1
             else:
                 pdmg = pdmg - mdef
             return int(pdmg)
@@ -1619,7 +1619,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         hp100 = 0.4
                     mdmg = mdmg-int(mdmg*hp100)
             if mdmg < pdef:
-                mdmg = 0
+                mdmg = 1
             else:
                 mdmg = mdmg - pdef
             return int(mdmg)
@@ -2159,7 +2159,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name=f"副本剩餘 {self.dungeon_time} 回合", value="\u200b", inline=False)
                 embed.add_field(name=f"副本剩餘 {self.dungeon_monster_amount} 隻怪", value="\u200b", inline=False)
                 players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-                defa = random.randint(110, 180) *0.01
+                defa = random.randint(300, 400) *0.01
                 player_def = int(math.floor(players_def *defa))
                 defa *= 100
                 defa = int(defa)
@@ -3591,8 +3591,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "hp", "max")
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
-                elif buff == "血量歸一":
-                    await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                elif buff == "血量歸三":
+                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
                     await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":
@@ -3788,8 +3788,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "hp", "max")
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
-                elif buff == "血量歸一":
-                    await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                elif buff == "血量歸三":
+                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
                     await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":
@@ -3985,8 +3985,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "hp", "max")
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
-                elif buff == "血量歸一":
-                    await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                elif buff == "血量歸三":
+                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
                     await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":

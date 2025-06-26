@@ -204,7 +204,7 @@ class Pets(discord.Cog, name="寵物系統"):
                 if dmg - monster_def >= 0:
                     dmg -= monster_def
                 else:
-                    dmg = 0
+                    dmg = 1
                 dodge = monster_dodge * 0.01
                 hit = hit * 0.01
                 if round(random.random(), 2) <= dodge:
