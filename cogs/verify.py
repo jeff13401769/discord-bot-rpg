@@ -43,7 +43,7 @@ class Verify(discord.Cog, name="驗證系統"):
             verify_status = True
         else:
             a = random.randint(0, atime)
-            if a > 100:
+            if a > 50:
                 code = await Verify.generate_secure_string()
                 await function_in.sql_update("rpg_system", "verify", "verify", 1, "user_id", user_id)
                 await function_in.sql_update("rpg_system", "verify", "code", code, "user_id", user_id)

@@ -79,7 +79,22 @@ class function_in(discord.Cog, name="模塊導入1"):
     
     async def give_skill_exp(self, user_id, skill_name):
         if skill_name == "所有被動":
-            pass
+            search = await function_in.sql_findall("rpg_skills", f"{user_id}")
+            for skill in search:
+                skill_name = skill[0]
+                skill_level = skill[1]
+                data, a, b, c = await function_in.search_for_file(self, skill_name, False)
+                if f"{data['技能類型']}" == "被動":
+                    skill_exp = skill[2]+1
+                    if data['等級上限'] > skill_level:
+                        await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                        while int(skill_level*100) < skill_exp:
+                            skill_exp -= int(skill_level*100)
+                            skill_level += 1
+                            if skill_level >= data['等級上限']:
+                                skill_exp = 0
+                            await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                            await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
         else:
             data, a, b, c = await function_in.search_for_file(self, skill_name, False)
             search = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])

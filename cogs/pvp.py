@@ -1239,6 +1239,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 money = await function_in.give_money(self, atttacker, "pp", 3, "pvp")
                 await Quest_system.add_quest(self, atttacker, "決鬥", "勝利", 1, msg)
                 embed.add_field(name="獲勝者:", value=f"{atttacker.mention} 決鬥點數+3({money})", inline=False)
+                await function_in.give_skill_exp(self, atttacker.id, "所有被動")
                 if not await function_in.check_money(self, loser, "pp", 3):
                     await function_in.sql_update("rpg_players", "money", "pp", 0, "user_id", loser.id)
                 else:

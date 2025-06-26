@@ -1325,6 +1325,7 @@ class Pve(discord.Cog, name="PVE系統"):
             embed.add_field(name=f"<:exp:1078583848381710346> 你獲得了 {exp} 經驗!", value="\u200b", inline=False)
             embed.add_field(name=f"<:coin:1078582446091665438> 你獲得了 {self.monster_money} 枚晶幣!", value="\u200b", inline=False)
             await function_in.checkactioning(self, user, "return")
+            await function_in.give_skill_exp(self, user.id, "所有被動")
             await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             embed.add_field(name=f"目前飽食度剩餘 {players_hunger}", value="\u200b", inline=False)
@@ -1406,6 +1407,7 @@ class Pve(discord.Cog, name="PVE系統"):
             embed.add_field(name=f"<:coin:1078582446091665438> 你獲得了 {self.monster_money} 枚晶幣!", value="\u200b", inline=False)
             await function_in.checkactioning(self, user, "return")
             await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
+            await function_in.give_skill_exp(self, user.id, "所有被動")
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             aexp = 0
             skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")

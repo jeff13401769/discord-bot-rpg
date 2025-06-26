@@ -1,21 +1,12 @@
 import datetime
 import pytz
-import asyncio
-import time
-import math
-import random
 import functools
-import yaml
-import certifi
-import os
 
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 
 from utility.config import config
-from cogs.function_in import function_in
-from cogs.function_in_in import function_in_in
 
 class Help(discord.Cog, name="幫助"):
     def __init__(self, bot):
@@ -44,10 +35,10 @@ class Help(discord.Cog, name="幫助"):
             self.interaction = interaction
             self.guild = guild
             self.url = url
-            self.button1 = discord.ui.Button(emoji="<:command_block:1149171629805555754>", label="指令表(一)", style=discord.ButtonStyle.red, custom_id="button1")
+            self.button1 = discord.ui.Button(emoji="<:command_block:1381359474014425218>", label="指令表(一)", style=discord.ButtonStyle.red, custom_id="button1")
             self.button1.callback = functools.partial(self.button1_callback, interaction)
             self.add_item(self.button1)
-            self.button2 = discord.ui.Button(emoji="<:command_block:1149171629805555754>", label="指令表(二)", style=discord.ButtonStyle.red, custom_id="button2")
+            self.button2 = discord.ui.Button(emoji="<:command_block:1381359474014425218>", label="指令表(二)", style=discord.ButtonStyle.red, custom_id="button2")
             self.button2.callback = functools.partial(self.button2_callback, interaction)
             self.add_item(self.button2)
             self.button3 = discord.ui.Button(emoji="<:weapon:1078601327262842893>", label="戰鬥介紹", style=discord.ButtonStyle.blurple, custom_id="button3")

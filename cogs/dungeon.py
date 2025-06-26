@@ -1309,6 +1309,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             await function_in.give_money(self, user, "money", self.monster_money, "打怪", interaction.message)
             await Quest_system.add_quest(self, user, "擊殺", self.monster_name, 1, interaction.message)
             levelup = await function_in.give_exp(self, user.id, exp)
+            await function_in.give_skill_exp(self, user.id, "所有被動")
             if levelup:
                 embed.add_field(name=f"{levelup}", value="\u200b", inline=False)
             if self.dungeon_name == "惡夢迷宮":

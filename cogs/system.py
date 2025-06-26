@@ -1298,10 +1298,6 @@ class System(discord.Cog, name="主系統"):
             else:
                 await interaction.followup.send('驗證碼已發送至您的私聊')
             return
-        if ltype == "特殊採藥":
-            if func > 30:
-                await interaction.followup.send(f'{ltype} 單次最多只能使用30次採集!')
-                return
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
