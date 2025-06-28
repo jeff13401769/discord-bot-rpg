@@ -1541,7 +1541,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 if level_limit > 20:
                     level_limit = 20
                 pdmg = int(pdmg + (pdmg*(level_limit*0.01)))
-            if pdmg < mdef:
+            if pdmg <= mdef:
                 pdmg = 1
             else:
                 pdmg = pdmg - mdef
@@ -1586,7 +1586,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     if hp100 > 0.4:
                         hp100 = 0.4
                     mdmg = mdmg-int(mdmg*hp100)
-            if mdmg < pdef:
+            if mdmg <= pdef:
                 mdmg = 1
             else:
                 mdmg = mdmg - pdef

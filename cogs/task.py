@@ -74,12 +74,14 @@ class Task(discord.Cog, name="後台1"):
     async def task(self):
         self.Time += 1
         now = datetime.datetime.now(pytz.timezone("Asia/Taipei"))
+        network_latency = self.get_network_latency()
+        ping = f"{network_latency * 1000:.2f}"
         requests.get(
                 url="https://status.rbctw.net/api/push/z1U2fYdovd",
                 params={
                     "status": "up",
                     "msg": "OK",
-                    "ping": f"{round(self.bot.latency*1000)}"
+                    "ping": ping
                 },
                 timeout=5
         )
@@ -91,9 +93,8 @@ class Task(discord.Cog, name="後台1"):
                 await function_in.fixplayer(self, user_id)
             self.bot.log.info("[排程] 自動修正資料完畢")
             memory_info = psutil.Process().memory_info().rss
-            network_latency = self.get_network_latency()
             self.bot.log.info(f"[偵錯] 目前機器人使用了 {memory_info / (1024 * 1024):.2f} MB 記憶體")
-            self.bot.log.info(f"[偵錯] 目前網路延遲為 {network_latency * 1000:.2f} ms")
+            self.bot.log.info(f"[偵錯] 目前網路延遲為 {ping} ms")
         if now.hour == 5:
             if now.minute == 45:
                 self.bot.log.info("[排程] 開始重置簽到系統...")

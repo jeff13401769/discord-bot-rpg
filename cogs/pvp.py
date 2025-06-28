@@ -889,7 +889,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                     if hp100 > 0.4:
                         hp100 = 0.4
                     mdmg = mdmg-int(mdmg*hp100)
-            if mdmg < pdef:
+            if mdmg <= pdef:
                 mdmg = 1
             else:
                 mdmg = mdmg - pdef
