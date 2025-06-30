@@ -25,7 +25,8 @@ class Task(discord.Cog, name="後台1"):
     boss_list = [
         "冰霜巨龍",
         "炎獄魔龍",
-        "魅魔女王"
+        "魅魔女王",
+        "紫羽狐神●日月粉碎者●銀夢浮絮"
     ]
     presence = 1
 

@@ -29,6 +29,7 @@ worldboss_list = [
     "冰霜巨龍",
     "炎獄魔龍",
     "魅魔女王",
+    "紫羽狐神●日月粉碎者●銀夢浮絮",
     "玉兔"
 ]
 wb = []
@@ -514,6 +515,8 @@ class Pve(discord.Cog, name="PVE系統"):
                 skill_list = ["炎龍之怒", "烈火焚天"]
             elif self.monster_name == "**世界BOSS** 魅魔女王":
                 skill_list = ["魅惑", "皮鞭抽打"]
+            elif self.monster_name == "**世界BOSS** 紫羽狐神●日月粉碎者●銀夢浮絮":
+                skill_list = ["夢界羽輪陣", "日蝕輪廻斬", "晨曦的誓約", "銀夢緋歌"]
             elif self.monster_name == "**世界BOSS** 玉兔":
                 skill_list = ["可愛的力量", "玉兔搗藥", "玉兔之怒", "星宮降臨"]
             else:
@@ -690,6 +693,37 @@ class Pve(discord.Cog, name="PVE系統"):
                             self.monster_異常_暈眩_round = 3
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔的誘惑 對 Lv.{self.monster_level} {self.monster_name} 造成 {dmg} 點魔法傷害", value="\u200b", inline=False)
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔的誘惑 使 Lv.{self.monster_level} {self.monster_name} 降低 {self.monster_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        if "「冰龍之軀」" in f"{info}":
+                            reg_mana = int(players_max_mana*0.1)
+                            players_mana += reg_mana
+                            if players_mana > players_max_mana:
+                                players_mana = players_max_mana
+                            embed.add_field(name=f"{user.name} 觸發被動技能 冰龍之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
+                        if "「炎龍之軀」" in f"{info}":
+                            reg_hp = int(players_max_hp*0.1)
+                            players_hpb += reg_hp
+                            if players_hpb > players_max_hp:
+                                players_hpb = players_max_hp
+                            embed.add_field(name=f"{user.name} 觸發被動技能 炎龍之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
+                        if "「魅魔之軀」" in f"{info}":
+                            reg_hp = int(players_max_hp*0.05)
+                            reg_mana = int(players_max_mana*0.1)
+                            players_hpb += reg_hp
+                            players_mana += reg_mana
+                            if players_hpb > players_max_hp:
+                                players_hpb = players_max_hp
+                            if players_mana > players_max_mana:
+                                players_mana = players_max_mana
+                            self.monster_異常_減傷 = True
+                            self.monster_異常_減傷_round = 3
+                            self.monster_異常_減傷_range = 30
+                            embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
+                            embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
+                            embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 使 Lv.{self.monster_level} {self.monster_name} {self.monster_異常_減傷_round} 回合內降低 {self.monster_異常_減傷_range}% 傷害", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
+                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
 
             return dmg_a, dmg_type, monster_hp
         
@@ -1149,18 +1183,18 @@ class Pve(discord.Cog, name="PVE系統"):
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 3
                         self.player_異常_減防_range = 70
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
 
                 if skill == "魅惑":
                     if random.random() < 0.5:
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 3
                         self.player_異常_減防_range = 50
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
                         self.player_異常_減傷 = True
                         self.player_異常_減傷_round = 3
                         self.player_異常_減傷_range = 50
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減傷_round} 回合內將減少 {self.player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
                     else:
                         embed.add_field(name=f"但因為 {user.name} 心智非常堅定, 沒有受到誘惑!", value="\u200b", inline=False)
 
@@ -1173,17 +1207,90 @@ class Pve(discord.Cog, name="PVE系統"):
                             a, dmgstr = await self.on_monster_damage(user, monster_AD*1.5, player_def)
                             embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
                             dmga+=a
+
+                if skill == "夢界羽輪陣":
+                    self.player_異常_減防 = True
+                    self.player_異常_減防_round = 3
+                    self.player_異常_減防_range = 75
+                    embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                    self.player_異常_減傷 = True
+                    self.player_異常_減傷_round = 3
+                    self.player_異常_減傷_range = 80
+                    embed.add_field(name=f"{user.name} {self.player_異常_減傷_round} 回合內將減少 {self.player_異常_減傷_range}% 傷害",value="\u200b", inline=False)
+                    self.player_異常_流血 = True
+                    self.player_異常_流血_round = int(self.monster_level/5)
+                    self.player_異常_流血_dmg = int(self.monster_level*3)
+                    embed.add_field(name=f"{user.name} {self.player_異常_流血_round} 回合內將受到 {self.player_異常_流血_dmg} 流血傷害",value="\u200b", inline=False)
+                
+                if skill == "日蝕輪廻斬":
+                    dodge_check = await self.dodge_check(players_dodge, int(monster_hit*1.5))
+                    if dodge_check:
+                        embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
+                    else:
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*3, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
+                        dmga+=a
+                        self.player_異常_燃燒 = True
+                        self.player_異常_燃燒_round = int(self.monster_level/10)
+                        self.player_異常_燃燒_dmg = int(self.monster_level*5)
+                        embed.add_field(name=f"{user.name} {self.player_異常_燃燒_round} 回合內將受到 {self.player_異常_燃燒_dmg} 燃燒傷害",value="\u200b", inline=False)
+                        self.player_異常_寒冷 = True
+                        self.player_異常_寒冷_round = int(self.monster_level/10)
+                        self.player_異常_寒冷_dmg = int(self.monster_level*5)
+                        embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round} 回合內將受到 {self.player_異常_寒冷_dmg} 寒冷傷害",value="\u200b", inline=False)
+                
+                if skill == "晨曦的誓約":
+                    dodge_check = await self.dodge_check(players_dodge, int(monster_hit*2.5))
+                    if dodge_check:
+                        embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
+                    else:
+                        a, dmgstr = await self.on_monster_damage(user, monster_AD*5, player_def)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 對 {user.name} 造成 {a}點{dmgstr}傷害", value="\u200b", inline=False)
+                        dmga+=a
+                
+                if skill == "銀夢緋歌":
+                    reghp = int(self.monster_maxhp*0.15)
+                    search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [self.monster_name])
+                    hp = search[2]
+                    if hp+reghp >= self.monster_maxhp:
+                        hp = self.monster_maxhp
+                        await function_in.sql_update("rpg_worldboss", "boss", "hp", hp, "monster_name", self.monster_name)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 回復了 {reghp} HP", value="\u200b", inline=False)
+                    else:
+                        await function_in.sql_update("rpg_worldboss", "boss", "hp", hp+reghp, "monster_name", self.monster_name)
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 回復了 {reghp} HP", value="\u200b", inline=False)
+                    if self.monster_異常_燃燒:
+                        self.monster_異常_燃燒 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 燃燒", value="\u200b", inline=False)
+                    if self.monster_異常_寒冷:
+                        self.monster_異常_寒冷 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 寒冷", value="\u200b", inline=False)
+                    if self.monster_異常_中毒:
+                        self.monster_異常_中毒 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 中毒", value="\u200b", inline=False)
+                    if self.monster_異常_流血:
+                        self.monster_異常_流血 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 流血", value="\u200b", inline=False)
+                    if self.monster_異常_凋零:
+                        self.monster_異常_凋零 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 凋零", value="\u200b", inline=False)
+                    if self.monster_異常_減防:
+                        self.monster_異常_減防 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 減防", value="\u200b", inline=False)
+                    if self.monster_異常_減傷:
+                        self.monster_異常_減傷 = False
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 減傷", value="\u200b", inline=False)
                 
                 if skill == "可愛的力量":
                     if random.random() < 0.8:
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 5
                         self.player_異常_減防_range = 90
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
                         self.player_異常_減傷 = True
                         self.player_異常_減傷_round = 5
                         self.player_異常_減傷_range = 90
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減傷_round} 回合內將減少 {self.player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
                     else:
                         embed.add_field(name=f"但因為 {user.name} 心智非常堅定, 沒有受到誘惑!", value="\u200b", inline=False)
 
@@ -1214,7 +1321,7 @@ class Pve(discord.Cog, name="PVE系統"):
                         self.player_異常_減防 = True
                         self.player_異常_減防_round = 3
                         self.player_異常_減防_range = 70
-                        embed.add_field(name=f"{user.name} 3回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
 
                 if skill == "星宮降臨":
                     dodge_check = await self.dodge_check(players_dodge, monster_hit*5)
@@ -1461,6 +1568,8 @@ class Pve(discord.Cog, name="PVE系統"):
                 prizes["魅魔女王的緊身衣碎片"] = 1500
                 prizes["魅魔女王的寶箱"] = 1500
                 prizes["魅魔女王的皮鞭"] = 1
+            if self.monster_name == "**世界BOSS** 紫羽狐神●日月粉碎者●銀夢浮絮":
+                prizes["紫羽狐神●日月粉碎者●銀夢浮絮的寶箱"] = 1500
             
             name = self.monster_name.replace("**世界BOSS** ", "").replace(" ", "")
             

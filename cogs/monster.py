@@ -12,7 +12,7 @@ class Monster(discord.Cog, name="怪物"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    async def summon_mob(self, map, players_level, mob_name: str, boss: bool, worldboss=None):
+    async def summon_mob(self, map, players_level, mob_name: str, boss: bool, worldboss=False, ramdomboss=False):
         is_boss = round(random.random(), 2) <= 0.03
         if boss:
             is_boss = True
@@ -63,6 +63,23 @@ class Monster(discord.Cog, name="怪物"):
                     "傳說卡包": 25,
                     "中級天賦領悟書": 10,
                     "魅魔女王的皮鞭": 2,
+                    "15%個人經驗加倍卷": 90,
+                    "5%全服經驗加倍卷": 70,
+                    "20%個人經驗加倍卷": 30,
+                    "10%全服經驗加倍卷": 15,
+                }
+            elif worldboss == "紫羽狐神●日月粉碎者●銀夢浮絮":
+                alllevel = await function_in.check_all_level(self)
+                player_num = await function_in.check_all_player_num(self)
+                level = int(((alllevel/player_num)*0.8)+30)
+                prizes = {
+                    "隨機職業技能書(15等)": 200,
+                    "水晶箱": 100,
+                    "Boss召喚卷": 80,
+                    "神性之石": 30,
+                    "詛咒之石": 30,
+                    "傳說卡包": 25,
+                    "中級天賦領悟書": 10,
                     "15%個人經驗加倍卷": 90,
                     "5%全服經驗加倍卷": 70,
                     "20%個人經驗加倍卷": 30,

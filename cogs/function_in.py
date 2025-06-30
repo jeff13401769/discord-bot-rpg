@@ -58,6 +58,21 @@ class function_in(discord.Cog, name="模塊導入1"):
         else:
             return None
     
+    async def check_all_level(self):
+        search = await function_in.sql_findall("rpg_players", "players")
+        alllevel = 0
+        for player in search:
+            alllevel = player[1]
+        return alllevel
+
+    async def check_all_player_num(self):
+        search = await function_in.sql_findall("rpg_players", "players")
+        num = 0
+        for player in search:
+            num += 1
+        return num
+        
+    
     async def card_packet(self, level:str):
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         card_list = []

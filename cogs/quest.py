@@ -188,7 +188,7 @@ class Quest_system(discord.Cog, name="任務系統"):
                     await function_in_in.sql_delete("rpg_guild", "quest", "guild_name", guild_info)
                     await msg.reply(embed=embed)
                 else:
-                    await function_in_in.sql_update("rpg_guild", "quest", "qnum_1", qnum_1, "guild_name", guild_info)
+                    await function_in_in.sql_update("rpg_guild", "quest", "qnum_1", qnum_1, "guild_name", f"{guild_info}")
 
 def setup(client: discord.Bot):
     client.add_cog(Quest_system(client))

@@ -859,6 +859,9 @@ class System(discord.Cog, name="主系統"):
                             prizes["魅魔女王的寶箱"] = 1500
                             prizes["魅魔女王的皮鞭"] = 1
                             prizes["中級天賦領悟書"] = 15
+                        if "紫羽狐神●日月粉碎者●銀夢浮絮" in attname:
+                            prizes["紫羽狐神●日月粉碎者●銀夢浮絮的寶箱"] = 1500
+                            prizes["中級天賦領悟書"] = 15
                         
                         item = await function_in.lot(self, prizes)
                         await function_in.give_item(self, user.id, item)
@@ -1321,10 +1324,10 @@ class System(discord.Cog, name="主系統"):
                 await interaction.followup.send(f"{item} 不存在於資料庫! 請聯繫GM處理!")
                 return
             await function_in.give_item(self, user.id, item)
-            await Quest_system.add_quest(self, user, "工作", lifemsg1, func, msg)
             await function_in.remove_hunger(self, user.id)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             msg = await interaction.followup.send(f"你辛苦的{lifemsg}後, 得到了1個{item}\n目前飽食度剩餘 {players_hunger}")
+            await Quest_system.add_quest(self, user, "工作", lifemsg1, func, msg)
             return
         msg1 = await interaction.followup.send(f'正在進行大量{ltype}中, 請稍後')
         msg = f"你辛苦的{lifemsg}後, 得到了下列物品:\n"

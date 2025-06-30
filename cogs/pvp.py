@@ -824,6 +824,37 @@ class Pvp(discord.Cog, name="PVP系統"):
                             self.next_player_異常_暈眩_round = 3
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔的誘惑 對 {self.next_player.name} 造成 {int(players_AP*2)} 點魔法傷害", value="\u200b", inline=False)
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔的誘惑 使 {self.next_player.name} 降低 {self.next_player_異常_減防_range}% 防禦", value="\u200b", inline=False)
+                        if "「冰龍之軀」" in f"{info}":
+                            reg_mana = int(players_max_mana*0.1)
+                            players_mana += reg_mana
+                            if players_mana > players_max_mana:
+                                players_mana = players_max_mana
+                            embed.add_field(name=f"{self.now_player.name} 觸發被動技能 冰龍之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
+                        if "「炎龍之軀」" in f"{info}":
+                            reg_hp = int(players_max_hp*0.1)
+                            players_hpb += reg_hp
+                            if players_hpb > players_max_hp:
+                                players_hpb = players_max_hp
+                            embed.add_field(name=f"{self.now_player.name} 觸發被動技能 炎龍之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
+                        if "「魅魔之軀」" in f"{info}":
+                            reg_hp = int(players_max_hp*0.05)
+                            reg_mana = int(players_max_mana*0.1)
+                            players_hpb += reg_hp
+                            players_mana += reg_mana
+                            if players_hpb > players_max_hp:
+                                players_hpb = players_max_hp
+                            if players_mana > players_max_mana:
+                                players_mana = players_max_mana
+                            self.next_player_異常_減傷 = True
+                            self.next_player_異常_減傷_round = 3
+                            self.next_player_異常_減傷_range = 30
+                            embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
+                            embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
+                            embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 使 {self.next_player.name} {self.next_player_異常_減傷_round} 回合內降低 {self.next_player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
+                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
+                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
             players_hpa = players_hp - dmg
             if players_hpa <= 0:
                 skill_list = await function_in.sql_findall("rpg_skills", f"{self.now_player.id}")

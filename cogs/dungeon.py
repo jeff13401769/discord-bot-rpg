@@ -729,7 +729,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                             self.monster_異常_減傷_range = 30
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
-                            embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 使 Lv.{self.monster_level} {self.monster_name} 降低 {self.monster_異常_減傷_range}% 傷害", value="\u200b", inline=False)
+                            embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 使 Lv.{self.monster_level} {self.monster_name} {self.monster_異常_減傷_round} 回合內降低 {self.monster_異常_減傷_range}% 傷害", value="\u200b", inline=False)
                             await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
                             await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
 
