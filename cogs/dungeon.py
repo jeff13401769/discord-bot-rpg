@@ -323,7 +323,7 @@ class Dungeon(discord.Cog, name="副本系統"):
         #副本資訊
             dungeon_name, dungeon_time, dungeon_monster_amount, dungeon_bonus, dungeon_random_bonus
         ):
-            super().__init__(timeout=60)
+            super().__init__(timeout=90)
             self.interaction = interaction
             self.original_msg = original_msg
             self.embed = embed
