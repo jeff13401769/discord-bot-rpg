@@ -71,6 +71,17 @@ class function_in(discord.Cog, name="模塊導入1"):
         for player in search:
             num += 1
         return num
+
+    async def check_super_worldboss_level(self):
+        search = await function_in.sql_findall("rpg_players", "players")
+        alllevel = 0
+        player_num = 0
+        for player in search:
+            if player[1] >= 10:
+                alllevel += player[1]
+                player_num += 1
+        boss_level = int(alllevel / player_num)
+        return boss_level
         
     
     async def card_packet(self, level:str):

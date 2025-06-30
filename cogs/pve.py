@@ -523,9 +523,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 return False
             if "世界BOSS" in self.monster_name:
                 skill_list.append("世界之力")
-            a = 0
-            while a < 2:
-                a += 1
+            for i in range(3):
                 skill_list.append("空")
             check = random.choice(skill_list)
             if check == "空":
@@ -1211,11 +1209,11 @@ class Pve(discord.Cog, name="PVE系統"):
                 if skill == "夢界羽輪陣":
                     self.player_異常_減防 = True
                     self.player_異常_減防_round = 3
-                    self.player_異常_減防_range = 75
+                    self.player_異常_減防_range = 60
                     embed.add_field(name=f"{user.name} {self.player_異常_減防_round} 回合內將減少 {self.player_異常_減防_range}% 防禦", value="\u200b", inline=False)
                     self.player_異常_減傷 = True
                     self.player_異常_減傷_round = 3
-                    self.player_異常_減傷_range = 80
+                    self.player_異常_減傷_range = 60
                     embed.add_field(name=f"{user.name} {self.player_異常_減傷_round} 回合內將減少 {self.player_異常_減傷_range}% 傷害",value="\u200b", inline=False)
                     self.player_異常_流血 = True
                     self.player_異常_流血_round = int(self.monster_level/5)
@@ -1336,7 +1334,7 @@ class Pve(discord.Cog, name="PVE系統"):
                         self.player_異常_寒冷_dmg = 500
                 
                 if skill == "世界之力":
-                    reghp = int(self.monster_maxhp*0.1)
+                    reghp = int(self.monster_maxhp*0.03)
                     search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [self.monster_name])
                     hp = search[2]
                     if hp+reghp >= self.monster_maxhp:
