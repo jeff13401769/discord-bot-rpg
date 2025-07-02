@@ -72,6 +72,7 @@ class Monster(discord.Cog, name="怪物"):
                 boss_level = await function_in.check_super_worldboss_level(self)
                 level = int(boss_level+10)
                 prizes = {
+                    "銀燼幻羽": 500,
                     "隨機職業技能書(15等)": 200,
                     "水晶箱": 100,
                     "Boss召喚卷": 80,

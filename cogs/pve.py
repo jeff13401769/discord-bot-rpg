@@ -1568,6 +1568,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 prizes["魅魔女王的皮鞭"] = 1
             if self.monster_name == "**世界BOSS** 紫羽狐神●日月粉碎者●銀夢浮絮":
                 prizes["紫羽狐神●日月粉碎者●銀夢浮絮的寶箱"] = 1500
+                prizes["銀燼幻羽"] = 1500
             
             name = self.monster_name.replace("**世界BOSS** ", "").replace(" ", "")
             

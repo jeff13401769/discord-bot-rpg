@@ -863,6 +863,7 @@ class System(discord.Cog, name="主系統"):
                             prizes["中級天賦領悟書"] = 15
                         if "紫羽狐神●日月粉碎者●銀夢浮絮" in attname:
                             prizes["紫羽狐神●日月粉碎者●銀夢浮絮的寶箱"] = 1500
+                            prizes["銀燼幻羽"] = 1500
                             prizes["中級天賦領悟書"] = 15
                         
                         item = await function_in.lot(self, prizes)
