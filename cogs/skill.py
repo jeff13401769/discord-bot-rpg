@@ -29,18 +29,31 @@ class Skill(discord.Cog, name="技能系統"):
                 if skill_name == skill:
                     skill_cd = skill_info["冷卻時間"]
                     skill_mana = skill_info["消耗MP"]
+                    ammo_num = skill_info.get("消耗彈藥", 0)
                     skill_in = True
                     continue
         cd = skill_cd
         if "世界BOSS" in monster_name:
             if "在攻擊世界Boss時無法使用" in f"{data[f'{list(data.keys())[0]}'][f'{skill}']['技能介紹']}":
-                return "但是這個技能無法在世界BOSS戰中使用, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+                return "但是這個技能無法在世界BOSS戰中使用, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if type(skill_mana) == str:
             remove_mana = skill_mana.replace("%", "")
             skill_mana = int(players_max_mana * (int(remove_mana)*0.01))
         if skill_mana > players_mana:
-            return "但因為魔力不夠, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+            return "但因為魔力不夠, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+        ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class, ammo_num)
+        ammodmg = 0
+        if ammouse:
+            data = await function_in.search_for_file(self, ammoname)
+            for attname, value in data.get(ammoname).get("增加屬性", {}).items():
+                if attname == "物理攻擊力":
+                    ammodmg += value
+        if not ammocheck:
+            if ammoname == "無":
+                return "忘記裝備了必須的道具! 請檢查你的職業專用道具!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+            else:
+                return f"你的 {ammoname} 已經沒了, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
         await function_in.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
         search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
         skill_lvl = search[1]
@@ -97,7 +110,7 @@ class Skill(discord.Cog, name="技能系統"):
         if skill == "劈砍":
             remove_hp = int(players_max_hp * 0.05)
             if players_hp <= remove_hp:
-                return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+                return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
             dmg = int((((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
             dmg -= monster_def
@@ -109,7 +122,7 @@ class Skill(discord.Cog, name="技能系統"):
             blood_dmg = int(dmg*0.45)
         if skill == "詠唱":
             if players_class != "法師":
-                return f"但因為這個技能限制只有法師能夠使用, 而你是 {players_class}, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+                return f"但因為這個技能限制只有法師能夠使用, 而你是 {players_class}, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             skill_type_chant = 50
             skill_type_chant1 = 9999
         if skill == "魔彈":
@@ -139,6 +152,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_type_damage = dmg
         if skill == "蓄力矢":
             dmg = int((players_AD*(skill_lvl*0.5))+(skill_lvl*55))
+            dmg += ammodmg
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0
@@ -149,7 +163,7 @@ class Skill(discord.Cog, name="技能系統"):
         if skill == "大刀闊斧":
             remove_hp = int(players_max_hp * 0.1)
             if players_hp <= remove_hp:
-                return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
+                return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
             dmg = int(((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
             dmg -= monster_def
@@ -164,6 +178,7 @@ class Skill(discord.Cog, name="技能系統"):
                 stun_round = 2
         if skill == "精準射擊":
             dmg = int((players_AD*2)*(skill_lvl*2))
+            dmg += ammodmg
             dmg -= monster_def
             if dmg < 1:
                 dmg = 0
@@ -277,7 +292,7 @@ class Skill(discord.Cog, name="技能系統"):
             remove_def_round = 0
             remove_def_range = 0
 
-        return False, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range, remove_def, remove_def_round, remove_def_range
+        return False, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range, remove_def, remove_def_round, remove_def_range, ammoname, ammonum
 
 def setup(client: discord.Bot):
     client.add_cog(Skill(client))

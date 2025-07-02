@@ -57,6 +57,8 @@ class function_in_in(discord.Cog, name="模塊導入2"):
                 time_return.append(f"{minute} 分")
         if second != 0:
             time_return.append(f"{second} 秒")
+        if second == 0:
+            time_return.append(f"片刻")
         time_return = str(time_return)
         time_return = time_return.replace("\u0027", "")
         time_return = time_return.replace(",", "")

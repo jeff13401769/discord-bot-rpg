@@ -679,7 +679,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                     dmg_type = "增傷固定值"
                 if skill_info[0] == "充盈魔杖" and skill_info[1] > 0:
                     if players_class in ["法師"]:
-                        dmg_a = skill_info[1]*players_AP
+                        dmg_a = int((players_max_mana*0.2)+(players_AP*1.3)+(skill_info[1]*1.5))
                         dmg_type = "增傷固定值"
                 if skill_info[0] == "怒意" and skill_info[1] > 0:
                     if players_class == "戰士":
@@ -1075,7 +1075,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             now_player = self.now_player
             now_player_level, now_player_exp, now_player_money, now_player_diamond, now_player_qp, now_player_wbp, now_player_pp, now_player_hp, now_player_max_hp, now_player_mana, now_player_max_mana, now_player_dodge, now_player_hit,  now_player_crit_damage, now_player_crit_chance, now_player_AD, now_player_AP, now_player_def, now_player_ndef, now_player_str, now_player_int, now_player_dex, now_player_con, now_player_luk, now_player_attr_point, now_player_add_attr_point, now_player_skill_point, now_player_register_time, now_player_map, now_player_class, drop_chance, now_player_hunger = await Pvp.pvp_menu.checkattr_pvp(self, now_player.id)
             next_player_level, next_player_exp, next_player_money, next_player_diamond, next_player_qp, next_player_wbp, next_player_pp, next_player_hp, next_player_max_hp, next_player_mana, next_player_max_mana, next_player_dodge, next_player_hit,  next_player_crit_damage, next_player_crit_chance, next_player_AD, next_player_AP, next_player_def, next_player_ndef, next_player_str, next_player_int, next_player_dex, next_player_con, next_player_luk, next_player_attr_point, next_player_add_attr_point, next_player_skill_point, next_player_register_time, next_player_map, next_player_class, drop_chance, next_player_hunger = await Pvp.pvp_menu.checkattr_pvp(self, next_player.id)
-            error, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range = await Skill.skill(self, self.now_player, skill, next_player_def*5, next_player_max_hp, next_player_hp, self.next_player.name)
+            error, skill_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range, ammoname, ammonum = await Skill.skill(self, self.now_player, skill, next_player_def*5, next_player_max_hp, next_player_hp, self.next_player.name)
             embed.add_field(name=f"{now_player.name} 使用技能 {skill}", value=f"消耗了 {skill_mana} 魔力!", inline=False)
             give_exp = True
             dmg = 0
@@ -1234,6 +1234,8 @@ class Pvp(discord.Cog, name="PVP系統"):
                         self.next_player_異常_凋零_round = wither_round
                         self.next_player_異常_凋零_dmg = wither_dmg
                         embed.add_field(name=f"{next_player.name} 受到持續{wither_round}回合的凋零傷害!🖤", value="\u200b", inline=False)
+                if ammoname and ammoname != "無":
+                    embed.add_field(name=f"{now_player.name} 的 {ammoname} 剩餘 {ammonum} 個!", value="\u200b", inline=False)
             if give_exp:
                 await function_in.give_skill_exp(self, now_player.id, skill)
             return dmg, cd, embed
@@ -1480,7 +1482,12 @@ class Pvp(discord.Cog, name="PVP系統"):
                     dmg = now_player_AP
                 else:
                     dmg = now_player_AD
-                ammocheck = True
+                ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, now_player.id, now_player_class)
+                if ammouse:
+                    data = await function_in.search_for_file(self, ammoname)
+                    for attname, value in data.get(ammoname).get("增加屬性", {}).items():
+                        if attname == "物理攻擊力":
+                            dmg += value
                 if ammocheck:
                     dodge_check = await self.dodge_check(next_player_dodge, now_player_hit)
                     if dodge_check:
@@ -1526,8 +1533,14 @@ class Pvp(discord.Cog, name="PVP系統"):
                                 dmg = int(dmg)
                             dmgstr = await self.dmg_int_to_str(dmg)
                             embed.add_field(name=f"{now_player.name} 對 {next_player.name} 造成 {dmgstr} 點傷害", value="\u200b", inline=False)
+                    if ammouse:
+                        embed.add_field(name=f"{now_player.name} 的 {ammoname} 剩餘 {ammonum} 個!", value="\u200b", inline=False)
                 else:
                     dmg = 0
+                    if ammoname == "無":
+                        embed.add_field(name=f"{now_player.name} 忘記裝備了必須的道具! 請檢查你的職業專用道具!", value="\u200b", inline=False)
+                    else:
+                        embed.add_field(name=f"{now_player.name} 的 {ammoname} 已經沒了! 無法發動攻擊!", value="\u200b", inline=False)
 
                 check = await self.remove_hp(next_player, dmg, embed)
                 if not check:

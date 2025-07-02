@@ -115,17 +115,18 @@ class function_in(discord.Cog, name="模塊導入1"):
                 skill_name = skill[0]
                 skill_level = skill[1]
                 data, a, b, c = await function_in.search_for_file(self, skill_name, False)
-                if f"{data['技能類型']}" == "被動":
-                    skill_exp = skill[2]+1
-                    if data['等級上限'] > skill_level:
-                        await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
-                        while int(skill_level*100) < skill_exp:
-                            skill_exp -= int(skill_level*100)
-                            skill_level += 1
-                            if skill_level >= data['等級上限']:
-                                skill_exp = 0
-                            await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                if data:
+                    if f"{data['技能類型']}" == "被動":
+                        skill_exp = skill[2]+1
+                        if data['等級上限'] > skill_level:
                             await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                            while int(skill_level*100) < skill_exp:
+                                skill_exp -= int(skill_level*100)
+                                skill_level += 1
+                                if skill_level >= data['等級上限']:
+                                    skill_exp = 0
+                                await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                                await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
         else:
             data, a, b, c = await function_in.search_for_file(self, skill_name, False)
             search = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])
@@ -403,6 +404,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             ("裝備", "pet", "寵物"),
             ("裝備", "medal", "勳章"),
             ("裝備", "card", "卡牌"),
+            ("裝備", "class_item", "職業專用道具"),
         ]
         for floder_name, floder_name1, item_type in folders_to_search:
             yaml_path = os.path.join(base_path, "rpg", f"{floder_name}", f"{floder_name1}", f"{item_name}.yml")
@@ -495,6 +497,20 @@ class function_in(discord.Cog, name="模塊導入1"):
         else:
             return None, None, None, None
     
+    async def check_ammo(self, user_id, players_class, ammonum = 1):
+        search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["職業專用道具"])
+        if players_class in {"弓箭手"}:
+            if search[1] in {"普通箭矢", "鋒利箭矢"}:
+                check, num = await function_in.check_item(self, user_id, search[1], ammonum)
+                if check:
+                    await function_in.remove_item(self, user_id, search[1], ammonum)
+                    return True, num, search[1], True
+                else:
+                    return False, num, search[1], True
+            else:
+                return False, 0, search[1], True
+        return True, -1, None, False
+    
     async def fixplayer(self, user_id):
         search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["戰鬥道具欄位3"])
         if not search:
@@ -516,7 +532,7 @@ class function_in(discord.Cog, name="模塊導入1"):
                     await function_in.sql_delete("rpg_backpack", f"{user_id}", "name", item)
                     self.bot.log.warn(f'[排程] {user_id} 背包內含有 {num} 個非法物品 {item}, 已被自動清除\n原因: 物品類型錯誤')
         data = await function_in.sql_findall("rpg_equip", f"{user_id}")
-        equip_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3","卡牌欄位1","卡牌欄位2","卡牌欄位3"]
+        equip_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","職業專用道具","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3","卡牌欄位1","卡牌欄位2","卡牌欄位3"]
         for item_info in data:
             slot = item_info[0]
             if slot in equip_list:
@@ -707,6 +723,8 @@ class function_in(discord.Cog, name="模塊導入1"):
             slot = equip[0]
             equip = equip[1]
             if "戰鬥道具" in slot or "技能" in slot:
+                continue
+            if "職業專用道具" in slot:
                 continue
             if "無" in equip or "未解鎖" in equip:
                 continue
@@ -1269,7 +1287,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         except:
             pass
         try:
-            item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
+            item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","職業專用道具","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
             for item_type in item_type_list:
                 await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [item_type, "無"])
         except:

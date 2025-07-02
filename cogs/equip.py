@@ -27,7 +27,8 @@ class Equip(discord.Cog, name="裝備系統"):
                     OptionChoice(name="戒指/披風/副手/項鍊/護身符", value=2),
                     OptionChoice(name="戰鬥道具欄位", value=3),
                     OptionChoice(name="技能欄位", value=4),
-                    OptionChoice(name="卡牌欄位", value=5)
+                    OptionChoice(name="卡牌欄位", value=5),
+                    OptionChoice(name="職業專用道具欄位", value=6)
                 ]
             )
         ])
@@ -41,7 +42,7 @@ class Equip(discord.Cog, name="裝備系統"):
         if not checkactioning:
             await interaction.response.send_message(f'你當前正在 {stat} 中, 無法裝備!')
             return
-        await interaction.response.send_modal(self.equip_menu(title="裝備欄", user=user, itype=equip_type, players_class=search[7]))
+        await interaction.response.send_modal(self.equip_menu(title="裝備欄", user=user, players_class=search[7], itype=equip_type))
 
     class equip_menu(discord.ui.Modal):
         def __init__(self, user: discord.Member, players_class: str, itype, *args, **kwargs) -> None:
@@ -86,8 +87,10 @@ class Equip(discord.Cog, name="裝備系統"):
                         item_type_list.append(f"卡牌欄位{a}")
                     a+=1
                     continue
+            elif self.itype == 6:
+                item_type_list = ["職業專用道具"]
                 
-            if self.itype < 5:
+            if self.itype < 5 or self.itype == 6:
                 for item_type in item_type_list:
                     db = mysql.connector.connect(
                         host="localhost",
@@ -131,6 +134,8 @@ class Equip(discord.Cog, name="裝備系統"):
                         item_type_list.append(f"卡牌欄位{a}")
                     a+=1
                     continue
+            elif self.itype == 6:
+                item_type_list = ["職業專用道具"]
             a = -1
             msg = await interaction.followup.send("正在為您裝備中...")
             for item_type in item_type_list:

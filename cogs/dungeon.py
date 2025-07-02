@@ -633,7 +633,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     dmg_type = "增傷固定值"
                 if skill_info[0] == "充盈魔杖" and skill_info[1] > 0:
                     if players_class in ["法師"]:
-                        dmg_a = skill_info[1]*players_AP
+                        dmg_a = int((players_max_mana*0.2)+(players_AP*1.3)+(skill_info[1]*1.5))
                         dmg_type = "增傷固定值"
                 if skill_info[0] == "怒意" and skill_info[1] > 0:
                     if players_class == "戰士":
@@ -1774,7 +1774,7 @@ class Dungeon(discord.Cog, name="副本系統"):
         async def use_skill(self, skill, embed: discord.Embed, msg: discord.Message):
             user = self.interaction.user
             player_level, player_exp, player_money, player_diamond, player_qp, player_wbp, player_pp, player_hp, player_max_hp, player_mana, player_max_mana, player_dodge, player_hit,  player_crit_damage, player_crit_chance, player_AD, player_AP, player_def, player_ndef, player_str, player_int, player_dex, player_con, player_luk, player_attr_point, player_add_attr_point, player_skill_point, player_register_time, player_map, player_class, drop_chance, player_hunger = await function_in.checkattr(self, user.id)
-            error, remove_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range = await Skill.skill(self, user, skill, self.monster_def, self.monster_maxhp, self.monster_hp, self.monster_name)
+            error, remove_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range, ammoname, ammonum = await Skill.skill(self, user, skill, self.monster_def, self.monster_maxhp, self.monster_hp, self.monster_name)
             embed.add_field(name=f"{user.name} 使用技能 {skill}", value=f"消耗了 {remove_mana} 魔力", inline=False)
             dmg = 0
             give_exp = True
@@ -1933,6 +1933,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                         self.monster_異常_凋零_round = wither_round
                         self.monster_異常_凋零_dmg = wither_dmg
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 受到持續{wither_round}回合的凋零傷害!🖤", value="\u200b", inline=False)
+                if ammoname and ammoname != "無":
+                    embed.add_field(name=f"{user.name} 的 {ammoname} 剩餘 {ammonum} 個!", value="\u200b", inline=False)
             if give_exp:
                 await function_in.give_skill_exp(self, user.id, skill)
             return dmg, cd, embed
@@ -2015,7 +2017,12 @@ class Dungeon(discord.Cog, name="副本系統"):
                     dmg = players_AP
                 else:
                     dmg = players_AD
-                ammocheck = True
+                ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class)
+                if ammouse:
+                    data = await function_in.search_for_file(self, ammoname)
+                    for attname, value in data.get(ammoname).get("增加屬性", {}).items():
+                        if attname == "物理攻擊力":
+                            dmg += value
                 if ammocheck:
                     dodge_check = await self.dodge_check(self.monster_dodge, players_hit)
                     if dodge_check:
@@ -2067,8 +2074,14 @@ class Dungeon(discord.Cog, name="副本系統"):
                                 pass
                             dmgstr = await self.dmg_int_to_str(dmg)
                             embed.add_field(name=f"{user.name} 對 Lv.{self.monster_level} {self.monster_name} 造成 {dmgstr} 點傷害", value="\u200b", inline=False)
+                    if ammouse:
+                        embed.add_field(name=f"{user.name} 的 {ammoname} 剩餘 {ammonum} 個!", value="\u200b", inline=False)
                 else:
                     dmg = 0
+                    if ammoname == "無":
+                        embed.add_field(name=f"{user.name} 你忘記裝備了必須的道具! 請檢查你的職業專用道具!", value="\u200b", inline=False)
+                    else:
+                        embed.add_field(name=f"{user.name} 你的 {ammoname} 已經沒了! 你無法發動攻擊!", value="\u200b", inline=False)
 
                 monster_hpa = self.monster_hp - dmg
                 dmgb, dmgb_type, monster_hpa, embed = await self.passive_damage_done_skill(user, embed, msg, players_hp, monster_hpa)

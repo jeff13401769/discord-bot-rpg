@@ -31,10 +31,12 @@ class System(discord.Cog, name="主系統"):
     
     @discord.Cog.listener()
     async def on_ready(self):
+        self.bot.log.info("開始初始化")
         search = await function_in.sql_findall("rpg_players", "players")
         for user in search:
             await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user[0])
             await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user[0])
+            await function_in.fixplayer(self, user[0])
         self.bot.log.info(f'已完成初始化')
     
     @discord.Cog.listener()
@@ -1062,6 +1064,8 @@ class System(discord.Cog, name="主系統"):
                     embed.add_field(name=f"冷卻時間: 0", value="\u200b", inline=False)
                 else:
                     embed.add_field(name=f"冷卻時間: {data['冷卻時間']}", value="\u200b", inline=False)
+                if data['消耗彈藥']:
+                    embed.add_field(name=f"消耗彈藥: {data['消耗彈藥']}", value="\u200b", inline=False)
             embed.add_field(name="技能介紹:", value=f"```\n{data['技能介紹']}\n```", inline=False)
         else:
             embed.add_field(name=f"物品類型: {data[f'{name}']['裝備類型']}", value=f"\u200b", inline=False)
