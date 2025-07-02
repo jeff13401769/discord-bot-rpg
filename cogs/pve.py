@@ -1001,17 +1001,17 @@ class Pve(discord.Cog, name="PVE系統"):
                 if skill == "極寒氛圍":
                     self.player_異常_寒冷 = True
                     self.player_異常_寒冷_round = 3
-                    self.player_異常_寒冷_dmg = 50
+                    self.player_異常_寒冷_dmg = 30
                     embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round}回合內將受到{self.player_異常_寒冷_dmg}點寒冷傷害", value="\u200b", inline=False)
 
                 if skill == "冰雪漫天":
                     self.player_異常_寒冷 = True
                     self.player_異常_寒冷_round = 2
-                    self.player_異常_寒冷_dmg = 120
+                    self.player_異常_寒冷_dmg = 70
                     embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round}回合內將受到{self.player_異常_寒冷_dmg}點寒冷傷害", value="\u200b", inline=False)
                     
                 if skill == "風花雪月":
-                    reg_hp = int(self.monster_maxhp * 0.3)
+                    reg_hp = int(self.monster_maxhp * 0.25)
                     monster_hpa += reg_hp
                     if monster_hpa >= self.monster_maxhp:
                         monster_hpa = self.monster_maxhp
@@ -1021,7 +1021,7 @@ class Pve(discord.Cog, name="PVE系統"):
                     dodge_check = await self.dodge_check(players_dodge, monster_hit)
                     self.player_異常_寒冷 = True
                     self.player_異常_寒冷_round = 10
-                    self.player_異常_寒冷_dmg = 80
+                    self.player_異常_寒冷_dmg = 40
                     embed.add_field(name=f"{user.name} {self.player_異常_寒冷_round}回合內將受到{self.player_異常_寒冷_dmg}點寒冷傷害", value="\u200b", inline=False)
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
@@ -1033,8 +1033,8 @@ class Pve(discord.Cog, name="PVE系統"):
                 if skill == "岩漿噴吐":
                     dodge_check = await self.dodge_check(players_dodge, monster_hit)
                     self.player_異常_燃燒 = True
-                    self.player_異常_燃燒_round = 5
-                    self.player_異常_燃燒_dmg = 80
+                    self.player_異常_燃燒_round = 4
+                    self.player_異常_燃燒_dmg = 60
                     if dodge_check:
                         embed.add_field(name=f"{user.name} 迴避了 Lv.{self.monster_level} {self.monster_name} 的 {skill}!🌟", value="\u200b", inline=False)
                     else:
@@ -1043,11 +1043,11 @@ class Pve(discord.Cog, name="PVE系統"):
                         dmga+=a
                 
                 if skill == "地震之怒":
-                    self.monster_def += 50
+                    self.monster_def += 40
                     embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 使自身防禦提升50點!", value="\u200b", inline=False)
                 
                 if skill == "火山之怒":
-                    self.monster_AD += 50
+                    self.monster_AD += 40
                     embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 的 {skill} 使自身攻擊力提升50點!", value="\u200b", inline=False)
                 
                 if skill == "熔岩吞噬":

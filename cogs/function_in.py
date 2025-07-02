@@ -82,7 +82,12 @@ class function_in(discord.Cog, name="模塊導入1"):
                 player_num += 1
         boss_level = int(alllevel / player_num)
         return boss_level
-        
+    
+    async def send_msg_to_user(self, user: discord.User, msg: str):
+        try:
+            ...
+        except:
+            pass
     
     async def card_packet(self, level:str):
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

@@ -103,9 +103,8 @@ class Monster(discord.Cog, name="怪物"):
                 return False
             if worldboss:
                 name = f"**世界BOSS** {worldboss}"
-            count = await function_in.check_all_players()
-            hp = int((level * random.randint(150000, 200000)) + int(count*30000)*3)
-            defense = math.floor((level * (random.randint(50, 60)*0.1))*3)
+            hp = int(level * random.randint(80000, 120000))
+            defense = math.floor(level * (random.randint(50, 60)*0.1))
             attack = math.floor(level * random.randint(5, 7))
             dodge = math.floor(level * (random.randint(6, 10)*0.1))
             hit = math.floor(level * (random.randint(12, 18)*0.1))
@@ -464,21 +463,19 @@ class Monster(discord.Cog, name="怪物"):
         if map in dungeon_map:
             item = False
             if is_boss:
-                hp = level * random.randint(80, 95)
+                hp = level * random.randint(60, 80)
                 defense = math.floor(level * (random.randint(35, 50)*0.1))
-                attack = math.floor((level * random.randint(3, 5)) + random.randint(5, 8))
-                dodge = math.floor(level * (random.randint(4, 8)*0.1))
-                hit = math.floor(level * (random.randint(10, 15)*0.1))
+                attack = math.floor((level * random.uniform(3.2, 5)))
                 exp = math.floor(level * 8)
                 money = math.floor(level * 7)
             else:
-                hp = level * random.randint(42, 56)
+                hp = level * random.randint(40, 50)
                 defense = math.floor(level * (random.randint(20, 30)*0.1))
-                attack = math.floor(level * random.randint(3, 5) + random.randint(3, 5))
-                dodge = math.floor(level * (random.randint(3, 6)*0.1))
-                hit = math.floor(level * (random.randint(8, 12)*0.1))
+                attack = math.floor(level * random.uniform(2.4, 3.8))
                 exp = math.floor(level * 5)
                 money = math.floor(level * 3.5)
+            dodge = math.floor(level * (random.randint(4, 8)*0.1))
+            hit = math.floor(level * (random.randint(10, 15)*0.1))
             if map == "惡夢迷宮":
                 defense = int(defense*1.3)
                 hp = int(hp*2.5)
@@ -497,11 +494,9 @@ class Monster(discord.Cog, name="怪物"):
                 attack = int(attack*1.5)
         else:
             if is_boss:
-                hp = level * random.randint(50, 70)
-                defense = math.floor(level * (random.randint(30, 50)*0.1))
-                attack = math.floor((level * random.randint(2, 4)) + random.randint(2, 5))
-                dodge = math.floor(level * (random.randint(3, 6)*0.1))
-                hit = math.floor(level * (random.randint(8, 15)*0.1))
+                hp = level * random.randint(40, 55)
+                defense = math.floor(level * (random.randint(17, 28)*0.1))
+                attack = math.floor(level * random.uniform(2.2, 3.3))
                 exp = math.floor(level * 8)
                 money = math.floor(level * 7)
             else:
@@ -518,11 +513,11 @@ class Monster(discord.Cog, name="怪物"):
                         level = level_limit-9
                 hp = level * random.randint(35, 50)
                 defense = math.floor(level * (random.randint(15, 25)*0.1))
-                attack = math.floor(level * random.randint(2, 3) + random.randint(1, 4))
-                dodge = math.floor(level * (random.randint(2, 5)*0.1))
-                hit = math.floor(level * (random.randint(7, 12)*0.1))
+                attack = math.floor(level * random.uniform(1.5, 2.2))
                 exp = math.floor(level * 5)
                 money = math.floor(level * 3.5)
+            dodge = math.floor(level * (random.randint(2, 5)*0.1))
+            hit = math.floor(level * (random.randint(7, 12)*0.1))
         
             item = await function_in.lot(self, prizes)
         if level > 20:
