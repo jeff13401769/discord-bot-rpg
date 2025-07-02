@@ -496,7 +496,7 @@ class Monster(discord.Cog, name="怪物"):
             if is_boss:
                 hp = level * random.randint(40, 55)
                 defense = math.floor(level * (random.randint(17, 28)*0.1))
-                attack = math.floor(level * random.uniform(2.2, 3.3))
+                attack = math.floor(level * random.uniform(1.5, 2.3))
                 exp = math.floor(level * 8)
                 money = math.floor(level * 7)
             else:
@@ -513,7 +513,7 @@ class Monster(discord.Cog, name="怪物"):
                         level = level_limit-9
                 hp = level * random.randint(35, 50)
                 defense = math.floor(level * (random.randint(15, 25)*0.1))
-                attack = math.floor(level * random.uniform(1.5, 2.2))
+                attack = math.floor(level * random.uniform(0.9, 1.8))
                 exp = math.floor(level * 5)
                 money = math.floor(level * 3.5)
             dodge = math.floor(level * (random.randint(2, 5)*0.1))
