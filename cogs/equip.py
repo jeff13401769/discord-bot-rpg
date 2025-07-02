@@ -53,7 +53,7 @@ class Equip(discord.Cog, name="裝備系統"):
             if self.itype == 1:
                 item_type_list = ["武器","頭盔","胸甲","護腿","鞋子"]
             elif self.itype == 2:
-                item_type_list = ["副手","戒指","項鍊","披風","護身符"]
+                item_type_list = ["戒指","披風","副手","項鍊","護身符"]
             elif self.itype == 3:
                 item_type_list = ["戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5"]
             elif self.itype == 4:
@@ -118,7 +118,7 @@ class Equip(discord.Cog, name="裝備系統"):
             if self.itype == 1:
                 item_type_list = ["武器","頭盔","胸甲","護腿","鞋子"]
             elif self.itype == 2:
-                item_type_list = ["副手","戒指","項鍊","披風","護身符"]
+                item_type_list = ["戒指","披風","副手","項鍊","護身符"]
             elif self.itype == 3:
                 item_type_list = ["戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5"]
             elif self.itype == 4:
