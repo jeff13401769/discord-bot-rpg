@@ -73,8 +73,8 @@ class Daily(discord.Cog, name="簽到"):
                             dailydaygold = 10000
                         msg += f'\n因為你連續簽到達 {dailyday} 天, 因此額外獲得 {dailydaygold} 晶幣 <:coin:1078582446091665438>!'
                         if dailyday % 10 == 0:
-                            await function_in.give_item(self, user.id, "簽到禮包")
-                            msg += "\n因為你連續簽到天數達到10的倍數, 你獲得了一個簽到禮包"
+                            await function_in.give_item(self, user.id, "追光寶匣")
+                            msg += "\n因為你連續簽到天數達到10的倍數, 你獲得了一個追光寶匣"
                     await interaction.followup.send(msg)
                     await function_in.give_money(self, user, "money", 500+dailydaygold, "每日", msg)
                     await function_in.sql_update("rpg_system", "daily", "can_daily", False, "user_id", user.id)

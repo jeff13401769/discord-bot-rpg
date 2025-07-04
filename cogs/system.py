@@ -756,7 +756,7 @@ class System(discord.Cog, name="主系統"):
                     if "BOSS召喚" in attname:
                         await function_in.sql_update("rpg_players", "players", "boss", True, "user_id", user.id)
                         embed.add_field(name=f"你下次攻擊必定召喚出Boss!", value=f"\u200b", inline=False)
-                    if "簽到禮包" in attname:
+                    if "追光寶匣" in attname:
                         lot_list = {
                             "普通卡包": 60,
                             "晶幣袋(100元)": 40,
@@ -775,7 +775,7 @@ class System(discord.Cog, name="主系統"):
                             item = await function_in.lot(self, lot_list)
                             data = await function_in.search_for_file(self, item)
                             if not data:
-                                item = "簽到禮包"
+                                item = "追光寶匣"
                             embed.add_field(name=f"你獲得了1個 {item} !", value=f"\u200b", inline=False)
                             await function_in.give_item(self, user.id, item)
                     if "卡牌欄位解鎖" in attname:

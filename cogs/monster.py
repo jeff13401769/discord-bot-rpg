@@ -122,8 +122,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 古樹守衛 - 樹心巨像"
                     level = random.randint(8, 12)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "破舊的布製頭盔": 250,
                         "破舊的布製胸甲": 250,
                         "破舊的布製短褲": 250,
@@ -145,8 +143,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(1, 10)
                     prizes = {
-                        "一小瓶紅藥水": 300,
-                        "一小瓶藍藥水": 300,
                         "破舊的布製頭盔": 200,
                         "破舊的布製胸甲": 200,
                         "破舊的布製短褲": 200,
@@ -166,8 +162,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 寒峰翼虎 - 霜牙獸"
                     level = random.randint(18, 23)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "劣質強化晶球": 280,
                         "阿克迪頭盔": 250,
                         "阿克迪胸甲": 250,
@@ -192,8 +186,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(11, 20)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "阿克迪頭盔": 200,
                         "阿克迪胸甲": 200,
                         "阿克迪護腿": 200,
@@ -215,8 +207,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 冰雪妖皇 - 寒冰霜帝"
                     level = random.randint(28, 33)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "冰晶之盔": 250,
                         "冰晶之甲": 250,
                         "冰晶之裙": 250,
@@ -239,8 +229,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(21, 30)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "冰晶之盔": 200,
                         "冰晶之甲": 200,
                         "冰晶之裙": 200,
@@ -260,8 +248,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 熔岩巨獸 - 火山魔龍"
                     level = random.randint(38, 43)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "熔岩之盔": 250,
                         "熔岩之甲": 250,
                         "熔岩護腿": 250,
@@ -284,8 +270,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(31, 40)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "熔岩之盔": 200,
                         "熔岩之甲": 200,
                         "熔岩護腿": 200,
@@ -306,8 +290,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 礦坑霸主 - 巨型哥布林"
                     level = random.randint(48, 53)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "黃金頭盔": 250,
                         "黃金護甲": 250,
                         "黃金護腿": 250,
@@ -331,8 +313,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(41, 50)
                     prizes = {
-                        "一瓶紅藥水": 300,
-                        "一瓶藍藥水": 300,
                         "黃金頭盔": 200,
                         "黃金護甲": 200,
                         "黃金護腿": 200,
@@ -353,8 +333,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = "BOSS 迷宮守衛者 - 暗影巨魔"
                     level = random.randint(58, 63)
                     prizes = {
-                        "一大瓶紅藥水": 300,
-                        "一大瓶藍藥水": 300,
                         "鎖鏈頭盔": 250,
                         "鎖鏈護甲": 250,
                         "鎖鏈護腿": 250,
@@ -378,8 +356,6 @@ class Monster(discord.Cog, name="怪物"):
                     name = random.choice(namelist)
                     level = random.randint(51, 60)
                     prizes = {
-                        "一大瓶紅藥水": 300,
-                        "一大瓶藍藥水": 300,
                         "鎖鏈頭盔": 200,
                         "鎖鏈護甲": 200,
                         "鎖鏈護腿": 200,
