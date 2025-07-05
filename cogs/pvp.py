@@ -1483,12 +1483,12 @@ class Pvp(discord.Cog, name="PVP系統"):
                 else:
                     dmg = now_player_AD
                 ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, now_player.id, now_player_class)
-                if ammouse:
-                    data = await function_in.search_for_file(self, ammoname)
-                    for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                        if attname == "物理攻擊力":
-                            dmg += value
                 if ammocheck:
+                    if ammouse:
+                        data = await function_in.search_for_file(self, ammoname)
+                        for attname, value in data.get(ammoname).get("增加屬性", {}).items():
+                            if attname == "物理攻擊力":
+                                dmg += value
                     dodge_check = await self.dodge_check(next_player_dodge, now_player_hit)
                     if dodge_check:
                         embed.add_field(name=f"{next_player.name} 迴避了 {now_player.name} 的傷害!🌟", value="\u200b", inline=False)
@@ -1538,7 +1538,8 @@ class Pvp(discord.Cog, name="PVP系統"):
                 else:
                     dmg = 0
                     if ammoname == "無":
-                        embed.add_field(name=f"{now_player.name} 忘記裝備了必須的道具! 請檢查你的職業專用道具!", value="\u200b", inline=False)
+                        item = await function_in.check_class_item_name(self, now_player_class)
+                        embed.add_field(name=f"{now_player.name} 忘記裝備了{item}! 請檢查你的職業專用道具!", value="\u200b", inline=False)
                     else:
                         embed.add_field(name=f"{now_player.name} 的 {ammoname} 已經沒了! 無法發動攻擊!", value="\u200b", inline=False)
 

@@ -2171,12 +2171,12 @@ class Pve(discord.Cog, name="PVE系統"):
                 else:
                     dmg = players_AD
                 ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class)
-                if ammouse:
-                    data = await function_in.search_for_file(self, ammoname)
-                    for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                        if attname == "物理攻擊力":
-                            dmg += value
                 if ammocheck:
+                    if ammouse:
+                        data = await function_in.search_for_file(self, ammoname)
+                        for attname, value in data.get(ammoname).get("增加屬性", {}).items():
+                            if attname == "物理攻擊力":
+                                dmg += value
                     dodge_check = await self.dodge_check(self.monster_dodge, players_hit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)
@@ -2237,7 +2237,8 @@ class Pve(discord.Cog, name="PVE系統"):
                 else:
                     dmg = 0
                     if ammoname == "無":
-                        embed.add_field(name=f"{user.name} 你忘記裝備了必須的道具! 請檢查你的職業專用道具!", value="\u200b", inline=False)
+                        item = await function_in.check_class_item_name(self, players_class)
+                        embed.add_field(name=f"{user.name} 你忘記裝備了{item}! 請檢查你的職業專用道具!", value="\u200b", inline=False)
                     else:
                         embed.add_field(name=f"{user.name} 你的 {ammoname} 已經沒了! 你無法發動攻擊!", value="\u200b", inline=False)
                 

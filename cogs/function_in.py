@@ -47,6 +47,11 @@ class function_in(discord.Cog, name="模塊導入1"):
         await function_in.sql_update("rpg_players", "players", "action", time_stamp+cd, "user_id", user_id)
         return True
     
+    async def check_class_item_name(self, players_class):
+        if players_class == "弓箭手":
+            return "箭矢"
+        return None
+    
     async def lot(self, lottery_list: dict[str, int]):
         lottery = np.array([])
         for key, value in lottery_list.items():

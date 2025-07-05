@@ -209,7 +209,7 @@ class Info(discord.Cog, name="資訊"):
             else:
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             embed.add_field(name="\u200b", value="\u200b", inline=False)
-            item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","卡牌欄位1","卡牌欄位2","卡牌欄位3"]
+            item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","卡牌欄位1","卡牌欄位2","卡牌欄位3", "職業專用道具"]
             for item_type in item_type_list:
                 search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [item_type])
                 equip = search[1]

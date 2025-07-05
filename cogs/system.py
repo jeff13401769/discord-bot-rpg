@@ -849,12 +849,12 @@ class System(discord.Cog, name="主系統"):
                         if "冰霜巨龍" in attname:
                             prizes["冰霜巨龍的鱗片"] = 1500
                             prizes["冰霜巨龍的寶箱"] = 1500
-                            prizes["冰霜幼龍"] = 1,
+                            prizes["冰霜幼龍"] = 1
                             prizes["初級天賦領悟書"] = 10
                         if "炎獄魔龍" in attname:
                             prizes["炎獄魔龍的鱗片"] = 1500
                             prizes["炎獄魔龍的寶箱"] = 1500
-                            prizes["炎獄幼龍"] = 1,
+                            prizes["炎獄幼龍"] = 1
                             prizes["初級天賦領悟書"] = 10
                         if "魅魔女王" in attname:
                             prizes["魅魔女王的緊身衣碎片"] = 1500
@@ -1594,9 +1594,6 @@ class System(discord.Cog, name="主系統"):
                 name="數量",
                 description="選擇你要丟棄的數量, 不填默認為1",
                 required=False,
-                choices=[
-                    OptionChoice(name="查看好感度", value=0)
-                ]
             )
         ]
     )
