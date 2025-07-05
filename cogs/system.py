@@ -1061,11 +1061,11 @@ class System(discord.Cog, name="主系統"):
             embed.add_field(name=f"等級上限: {data['等級上限']}", value="\u200b", inline=False)
             if data['技能類型'] == "主動":
                 embed.add_field(name=f"消耗魔力: {data['消耗MP']}", value="\u200b", inline=False)
-                if not data['冷卻時間']:
-                    embed.add_field(name=f"冷卻時間: 0", value="\u200b", inline=False)
-                else:
+                if data.get('冷卻時間'):
                     embed.add_field(name=f"冷卻時間: {data['冷卻時間']}", value="\u200b", inline=False)
-                if data['消耗彈藥']:
+                else:
+                    embed.add_field(name=f"冷卻時間: 0", value="\u200b", inline=False)
+                if data.get('消耗彈藥'):
                     embed.add_field(name=f"消耗彈藥: {data['消耗彈藥']}", value="\u200b", inline=False)
             embed.add_field(name="技能介紹:", value=f"```\n{data['技能介紹']}\n```", inline=False)
         else:
