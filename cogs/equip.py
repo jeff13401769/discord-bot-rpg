@@ -164,7 +164,6 @@ class Equip(discord.Cog, name="裝備系統"):
                             base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
                             folder_path = os.path.join(base_path, "rpg", "職業")
                             file_list = os.listdir(folder_path)
-                            print(1)
                             skilla=True
                             skill_in = False
                             for file_name in file_list:

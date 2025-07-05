@@ -143,27 +143,27 @@ class Life(discord.Cog, name="生活系統"):
             if item_lv == "常見":
                 suss_exp = 5
                 fail_exp = 1
-                suss_rate = 60
+                suss_rate = 75
             elif item_lv == "普通":
                 suss_exp = 10
                 fail_exp = 2
-                suss_rate = 35
+                suss_rate = 70
             elif item_lv == "稀有":
                 suss_exp = 20
                 fail_exp = 4
-                suss_rate = 30
+                suss_rate = 65
             elif item_lv == "高級":
                 suss_exp = 30
                 fail_exp = 6
-                suss_rate = 25
+                suss_rate = 55
             elif item_lv == "史詩":
                 suss_exp = 40
                 fail_exp = 8
-                suss_rate = 20
+                suss_rate = 40
             elif item_lv == "傳說":
                 suss_exp = 50
                 fail_exp = 10
-                suss_rate = 15
+                suss_rate = 35
             bigsusschance = cook_lv
             if bigsusschance > 20:
                 bigsusschance = 20

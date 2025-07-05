@@ -20,6 +20,7 @@ from cogs.function_in_in import function_in_in
 class Shop(discord.Cog, name="商店"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
+        self.shop_check.start()
 
     @commands.slash_command(name="商店", description="看看商店有賣什麼吧",
         options=[
@@ -296,6 +297,36 @@ class Shop(discord.Cog, name="商店"):
             await function_in.give_item(self, user.id, name, num)
             await function_in.remove_item(self, user.id, "奇異質點", price)
             await interaction.followup.send(f'你成功購買了 {num} 個 {name}, 花費了 {price}個奇異質點!')
+    
+    @tasks.loop(seconds=10)
+    async def shop_check(self):
+        search = await function_in.sql_findall("rpg_shop", "shop")
+        if search:
+            for order_info in search:
+                order_id = order_info[0]
+                user_id = order_info[1]
+                checkreg = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+                if checkreg:
+                    user = self.bot.get_user(user_id)
+                    await function_in.sql_delete("rpg_shop", "shop", "order_id", order_id)
+                    items = await function_in.sql_findall("rpg_shop", f"{order_id}")
+                    item_info = ""
+                    for buy_info in items:
+                        item = buy_info[1]
+                        if "奇異質點" in item:
+                            item_name, amount_str = item.split(" x ")
+                            amount = int(amount_str)
+                            item_info += f"{item_name} x {amount}\n"
+                            await function_in.give_item(self, user_id, item_name, amount)
+                    await function_in.sql_drop_table("rpg_shop", f"{order_id}")
+                    try:
+                        await user.send(f'感謝您在幻境之旅RPG進行購買, 以下為您的購買資訊:\n訂單編號: {order_id}\n訂單內容:\n{item_info}')
+                    except:
+                        pass
+
+    @shop_check.before_loop
+    async def before_shop_check(self):
+        await self.bot.wait_until_ready()
 
 def setup(client: discord.Bot):
     client.add_cog(Shop(client))
