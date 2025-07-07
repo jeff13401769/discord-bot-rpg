@@ -128,9 +128,10 @@ class Task(discord.Cog, name="後台1"):
         for ah_info in ah_list:
             ah_id = ah_info[0]
             ah_item = ah_info[1]
-            ah_item_type = ah_info[2]
-            ah_seller = ah_info[4]
-            ah_time_stamp = ah_info[5]
+            ah_amount = ah_info[2]
+            ah_item_type = ah_info[3]
+            ah_seller = ah_info[5]
+            ah_time_stamp = ah_info[6]
             now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
@@ -144,10 +145,10 @@ class Task(discord.Cog, name="後台1"):
                 if not (ah_seller := self.bot.get_user(ah_seller)):
                     ah_seller = await self.bot.fetch_user(ah_seller)
                 if not data:
-                    await ah_seller.send(f'你的拍賣品ID `{self.ah_id}` 因超時已被自動下架! {ah_item_type} {ah_item} 不存在於資料庫! 請聯繫GM!')
+                    await ah_seller.send(f'你的拍賣品ID `{ah_id}` 因超時已被自動下架! {ah_item_type} {ah_item} 不存在於資料庫! 請聯繫GM!')
                 else:
-                    await function_in.give_item(self, ah_seller.id, ah_item)
-                    await ah_seller.send(f'你的拍賣品ID `{self.ah_id}` 因超時已被自動下架! 你獲得了 {ah_item_type} {ah_item}')
+                    await function_in.give_item(self, ah_seller.id, ah_item, ah_amount)
+                    await ah_seller.send(f'你的拍賣品ID `{ah_id}` 因超時已被自動下架! 你獲得了 {ah_item_type} {ah_item}')
 
         all_exp_list = await function_in.sql_findall("rpg_exp", "all")
         if all_exp_list:

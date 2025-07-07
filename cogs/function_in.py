@@ -1017,13 +1017,13 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_crit_damage+=int(players_dex*1.75)
             players_def+=int(players_con*1)
         elif players_class == "刺客":
-            players_AD+=int((players_str*1.1)+(players_dex*0.8))
+            players_AD+=int((players_str*1.1)+(players_dex*1.4))
             players_max_hp+=int((players_str*2.1)+(players_con*1.7))
             players_AP+=int(players_int*1)
             players_max_mana+=int(players_int*6)
-            players_dodge+=int(players_dex*1.4)
-            players_hit+=int(players_dex*1.4)
-            players_crit_chance+=int(players_dex*1.02)
+            players_dodge+=int(players_dex*1.6)
+            players_hit+=int(players_dex*1.5)
+            players_crit_chance+=int(players_dex*1.35)
             players_crit_damage+=int(players_dex*1.65)
             players_def+=int(players_con*0.75)
         elif players_class == "法師":

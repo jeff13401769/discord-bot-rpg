@@ -1639,7 +1639,7 @@ class System(discord.Cog, name="主系統"):
         if players_level >= 60 and players_level < 150:
             che = 3
         if func > 0:
-            fullexp = int(18 * (players_level * (players_level ** 1.5)))
+            fullexp = int((17 * players_level) ** 1.7)
             expa = int(round(fullexp * (func *0.01)))
             if expa <= 0:
                 expa = 1
