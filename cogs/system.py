@@ -18,13 +18,11 @@ from discord.ext import commands, tasks
 
 from utility.config import config
 from cogs.function_in import function_in
-from cogs.monster import Monster
 from cogs.function_in_in import function_in_in
-from cogs.lottery import Lottery
-from cogs.skill import Skill
 from cogs.quest import Quest_system
 from cogs.event import Event
 from cogs.verify import Verify
+from cogs.premium import Premium
 class System(discord.Cog, name="主系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
@@ -982,7 +980,11 @@ class System(discord.Cog, name="主系統"):
     async def 休息(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
-        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_休息)
+        card = await Premium.month_card_check(self, user.id)
+        if card:
+            checkaction = await function_in.checkaction(self, interaction, user.id, int(config.cd_休息*0.5))
+        else:
+            checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_休息)
         if not checkaction:
             return
         checkactioning, stat = await function_in.checkactioning(self, user)
@@ -1008,7 +1010,11 @@ class System(discord.Cog, name="主系統"):
     async def 冥想(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
-        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_冥想)
+        card, day = await Premium.month_card_check(self, user.id)
+        if card:
+            checkaction = await function_in.checkaction(self, interaction, user.id, int(config.cd_冥想*0.5))
+        else:
+            checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_冥想)
         if not checkaction:
             return
         checkactioning, stat = await function_in.checkactioning(self, user)
@@ -1314,7 +1320,11 @@ class System(discord.Cog, name="主系統"):
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp = int(time.mktime(struct_time))
-        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_工作*func)
+        card, day = await Premium.month_card_check(self, user.id)
+        if card:
+            checkaction = await function_in.checkaction(self, interaction, user.id, int((config.cd_工作*func)*0.5))
+        else:
+            checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_工作*func)
         if not checkaction:
             return
         checkactioning, stat = await function_in.checkactioning(self, user)

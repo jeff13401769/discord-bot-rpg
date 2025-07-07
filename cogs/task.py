@@ -10,6 +10,7 @@ from discord.ext import tasks
 
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
+from cogs.premium import Premium
 from cogs.monster import Monster
 from utility.config import config
 
@@ -97,6 +98,10 @@ class Task(discord.Cog, name="後台1"):
             self.bot.log.info(f"[偵錯] 目前機器人使用了 {memory_info / (1024 * 1024):.2f} MB 記憶體")
             self.bot.log.info(f"[偵錯] 目前網路延遲為 {ping} ms")
         if now.hour == 5:
+            if now.minute == 0:
+                self.bot.log.info("[排程] 開始計算月卡...")
+                await Premium.month_card_remove(self)
+                self.bot.log.info("[排程] 月卡計算完畢")
             if now.minute == 45:
                 self.bot.log.info("[排程] 開始重置簽到系統...")
                 players = await function_in.sql_findall("rpg_system", "daily")
@@ -116,6 +121,7 @@ class Task(discord.Cog, name="後台1"):
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_4", 1)
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_5", 1)
                 self.bot.log.info("[排程] 每日副本重置完畢!")
+                await Premium.auto_daily(self)
 
         channel = self.bot.get_channel(1382638616857022635)
         ah_list = await function_in.sql_findall("rpg_ah", "all")

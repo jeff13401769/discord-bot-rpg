@@ -24,6 +24,7 @@ from cogs.quest import Quest_system
 from cogs.pets import Pets
 from cogs.event import Event
 from cogs.verify import Verify
+from cogs.premium import Premium
 
 worldboss_list = [
     "冰霜巨龍",
@@ -201,7 +202,11 @@ class Pve(discord.Cog, name="PVE系統"):
         if players_hp <= 0:
             await interaction.followup.send('請先至神殿復活後再進行任何活動!')
             return
-        checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_攻擊)
+        card, day = await Premium.month_card_check(self, user.id)
+        if card:
+            checkaction = await function_in.checkaction(self, interaction, user.id, int(config.cd_攻擊*0.5))
+        else:
+            checkaction = await function_in.checkaction(self, interaction, user.id, config.cd_攻擊)
         if not checkaction:
             return
         checkactioning, stat = await function_in.checkactioning(self, user, "攻擊")
@@ -1548,7 +1553,7 @@ class Pve(discord.Cog, name="PVE系統"):
                 "史詩卡包": 1250,
                 "傳說卡包": 50,
                 "神性之石": 30,
-                "奇異質點": 1,
+                "奇異質點": 10,
                 "「古樹之森」副本入場卷": 1000,
                 "「寒冰之地」副本入場卷": 1000,
                 "「黑暗迴廊」副本入場卷": 1000,
@@ -1557,15 +1562,15 @@ class Pve(discord.Cog, name="PVE系統"):
             if self.monster_name == "**世界BOSS** 冰霜巨龍":
                 prizes["冰霜巨龍的鱗片"] = 1500
                 prizes["冰霜巨龍的寶箱"] = 1500
-                prizes["冰霜幼龍"] = 1
+                prizes["冰霜幼龍"] = 5
             if self.monster_name == "**世界BOSS** 炎獄魔龍":
                 prizes["炎獄魔龍的鱗片"] = 1500
                 prizes["炎獄魔龍的寶箱"] = 1500
-                prizes["炎獄幼龍"] = 1
+                prizes["炎獄幼龍"] = 5
             if self.monster_name == "**世界BOSS** 魅魔女王":
                 prizes["魅魔女王的緊身衣碎片"] = 1500
                 prizes["魅魔女王的寶箱"] = 1500
-                prizes["魅魔女王的皮鞭"] = 1
+                prizes["魅魔女王的皮鞭"] = 5
             if self.monster_name == "**世界BOSS** 紫羽狐神●日月粉碎者●銀夢浮絮":
                 prizes["紫羽狐神●日月粉碎者●銀夢浮絮的寶箱"] = 1500
                 prizes["銀燼幻羽"] = 1500

@@ -494,6 +494,12 @@ class Info(discord.Cog, name="資訊"):
                 embed.add_field(name=":date: 簽到狀態:", value=":x: 今日尚未簽到", inline=False)
             else:
                 embed.add_field(name=":date: 簽到狀態:", value=":white_check_mark: 今日已簽到", inline=False)
+            search = await function_in.sql_search("rpg_system", "month_card", ["user_id"], [user.id])
+            if search:
+                day = search[1]
+                embed.add_field(name=":credit_card: 星辰之約狀態:", value=f":white_check_mark: 目前月卡剩餘 {day} 天", inline=False)
+            else:
+                embed.add_field(name=":credit_card: 星辰之約狀態:", value=":x: 當前無有效的月卡", inline=False)
             now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d %H:%M:%S")
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
