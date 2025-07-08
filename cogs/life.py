@@ -13,6 +13,7 @@ from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.verify import Verify
+from cogs.premium import Premium
 
 class Life(discord.Cog, name="生活系統"):
     def __init__(self, bot):
@@ -164,6 +165,9 @@ class Life(discord.Cog, name="生活系統"):
                 suss_exp = 50
                 fail_exp = 10
                 suss_rate = 35
+            month_card_check, day = await Premium.month_card_check(self, user.id)
+            if month_card_check:
+                suss_rate += 15
             bigsusschance = cook_lv
             if bigsusschance > 20:
                 bigsusschance = 20

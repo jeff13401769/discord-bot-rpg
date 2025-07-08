@@ -112,6 +112,8 @@ class Task(discord.Cog, name="後台1"):
                         await function_in.sql_update("rpg_system", "daily", "dailyday", 0, "user_id", user_id)
                 await function_in.sql_update_all("rpg_system", "daily", "can_daily", True)
                 self.bot.log.info("[排程] 簽到系統重置完畢!")
+            if now.minute == 46:
+                await Premium.auto_daily(self)
         if now.hour == 6:
             if now.minute == 0:
                 self.bot.log.info("[排程] 開始重置每日副本...")
@@ -121,7 +123,6 @@ class Task(discord.Cog, name="後台1"):
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_4", 1)
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_5", 1)
                 self.bot.log.info("[排程] 每日副本重置完畢!")
-                await Premium.auto_daily(self)
 
         channel = self.bot.get_channel(1382638616857022635)
         ah_list = await function_in.sql_findall("rpg_ah", "all")
