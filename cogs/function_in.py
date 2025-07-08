@@ -207,6 +207,41 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
         if not hunger:
             hunger = 1
+        
+        equip_list = await function_in.sql_findall("rpg_equip", f"{user_id}")
+        for equip in equip_list:
+            if equip[1] == "無" or equip[1] == "未解鎖":
+                continue
+            if "技能欄位" in equip[0] or "道具欄位" in equip[0]:
+                continue
+            data = await function_in.search_for_file(self, equip[1])
+            if not data:
+                continue
+            info = data[f"{equip[1]}"]["道具介紹"]
+            if "飽腹守護●初級" in f"{info}":
+                chance = {
+                    "成功": 1,
+                    "失敗": 10
+                }
+                chance = await function_in.lot(self, chance)
+                if chance == "成功":
+                    return
+            if "飽腹守護●中級" in f"{info}":
+                chance = {
+                    "成功": 1,
+                    "失敗": 5
+                }
+                chance = await function_in.lot(self, chance)
+                if chance == "成功":
+                    return
+            if "飽腹守護●高級" in f"{info}":
+                chance = {
+                    "成功": 3,
+                    "失敗": 10
+                }
+                chance = await function_in.lot(self, chance)
+                if chance == "成功":
+                    return
         players_hunger -= hunger
         if players_hunger < 0:
             players_hunger = 0

@@ -106,8 +106,8 @@ class Auction_House(discord.Cog, name="拍賣行"):
             if item_type == "勳章":
                 await interaction.followup.send(f'勳章無法上架!')
                 return
-            if "不可上架至拍賣行" in f"{data[f'{item}']['道具介紹']}":
-                await interaction.followup.send(f'{item_type} {item} 不可上架至拍賣行')
+            if "無法上架至拍賣行" in f"{data[f'{item}']['道具介紹']}":
+                await interaction.followup.send(f'{item_type} {item} 無法上架至拍賣行')
                 return
             check_num, numa = await function_in.check_item(self, user.id, item, amount)
             if not check_num:

@@ -194,7 +194,7 @@ class System(discord.Cog, name="主系統"):
                 return
             if not num:
                 num = 1
-            data = await function_in.search_for_file(self, item)
+            data, floder_name, floder_name1, item_type = await function_in.search_for_file(self, item, False)
             if not data:
                 await interaction.followup.send(f"`{item}` 不存在於資料庫! 請聯繫GM處理!")
                 return
@@ -204,6 +204,9 @@ class System(discord.Cog, name="主系統"):
                     await interaction.followup.send(f"你沒有 `{item}` !")
                     return
                 await interaction.followup.send(f'你只有 {numa} 個 `{item}` !')
+            if "無法交易" in f"{data[f'{item}']['道具介紹']}":
+                await interaction.followup.send(f'{item_type} {item} 無法交易')
+                return
             gold = num*10
             check = await function_in.check_money(self, user, "money", gold)
             if not check:
