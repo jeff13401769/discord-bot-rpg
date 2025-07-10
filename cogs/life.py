@@ -190,12 +190,15 @@ class Life(discord.Cog, name="生活系統"):
                     lost += 1
             await function_in.remove_hunger(self, user.id, num)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
+            data = await function_in.search_for_file(self, f"變異{name}")
+            if not data:
+                suss += bigsuss
+                bigsuss = 0
             if suss >= 1:
                 embed.add_field(name=f"你成功烹飪了 {suss} 個 {name} !", value=f'你獲得了 {suss_exp*suss} 烹飪經驗!', inline=False)
                 await function_in.give_item(self, user.id, name, suss)
                 await self.生活經驗(user, "cook", suss_exp*suss)
             if bigsuss >= 1:
-                data = await function_in.search_for_file(self, f"變異{name}")
                 if not data:
                     embed.add_field(name=f"你成功烹飪了 {bigsuss} 個 {name} !", value=f'你獲得了 {suss_exp*bigsuss} 烹飪經驗!', inline=False)
                     await function_in.give_item(self, user.id, name, bigsuss)
