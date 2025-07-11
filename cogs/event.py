@@ -99,7 +99,7 @@ class Event(discord.Cog, name="活動系統"):
             num = random.randint(100, 10000)
             item = "晶幣"
         else:
-            num = random.randint(10, 30)
+            num = random.randint(20, 50)
             item = await function_in.lot(self, lot_list)
         embed.add_field(name = f"本次活動根據參與人數, 所有人最多可取得{num}個{item}", value="\u200b", inline=False)
         embed.add_field(name = f"直接輸入 `{event}` 以參與活動!", value="\u200b", inline=False)
