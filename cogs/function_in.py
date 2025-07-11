@@ -540,7 +540,7 @@ class function_in(discord.Cog, name="模塊導入1"):
     async def check_ammo(self, user_id, players_class, ammonum = 1):
         search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["職業專用道具"])
         if players_class in {"弓箭手"}:
-            if search[1] in {"普通箭矢", "鋒利箭矢"}:
+            if search[1] in {"普通箭矢", "鋒利箭矢", "星落幻羽箭"}:
                 check, num = await function_in.check_item(self, user_id, search[1], ammonum)
                 if check:
                     await function_in.remove_item(self, user_id, search[1], ammonum)

@@ -1772,7 +1772,7 @@ class Dungeon(discord.Cog, name="副本系統"):
         async def use_skill(self, skill, embed: discord.Embed, msg: discord.Message):
             user = self.interaction.user
             player_level, player_exp, player_money, player_diamond, player_qp, player_wbp, player_pp, player_hp, player_max_hp, player_mana, player_max_mana, player_dodge, player_hit,  player_crit_damage, player_crit_chance, player_AD, player_AP, player_def, player_ndef, player_str, player_int, player_dex, player_con, player_luk, player_attr_point, player_add_attr_point, player_skill_point, player_register_time, player_map, player_class, drop_chance, player_hunger = await function_in.checkattr(self, user.id)
-            error, remove_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range, ammoname, ammonum = await Skill.skill(self, user, skill, self.monster_def, self.monster_maxhp, self.monster_hp, self.monster_name)
+            error, remove_mana, skill_type_damage, skill_type_reg, skill_type_chant, skill_type_chant1, skill_type_chant_normal_attack, skill_type_chant_normal_attack1, cd, stun, stun_round, absolute_hit, fire, fire_round, fire_dmg, ice, ice_round, ice_dmg, poison, poison_round, poison_dmg, blood, blood_round, blood_dmg, wither, wither_round, wither_dmg, clear_buff, remove_dmg, remove_dmg_round, remove_dmg_range , remove_def, remove_def_round, remove_def_range, ammoname, ammonum, ammohit = await Skill.skill(self, user, skill, self.monster_def, self.monster_maxhp, self.monster_hp, self.monster_name)
             embed.add_field(name=f"{user.name} 使用技能 {skill}", value=f"消耗了 {remove_mana} 魔力", inline=False)
             dmg = 0
             give_exp = True
@@ -1840,7 +1840,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         dodge = 0
                     else:
                         dodge = self.monster_dodge
-                    dodge_check = await self.dodge_check(dodge, player_hit)
+                    dodge_check = await self.dodge_check(dodge, player_hit+ammohit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)
                         give_exp = False
@@ -2022,6 +2022,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                         for attname, value in data.get(ammoname).get("增加屬性", {}).items():
                             if attname == "物理攻擊力":
                                 dmg += value
+                            if attname == "命中率":
+                                players_hit += value
                     dodge_check = await self.dodge_check(self.monster_dodge, players_hit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)

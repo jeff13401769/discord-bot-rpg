@@ -77,6 +77,8 @@ class Task(discord.Cog, name="後台1"):
         self.Time += 1
         now = datetime.datetime.now(pytz.timezone("Asia/Taipei"))
         network_latency = self.get_network_latency()
+        if not network_latency:
+            network_latency = 100000
         ping = f"{network_latency * 1000:.2f}"
         requests.get(
                 url="https://status.rbctw.net/api/push/z1U2fYdovd",
