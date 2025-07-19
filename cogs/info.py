@@ -118,6 +118,7 @@ class Info(discord.Cog, name="資訊"):
             self.button6 = discord.ui.Button(emoji="🍽️", label="料理", style=discord.ButtonStyle.blurple, custom_id="button6")
             self.button7 = discord.ui.Button(emoji="<a:sword:1219469485875138570>", label="PVP面板", style=discord.ButtonStyle.blurple, custom_id="button7")
             self.button8 = discord.ui.Button(emoji="🤖", label="小幫手", style=discord.ButtonStyle.blurple, custom_id="button8")
+            self.button9 = discord.ui.Button(emoji="📰", label="股票", style=discord.ButtonStyle.blurple, custom_id="button9")
             self.button1.callback = functools.partial(self.button1_callback, interaction)
             self.button2.callback = functools.partial(self.button2_callback, interaction)
             self.button3.callback = functools.partial(self.button3_callback, interaction)
@@ -126,6 +127,7 @@ class Info(discord.Cog, name="資訊"):
             self.button6.callback = functools.partial(self.button6_callback, interaction)
             self.button7.callback = functools.partial(self.button7_callback, interaction)
             self.button8.callback = functools.partial(self.button8_callback, interaction)
+            self.button9.callback = functools.partial(self.button9_callback, interaction)
             self.add_item(self.button1)
             self.add_item(self.button2)
             self.add_item(self.button3)
@@ -134,6 +136,7 @@ class Info(discord.Cog, name="資訊"):
             self.add_item(self.button6)
             self.add_item(self.button7)
             self.add_item(self.button8)
+            self.add_item(self.button9)
 
         async def on_timeout(self):
             await super().on_timeout()
@@ -519,6 +522,42 @@ class Info(discord.Cog, name="資訊"):
             else:
                 embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
+        
+        async def button9_callback(self, button, interaction: discord.ApplicationContext):
+            self.disable_all_items()
+            await interaction.response.edit_message(view=self)
+            msg = interaction.message
+            user = self.player
+            embed = discord.Embed(title=f"{user.name} 的股票", color=0xFF0000)
+            embed.add_field(name="玩家:", value=f"{user.mention}", inline=False)
+            if user.avatar:
+                embed.set_thumbnail(url=f"{user.avatar.url}")
+            else:
+                embed.set_thumbnail(url=f"{user.default_avatar.url}")
+            
+            stock_check = await function_in.sql_check_table("rpg_food", f"{user.id}")
+            if stock_check:
+                stock_list = await function_in.sql_findall("rpg_stock", user.id)
+                if stock_list:
+                    for stock in stock_list:
+                        stock_id = stock[0]
+                        stock_amount = stock[1]
+                        check = await function_in.sql_search("rpg_stock", "all", ["stock_id"], [stock_id])
+                        if not check:
+                            await function_in.sql_delete("rpg_stock", user.id, "stock_id", stock_id)
+                            continue
+                        stock_name = check[1]
+                        embed.add_field(name=f"股票名稱: {stock_name}", value=f"股票數量: {stock_amount} 張", inline=False)
+                else:
+                    embed.add_field(name="空空如也.....", value="\u200b", inline=False)
+            else:
+                await function_in.sql_create_table("rpg_stock", user.id, ["stock_id", "amount"], ["BIGINT", "BIGINT"], "stock_id")
+                embed.add_field(name="空空如也.....", value="\u200b", inline=False)
+            if len(embed.fields) > 24:
+                del embed.fields[24:]
+                embed.add_field(name="由於超過Discord Embed 25行限制, 以下已被省略...", value="...", inline=False)
+            await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
+                
 
 def setup(client: discord.Bot):
     client.add_cog(Info(client))

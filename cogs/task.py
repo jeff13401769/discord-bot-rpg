@@ -12,6 +12,7 @@ from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.premium import Premium
 from cogs.monster import Monster
+from cogs.stock import Stock
 from utility.config import config
 
 class Task(discord.Cog, name="後台1"):
@@ -114,6 +115,7 @@ class Task(discord.Cog, name="後台1"):
                         await function_in.sql_update("rpg_system", "daily", "dailyday", 0, "user_id", user_id)
                 await function_in.sql_update_all("rpg_system", "daily", "can_daily", True)
                 self.bot.log.info("[排程] 簽到系統重置完畢!")
+                await Stock.update_stock(self)
             if now.minute == 46:
                 await Premium.auto_daily(self)
         if now.hour == 6:

@@ -77,7 +77,7 @@ class Life(discord.Cog, name="生活系統"):
         check_verify, check_verifya = await Verify.check_verify_status(self, user.id)
         if check_verify:
             if not check_verifya:
-                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到, 也無法參與隨機活動!')
+                await interaction.followup.send('請打開接收機器人的私聊以接受真人驗證!\n再驗證完畢前你將無法進行下列動作:\n攻擊/工作/傷害測試/生活/任務/使用/決鬥/副本/簽到/股票, 也無法參與隨機活動!')
             else:
                 await interaction.followup.send('驗證碼已發送至您的私聊')
             return
