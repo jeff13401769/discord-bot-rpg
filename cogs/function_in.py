@@ -539,17 +539,25 @@ class function_in(discord.Cog, name="模塊導入1"):
     
     async def check_ammo(self, user_id, players_class, ammonum = 1):
         search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["職業專用道具"])
+        dmg = 0
+        hit = 0
         if players_class in {"弓箭手"}:
             if search[1] in {"普通箭矢", "鋒利箭矢", "星落幻羽箭"}:
                 check, num = await function_in.check_item(self, user_id, search[1], ammonum)
                 if check:
                     await function_in.remove_item(self, user_id, search[1], ammonum)
-                    return True, num, search[1], True
+                    data = await function_in.search_for_file(self, search[1])
+                    for attname, value in data.get(search[1]).get("增加屬性", {}).items():
+                        if attname == "物理攻擊力":
+                            dmg += value
+                        if attname == "命中率":
+                            hit += value
+                    return True, num, search[1], True, dmg, hit
                 else:
-                    return False, num, search[1], True
+                    return False, num, search[1], True, dmg, hit
             else:
-                return False, 0, search[1], True
-        return True, -1, None, False
+                return False, 0, search[1], True, dmg, hit
+        return True, -1, None, False, dmg, hit
     
     async def fixplayer(self, user_id):
         search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["戰鬥道具欄位3"])

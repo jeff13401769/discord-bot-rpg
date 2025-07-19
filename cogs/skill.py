@@ -42,7 +42,7 @@ class Skill(discord.Cog, name="技能系統"):
             skill_mana = int(players_max_mana * (int(remove_mana)*0.01))
         if skill_mana > players_mana:
             return "但因為魔力不夠, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-        ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class, ammo_num)
+        ammocheck, ammonum, ammoname, ammouse, ammodmg, ammohit = await function_in.check_ammo(self, user.id, players_class, ammo_num)
         ammodmg = 0
         ammohit = 0
         if not ammocheck:
@@ -51,13 +51,6 @@ class Skill(discord.Cog, name="技能系統"):
                 return f"忘記裝備了{item}! 請檢查你的職業專用道具!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             else:
                 return f"你的 {ammoname} 已經沒了, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-        if ammouse:
-            data = await function_in.search_for_file(self, ammoname)
-            for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                if attname == "物理攻擊力":
-                    ammodmg += value
-                if attname == "命中率":
-                    ammohit += value
         await function_in.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
         search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
         skill_lvl = search[1]

@@ -1252,37 +1252,38 @@ class Pve(discord.Cog, name="PVE系統"):
                         dmga+=a
                 
                 if skill == "銀夢緋歌":
-                    reghp = int(self.monster_maxhp*0.15)
-                    search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [self.monster_name])
-                    hp = search[2]
-                    if hp+reghp >= self.monster_maxhp:
-                        hp = self.monster_maxhp
-                        await function_in.sql_update("rpg_worldboss", "boss", "hp", hp, "monster_name", self.monster_name)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 回復了 {reghp} HP", value="\u200b", inline=False)
-                    else:
-                        await function_in.sql_update("rpg_worldboss", "boss", "hp", hp+reghp, "monster_name", self.monster_name)
-                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 回復了 {reghp} HP", value="\u200b", inline=False)
+                    test = False
                     if self.monster_異常_燃燒:
+                        test = True
                         self.monster_異常_燃燒 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 燃燒", value="\u200b", inline=False)
                     if self.monster_異常_寒冷:
+                        test = True
                         self.monster_異常_寒冷 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 寒冷", value="\u200b", inline=False)
                     if self.monster_異常_中毒:
+                        test = True
                         self.monster_異常_中毒 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 中毒", value="\u200b", inline=False)
                     if self.monster_異常_流血:
+                        test = True
                         self.monster_異常_流血 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 流血", value="\u200b", inline=False)
                     if self.monster_異常_凋零:
+                        test = True
                         self.monster_異常_凋零 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 凋零", value="\u200b", inline=False)
                     if self.monster_異常_減防:
+                        test = True
                         self.monster_異常_減防 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 減防", value="\u200b", inline=False)
                     if self.monster_異常_減傷:
+                        test = True
                         self.monster_異常_減傷 = False
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 淨化了自身異常效果 減傷", value="\u200b", inline=False)
+                    if not test:
+                        embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 沒有異常效果, 沒辦法淨化!", value="\u200b", inline=False)
+                        
                 
                 if skill == "可愛的力量":
                     if random.random() < 0.8:
@@ -2175,15 +2176,11 @@ class Pve(discord.Cog, name="PVE系統"):
                     dmg = players_AP
                 else:
                     dmg = players_AD
-                ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class)
+                ammocheck, ammonum, ammoname, ammouse, ammodmg, ammohit = await function_in.check_ammo(self, user.id, players_class)
                 if ammocheck:
                     if ammouse:
-                        data = await function_in.search_for_file(self, ammoname)
-                        for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                            if attname == "物理攻擊力":
-                                dmg += value
-                            if attname == "命中率":
-                                players_hit += value
+                        dmg += ammodmg
+                        players_hit += ammohit
                     dodge_check = await self.dodge_check(self.monster_dodge, players_hit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)

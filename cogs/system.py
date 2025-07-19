@@ -1105,7 +1105,8 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name=f"料理等級: {data[f'{name}']['料理等級']}", value=f"\u200b", inline=False)
                 embed.add_field(name=f"增加屬性: ", value=f"\u200b", inline=False)
                 for attname, value in data.get(name).get("增加屬性", {}).items():
-                    embed.add_field(name=f"\u200b        {attname}: {value}", value=f"\u200b", inline=False)
+                    if "料理_" not in attname:
+                        embed.add_field(name=f"\u200b        {attname}: {value}", value=f"\u200b", inline=False)
 
             elif f"{data[f'{name}']['裝備類型']}" == "卡牌":
                 embed.add_field(name=f"卡牌等級: {data[f'{name}']['卡牌等級']}", value=f"\u200b", inline=False)
@@ -1130,7 +1131,10 @@ class System(discord.Cog, name="主系統"):
                     try:
                         embed.add_field(name=f"增加屬性: ", value=f"\u200b", inline=False)
                         for attname, value in data.get(name).get("增加屬性", {}).items():
-                            embed.add_field(name=f"\u200b        {attname}: {value}", value=f"\u200b", inline=False)
+                            if "套裝" not in attname:
+                                if "PVP_" in attname:
+                                    attname = attname.replace("PVP_", "PvP ")
+                                embed.add_field(name=f"\u200b        {attname}: {value}", value=f"\u200b", inline=False)
                     except:
                         embed.add_field(name=f"當前該裝備尚未有屬性! ", value=f"\u200b", inline=False)
                 a=0

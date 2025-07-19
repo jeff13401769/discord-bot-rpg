@@ -1242,7 +1242,7 @@ class Pvp(discord.Cog, name="PVP系統"):
 
         async def remove_hp(self, user: discord.Member, hp: int, embed): #扣除玩家血量
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, user.id)
-            remove_dmg, players_mana = await self.def_passive_skill(user, embed, hp)
+            remove_dmg, players_mana = await self.def_passive_skill(embed, hp)
             hp -= remove_dmg
             players_hp -= hp
             if players_hp < 0:
@@ -1482,15 +1482,11 @@ class Pvp(discord.Cog, name="PVP系統"):
                     dmg = now_player_AP
                 else:
                     dmg = now_player_AD
-                ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, now_player.id, now_player_class)
+                ammocheck, ammonum, ammoname, ammouse, ammodmg, ammohit = await function_in.check_ammo(self, now_player.id, now_player_class)
                 if ammocheck:
                     if ammouse:
-                        data = await function_in.search_for_file(self, ammoname)
-                        for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                            if attname == "物理攻擊力":
-                                dmg += value
-                            if attname == "命中率":
-                                now_player_hit += value
+                        dmg += ammodmg
+                        now_player_hit += ammohit
                     dodge_check = await self.dodge_check(next_player_dodge, now_player_hit)
                     if dodge_check:
                         embed.add_field(name=f"{next_player.name} 迴避了 {now_player.name} 的傷害!🌟", value="\u200b", inline=False)

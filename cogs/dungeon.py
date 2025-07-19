@@ -2015,15 +2015,11 @@ class Dungeon(discord.Cog, name="副本系統"):
                     dmg = players_AP
                 else:
                     dmg = players_AD
-                ammocheck, ammonum, ammoname, ammouse = await function_in.check_ammo(self, user.id, players_class)
+                ammocheck, ammonum, ammoname, ammouse, ammodmg, ammohit = await function_in.check_ammo(self, user.id, players_class)
                 if ammocheck:
                     if ammouse:
-                        data = await function_in.search_for_file(self, ammoname)
-                        for attname, value in data.get(ammoname).get("增加屬性", {}).items():
-                            if attname == "物理攻擊力":
-                                dmg += value
-                            if attname == "命中率":
-                                players_hit += value
+                        dmg += ammodmg
+                        players_hit += ammohit
                     dodge_check = await self.dodge_check(self.monster_dodge, players_hit)
                     if dodge_check:
                         embed.add_field(name=f"Lv.{self.monster_level} {self.monster_name} 迴避了 {user.name} 的傷害!🌟", value="\u200b", inline=False)

@@ -71,6 +71,8 @@ class Monster(discord.Cog, name="怪物"):
             elif worldboss == "紫羽狐神●日月粉碎者●銀夢浮絮":
                 boss_level = await function_in.check_super_worldboss_level(self)
                 level = int(boss_level+10)
+                if level > 30:
+                    level = 30
                 prizes = {
                     "銀燼幻羽": 500,
                     "隨機職業技能書(15等)": 200,
@@ -108,7 +110,7 @@ class Monster(discord.Cog, name="怪物"):
             defense = math.floor(level * (random.randint(50, 60)*0.1))
             attack = math.floor(level * random.randint(5, 7))
             dodge = math.floor(level * (random.randint(6, 10)*0.1))
-            hit = math.floor(level * (random.randint(12, 18)*0.1))
+            hit = math.floor(level * (random.randint(14, 20)*0.1))
             exp = math.floor(level * 150)
             money = math.floor(level * 70)
             item = await function_in.lot(self, prizes)
@@ -133,7 +135,7 @@ class Monster(discord.Cog, name="怪物"):
                         "劣質強化晶球": 165,
                         "「翠葉林地」破碎核心": 200,
                         "普通強化晶球": 50,
-                        "古樹碎片": 400,
+                        "古樹碎片": 500,
                         "古樹之心": 200,
                     }
                 else:
@@ -153,8 +155,8 @@ class Monster(discord.Cog, name="怪物"):
                         "破舊的項鍊": 125,
                         "劣質強化晶球": 110,
                         "「翠葉林地」破碎核心": 75,
-                        "古樹碎片": 350,
-                        "古樹之心": 50,
+                        "古樹碎片": 450,
+                        "古樹之心": 130,
                     }
             elif map == "無盡山脊":
                 level_limit = 20
@@ -175,8 +177,8 @@ class Monster(discord.Cog, name="怪物"):
                         "普通強化晶球": 165,
                         "「無盡山脊」破碎核心": 100,
                         "魔法石": 150,
-                        "山脊碎片": 400,
-                        "山脊之心": 100,
+                        "山脊碎片": 500,
+                        "山脊之心": 200,
                         "隨機職業技能書(15等)": 70,
                     }
                 else:
@@ -198,8 +200,8 @@ class Monster(discord.Cog, name="怪物"):
                         "劣質強化晶球": 110,
                         "「無盡山脊」破碎核心": 75,
                         "普通強化晶球": 80,
-                        "山脊碎片": 350,
-                        "山脊之心": 75,
+                        "山脊碎片": 450,
+                        "山脊之心": 130,
                     }
             elif map == "極寒之地":
                 level_limit = 30
@@ -214,12 +216,12 @@ class Monster(discord.Cog, name="怪物"):
                         "冰晶之戒": 180,
                         "冰晶之翼": 180,
                         "冰晶之鏈": 180,
-                        "冰晶女王的權杖": 100,
+                        "冰晶女王的權杖": 180,
                         "「極寒之地」破碎核心": 100,
                         "普通強化晶球": 120,
                         "魔法石": 100,
-                        "極寒碎片": 400,
-                        "極寒之心": 100,
+                        "極寒碎片": 500,
+                        "極寒之心": 200,
                         "隨機職業技能書(15等)": 70,
                     }
                 else:
@@ -236,11 +238,12 @@ class Monster(discord.Cog, name="怪物"):
                         "冰晶之戒": 125,
                         "冰晶之翼": 125,
                         "冰晶之鏈": 125,
+                        "冰晶女王的權杖": 125,
                         "「極寒之地」破碎核心": 75,
                         "劣質強化晶球": 120,
                         "普通強化晶球": 80,
-                        "極寒碎片": 350,
-                        "極寒之心": 75,
+                        "極寒碎片": 450,
+                        "極寒之心": 130,
                     }
             elif map == "熔岩深谷":
                 level_limit = 40
@@ -259,8 +262,8 @@ class Monster(discord.Cog, name="怪物"):
                         "「熔岩深谷」破碎核心": 100,
                         "普通強化晶球": 120,
                         "魔法石": 100,
-                        "熔岩碎片": 400,
-                        "熔岩之心": 100,
+                        "熔岩碎片": 500,
+                        "熔岩之心": 200,
                         "隨機職業技能書(15等)": 80,
                     }
                 else:
@@ -281,8 +284,8 @@ class Monster(discord.Cog, name="怪物"):
                         "「熔岩深谷」破碎核心": 75,
                         "劣質強化晶球": 120,
                         "普通強化晶球": 100,
-                        "熔岩碎片": 350,
-                        "熔岩之心": 75,
+                        "熔岩碎片": 450,
+                        "熔岩之心": 130,
                     }
             elif map == "矮人礦山":
                 level_limit = 50
@@ -302,8 +305,8 @@ class Monster(discord.Cog, name="怪物"):
                         "普通強化晶球": 120,
                         "高級強化晶球": 120,
                         "魔法石": 100,
-                        "矮人碎片": 400,
-                        "矮人之心": 100,
+                        "矮人碎片": 500,
+                        "矮人之心": 200,
                         "隨機職業技能書(15等)": 80,
                     }
                 else:
@@ -324,11 +327,11 @@ class Monster(discord.Cog, name="怪物"):
                         "「矮人礦山」破碎核心": 75,
                         "劣質強化晶球": 120,
                         "普通強化晶球": 100,
-                        "矮人碎片": 350,
-                        "矮人之心": 75,
+                        "矮人碎片": 450,
+                        "矮人之心": 130,
                     }
             elif map == "幽暗迷宮":
-                level_limit = 50
+                level_limit = 60
                 if is_boss:
                     name = "BOSS 迷宮守衛者 - 暗影巨魔"
                     level = random.randint(58, 63)
@@ -345,8 +348,8 @@ class Monster(discord.Cog, name="怪物"):
                         "普通強化晶球": 150,
                         "高級強化晶球": 130,
                         "魔法石": 100,
-                        "迷宮碎片": 400,
-                        "幽暗之心": 100,
+                        "迷宮碎片": 500,
+                        "幽暗之心": 200,
                         "隨機職業技能書(15等)": 90,
                     }
                 else:
@@ -367,8 +370,8 @@ class Monster(discord.Cog, name="怪物"):
                         "「幽暗迷宮」破碎核心": 75,
                         "劣質強化晶球": 140,
                         "普通強化晶球": 120,
-                        "迷宮碎片": 350,
-                        "幽暗之心": 75,
+                        "迷宮碎片": 450,
+                        "幽暗之心": 130,
                     }
 
             #副本
