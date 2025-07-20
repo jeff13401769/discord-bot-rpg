@@ -34,6 +34,11 @@ class Stock(discord.Cog, name="股票系統"):
             stock_price_6 = stock[8]
             stock_price_7 = stock[9]
             stock_price_8 = stock[10]
+            stock_price_9 = stock[11]
+            stock_price_10 = stock[12]
+            stock_price_11 = stock[13]
+            stock_price_12 = stock[14]
+            stock_price_13 = stock[15]
             await function_in.sql_update("rpg_stock", "all", "price_1", stock_price, "stock_id", stock_id)
             await function_in.sql_update("rpg_stock", "all", "price_2", stock_price_1, "stock_id", stock_id)
             await function_in.sql_update("rpg_stock", "all", "price_3", stock_price_2, "stock_id", stock_id)
@@ -43,12 +48,16 @@ class Stock(discord.Cog, name="股票系統"):
             await function_in.sql_update("rpg_stock", "all", "price_7", stock_price_6, "stock_id", stock_id)
             await function_in.sql_update("rpg_stock", "all", "price_8", stock_price_7, "stock_id", stock_id)
             await function_in.sql_update("rpg_stock", "all", "price_9", stock_price_8, "stock_id", stock_id)
+            await function_in.sql_update("rpg_stock", "all", "price_10", stock_price_9, "stock_id", stock_id)
+            await function_in.sql_update("rpg_stock", "all", "price_11", stock_price_10, "stock_id", stock_id)
+            await function_in.sql_update("rpg_stock", "all", "price_12", stock_price_11, "stock_id", stock_id)
+            await function_in.sql_update("rpg_stock", "all", "price_13", stock_price_12, "stock_id", stock_id)
             a = random.randint(-100, 100)
             stock_price_0 = int(stock_price + (stock_price * (a * 0.001)))
             if stock_price_0 < 100:
                 stock_price_0 = 100
             await function_in.sql_update("rpg_stock", "all", "now_price", stock_price_0, "stock_id", stock_id)
-            prices = [stock_price_8, stock_price_7, stock_price_6, stock_price_5, stock_price_4, stock_price_3, stock_price_2, stock_price_1, stock_price, stock_price_0]
+            prices = [stock_price_13, stock_price_12, stock_price_11, stock_price_10, stock_price_9, stock_price_8, stock_price_7, stock_price_6, stock_price_5, stock_price_4, stock_price_3, stock_price_2, stock_price_1, stock_price, stock_price_0]
             await Stock.summon_stock_png(self, stock_id, stock_name, prices)
         self.bot.log.info("[排程] 股市更新完畢!")
 
@@ -67,7 +76,7 @@ class Stock(discord.Cog, name="股票系統"):
         dates = [(today - timedelta(days=i)).strftime("%m/%d") for i in reversed(range(len(prices)))]
         x_positions = range(len(prices))
 
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(14, 5))
         ax = plt.gca()
 
         ax.set_facecolor("black")
@@ -81,7 +90,6 @@ class Stock(discord.Cog, name="股票系統"):
         plt.grid(True, color='white', alpha=0.3)
 
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
-
         plt.ylim(min(prices) * 0.9, max(prices) * 1.3)
 
         plt.plot(x_positions, prices, marker='o', linestyle='-', color='cyan', label="股價")
@@ -89,8 +97,32 @@ class Stock(discord.Cog, name="股票系統"):
             color = 'red' if prices[i] > prices[i-1] else 'lime'
             plt.plot([x_positions[i-1], x_positions[i]], [prices[i-1], prices[i]], color=color)
 
-        for x, y in zip(x_positions, prices):
-            plt.text(x, y + (max(prices) * 0.02), f"{y:,}", ha='center', fontsize=10, color='white')
+        offset_price = max(prices) * 0.04
+        offset_change = max(prices) * 0.08
+
+        for i, (x, y) in enumerate(zip(x_positions, prices)):
+            plt.text(x, y + offset_price, f"{y:,}", ha='center', fontsize=10, color='white')
+            prev = prices[i - 1]
+
+            if prev == 0:
+                if y == 0:
+                    change_text, arrow, change_color = "0%", "", "white"
+                else:
+                    change_text, arrow, change_color = "NEW", "", "yellow"
+            else:
+                change = ((y - prev) / prev) * 100
+                if abs(change) < 0.05:
+                    change_text, arrow, change_color = "0%", "", "white"
+                elif change > 0:
+                    change_text, arrow, change_color = f"{change:+.1f}%", "▲", "red"
+                else:
+                    change_text, arrow, change_color = f"{change:+.1f}%", "▼", "lime"
+
+            if arrow:
+                text = f"{arrow}{change_text}"
+            else:
+                text = change_text
+            plt.text(x, y + offset_change, text, ha='center', fontsize=9, color=change_color)
 
         plt.title(stock_name, fontsize=18, weight='bold', color='white')
         plt.xticks(x_positions, dates, rotation=45, color='white')
