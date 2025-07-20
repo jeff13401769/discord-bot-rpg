@@ -63,7 +63,7 @@ class Stock(discord.Cog, name="股票系統"):
         rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         rcParams['axes.unicode_minus'] = False
 
-        today = datetime.today()
+        today = datetime.datetime.today()
         dates = [(today - timedelta(days=i)).strftime("%m/%d") for i in reversed(range(len(prices)))]
         x_positions = range(len(prices))
 
