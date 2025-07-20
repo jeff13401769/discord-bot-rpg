@@ -97,11 +97,15 @@ class Stock(discord.Cog, name="股票系統"):
             color = 'red' if prices[i] > prices[i-1] else 'lime'
             plt.plot([x_positions[i-1], x_positions[i]], [prices[i-1], prices[i]], color=color)
 
-        offset_price = max(prices) * 0.04
-        offset_change = max(prices) * 0.08
+        offset_price = max(prices) * 0.09
+        offset_change = max(prices) * 0.04
 
         for i, (x, y) in enumerate(zip(x_positions, prices)):
             plt.text(x, y + offset_price, f"{y:,}", ha='center', fontsize=10, color='white')
+            
+            if i == 0:
+                continue
+            
             prev = prices[i - 1]
 
             if prev == 0:
