@@ -28,7 +28,12 @@ class function_in(discord.Cog, name="模塊導入1"):
             else:
                 await interaction.followup.send('該使用者尚未註冊')
             return False
-        return True
+        user = self.bot.get_user(user_id)
+        if user:
+            return True
+        else:
+            await interaction.followup.send('機器人無法取得該使用者')
+            return False
 
     async def checkaction(self, interaction: discord.ApplicationContext, user_id, cd):
         checka = await function_in.checkreg(self, interaction, user_id)
@@ -62,6 +67,13 @@ class function_in(discord.Cog, name="模塊導入1"):
             return random_element
         else:
             return None
+    
+    async def players_list_to_players(self, user_id):
+        user_id_list = user_id.split("(")
+        user_id_str = user_id_list[1].replace('(', '').replace(')', '').replace(' ', '')
+        user_id = int(user_id_str)
+        players = await self.bot.fetch_user(user_id)
+        return players
     
     async def check_all_level(self):
         search = await function_in.sql_findall("rpg_players", "players")

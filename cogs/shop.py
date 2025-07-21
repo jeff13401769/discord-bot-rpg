@@ -277,7 +277,7 @@ class Shop(discord.Cog, name="商店"):
             await function_in.remove_money(self, user, money_type, price)
             await interaction.followup.send(f'你成功購買了 {num} 個 {name}, 花費了 {price}{money_str}!')
         else:
-            check = await function_in.check_item(self, user.id, "奇異質點", price)
+            check, numa = await function_in.check_item(self, user.id, "奇異質點", price)
             if not check:
                 await interaction.followup.send(f'你沒有足夠的奇異質點來完成這筆交易!')
                 return

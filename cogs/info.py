@@ -22,7 +22,20 @@ from cogs.function_in_in import function_in_in
 class Info(discord.Cog, name="資訊"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
-
+        
+    async def players_autocomplete(self, ctx: discord.AutocompleteContext):
+        members_list = []
+        members = await function_in.sql_findall('rpg_players', 'players')
+        for member in members:
+            name = ""
+            user = self.bot.get_user(member[0])
+            if not user:
+                name = f"機器人無法獲取名稱 ({member[0]})"
+            else:
+                name = f"{user.name} ({user.id})"
+            members_list.append(name)
+        return members_list
+        
     @discord.user_command(name="rpg資訊", description="查看自己或別人的資訊",
         options=[
             discord.Option(
@@ -34,25 +47,27 @@ class Info(discord.Cog, name="資訊"):
         ]
     )
     async def rpg資訊(self, interaction: discord.ApplicationContext, players: discord.Member):
-        await self.資訊(interaction, players)
+        await self.資訊(interaction, f"{players.name} ({players.id})")
 
     @commands.slash_command(name="資訊", description="查看自己或別人的資訊",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
                 description="選擇欲查看的玩家",
-                required=False
+                required=False,
+                autocomplete=players_autocomplete
             )
         ]
     )
-    async def 資訊(self, interaction: discord.ApplicationContext, players: discord.Member):
+    async def 資訊(self, interaction: discord.ApplicationContext, players: str):
         await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
         if players:
+            players = await function_in.players_list_to_players(self, players)
             checkreg = await function_in.checkreg(self, interaction, players.id)
             if not checkreg:
                 return
