@@ -463,7 +463,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             if not check_num:
                 await interaction.followup.send(f'你沒有 `{material}`!')
                 return
-        check_item = await function_in.check_item(self, user.id, "魔力晶核")
+        check_item, numa = await function_in.check_item(self, user.id, "魔力晶核")
         if not check_item:
             await interaction.followup.send(f'你沒有 `魔力晶核`! 每次附魔都需要消耗一個魔力晶核!')
             return
