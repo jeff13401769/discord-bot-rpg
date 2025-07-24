@@ -356,6 +356,7 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="每天5:46點自動簽到. 簽到時, 機器人將會於私聊告知您, 並額外增送一個追光寶匣", value="\u200b", inline=False)
             embed.add_field(name="工作/休息/冥想/攻擊冷卻時間減半", value="\u200b", inline=False)
             embed.add_field(name="料理時成功率增加15%", value="\u200b", inline=False)
+            embed.add_field(name="每日神明好感度不會自然下降", value="\u200b", inline=False)
             embed.add_field(name="隨時可能增加新功能, 敬請期待!", value="\u200b", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()

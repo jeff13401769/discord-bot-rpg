@@ -67,7 +67,7 @@ class Premium(discord.Cog, name="高級功能"):
             user_id = player_info[0]
             user = self.bot.get_user(user_id)
             msg = await Daily.daily(self, user_id, True)
-            await user.send(f"因為擁有星辰之約, 你已經自動簽到\n{msg}")
+            await user.send(f"因為擁有星辰之約, 系統已為您自動簽到\n{msg}")
             await function_in.give_item(self, user_id, "追光寶匣")
             await user.send(f"因為擁有星辰之約, 你獲得了追光寶匣x1")
             #checkreg = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])

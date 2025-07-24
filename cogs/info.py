@@ -18,6 +18,7 @@ from discord.ext import commands, tasks
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
+from cogs.aibot import Aibot
 
 class Info(discord.Cog, name="資訊"):
     def __init__(self, bot):
@@ -536,6 +537,14 @@ class Info(discord.Cog, name="資訊"):
                 embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
             else:
                 embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
+            affection, amount = await Aibot.check_favorability(self, user)
+            if not affection:
+                embed.add_field(name="<:ehh:1381359837476032612> 拜神:", value=f":x: 於50等時開放", inline=False)
+            else:
+                if amount > 0:
+                    embed.add_field(name="<:ehh:1381359837476032612> 拜神:", value=f":white_check_mark: 本日還可以拜訪兔神 - 雪月‧緋綾 {amount} 次", inline=False)
+                else:
+                    embed.add_field(name="<:ehh:1381359837476032612> 拜神:", value=f":x: 本日已經拜訪兔神 - 雪月‧緋綾 太多次了", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
         
         async def button9_callback(self, button, interaction: discord.ApplicationContext):

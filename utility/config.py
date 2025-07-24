@@ -19,11 +19,13 @@ class Config(BaseModel):
     cd_冥想: int
     cd_使用: int
     cd_傳送: int
+    cd_拜神: int
     mysql_username: str
     mysql_password: str
     paypal_Client_ID: str
     paypal_Client_Secret: str
     bot_token: str
+    openai_key: str
 
 with open("config.json", "r", encoding="utf8") as f:
     config_data = json.load(f)
