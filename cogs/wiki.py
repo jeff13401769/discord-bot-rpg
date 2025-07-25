@@ -72,7 +72,11 @@ class Wiki(discord.Cog, name="Wiki系統"):
         if not data:
             await interaction.followup.send(f'`{name}` 不存在於資料庫! 請聯繫GM處理!')
             return
-        embed = discord.Embed(title=f'{name}', color=0x28FF28)
+        search = await function_in.sql_search("nameless", "nl2_wiki_pages", ["title"], [name])
+        if search:
+            embed = discord.Embed(title=f'{name}', color=0x28FF28, url=f"https://www.rbctw.net/wiki/{search[1]}/{search[2]}")
+        else:
+            embed = discord.Embed(title=f'{name}', color=0x28FF28)
         if data.get('技能類型'):
             if a == "特殊":
                 embed.add_field(name=f"職業限制: 全職業", value=f"\u200b", inline=False)

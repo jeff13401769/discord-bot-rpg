@@ -13,6 +13,7 @@ from cogs.function_in_in import function_in_in
 from cogs.premium import Premium
 from cogs.monster import Monster
 from cogs.stock import Stock
+from cogs.aibot import Aibot
 from utility.config import config
 
 class Task(discord.Cog, name="後台1"):
@@ -127,6 +128,7 @@ class Task(discord.Cog, name="後台1"):
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_4", 1)
                 await function_in.sql_update_all("rpg_players", "dungeon", "dungeon_5", 1)
                 self.bot.log.info("[排程] 每日副本重置完畢!")
+                await Aibot.dailyreset_ai(self)
 
         channel = self.bot.get_channel(1382638616857022635)
         ah_list = await function_in.sql_findall("rpg_ah", "all")
