@@ -2,14 +2,10 @@ import datetime
 import openpyxl
 from openpyxl.styles import Alignment
 import pytz
-import asyncio
 import time
-import math
-import random
 import functools
-import yaml
-import certifi
 import os
+import difflib
 
 import discord
 from discord import Option, OptionChoice
@@ -25,17 +21,27 @@ class Info(discord.Cog, name="資訊"):
         self.bot: discord.Bot = bot
         
     async def players_autocomplete(self, ctx: discord.AutocompleteContext):
-        members_list = []
+        query = ctx.value.lower() if ctx.value else ""
+        
         members = await function_in.sql_findall('rpg_players', 'players')
+        members_list = []
         for member in members:
-            name = ""
             user = self.bot.get_user(member[0])
             if not user:
                 name = f"機器人無法獲取名稱 ({member[0]})"
             else:
                 name = f"{user.name} ({user.id})"
             members_list.append(name)
-        return members_list
+        
+        if query:
+            # 依相似度排序，越接近輸入的越前面
+            members_list = sorted(
+                members_list,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
+        return members_list[:25]
         
     @discord.user_command(name="rpg資訊", description="查看自己或別人的資訊",
         options=[
@@ -132,9 +138,10 @@ class Info(discord.Cog, name="資訊"):
             self.button4 = discord.ui.Button(emoji="<:mage:975947436885430362>", label="技能", style=discord.ButtonStyle.blurple, custom_id="button4")
             self.button5 = discord.ui.Button(emoji="<:coin:1078582446091665438>", label="貨幣", style=discord.ButtonStyle.blurple, custom_id="button5")
             self.button6 = discord.ui.Button(emoji="🍽️", label="料理", style=discord.ButtonStyle.blurple, custom_id="button6")
-            self.button7 = discord.ui.Button(emoji="<a:sword:1219469485875138570>", label="PVP面板", style=discord.ButtonStyle.blurple, custom_id="button7")
-            self.button8 = discord.ui.Button(emoji="🤖", label="小幫手", style=discord.ButtonStyle.blurple, custom_id="button8")
-            self.button9 = discord.ui.Button(emoji="📰", label="股票", style=discord.ButtonStyle.blurple, custom_id="button9")
+            self.button7 = discord.ui.Button(emoji="<:buff:1398047025118969988>", label="Buff", style=discord.ButtonStyle.blurple, custom_id="button7")
+            self.button8 = discord.ui.Button(emoji="<a:sword:1219469485875138570>", label="PVP面板", style=discord.ButtonStyle.blurple, custom_id="button8")
+            self.button9 = discord.ui.Button(emoji="🤖", label="小幫手", style=discord.ButtonStyle.blurple, custom_id="button9")
+            self.button10 = discord.ui.Button(emoji="📰", label="股票", style=discord.ButtonStyle.blurple, custom_id="button10")
             self.button1.callback = functools.partial(self.button1_callback, interaction)
             self.button2.callback = functools.partial(self.button2_callback, interaction)
             self.button3.callback = functools.partial(self.button3_callback, interaction)
@@ -144,6 +151,7 @@ class Info(discord.Cog, name="資訊"):
             self.button7.callback = functools.partial(self.button7_callback, interaction)
             self.button8.callback = functools.partial(self.button8_callback, interaction)
             self.button9.callback = functools.partial(self.button9_callback, interaction)
+            self.button10.callback = functools.partial(self.button10_callback, interaction)
             self.add_item(self.button1)
             self.add_item(self.button2)
             self.add_item(self.button3)
@@ -153,6 +161,7 @@ class Info(discord.Cog, name="資訊"):
             self.add_item(self.button7)
             self.add_item(self.button8)
             self.add_item(self.button9)
+            self.add_item(self.button10)
 
         async def on_timeout(self):
             await super().on_timeout()
@@ -383,6 +392,41 @@ class Info(discord.Cog, name="資訊"):
             await interaction.response.edit_message(view=self)
             msg = interaction.message
             user = self.player
+            embed = discord.Embed(title=f"{user.name} 的Buff介面", color=0xFF0000)
+            embed.add_field(name="玩家:", value=f"{user.mention}", inline=True)
+            if user.avatar:
+                embed.set_thumbnail(url=f"{user.avatar.url}")
+            else:
+                embed.set_thumbnail(url=f"{user.default_avatar.url}")
+            
+            now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
+            timeString = now_time
+            struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
+            time_stamp = int(time.mktime(struct_time))
+            players_buff_check = await function_in.sql_check_table("rpg_buff", f"{user.id}")
+            if players_buff_check:
+                players_buff_list = await function_in.sql_findall("rpg_buff", f"{user.id}")
+                if players_buff_list:
+                    for buff_info in players_buff_list:
+                        buff = buff_info[0]
+                        buff_time_stamp = buff_info[1]
+                        buff_time = await function_in_in.time_calculate(buff_time_stamp - time_stamp)
+                        embed.add_field(name=f"{buff}", value=f"剩餘時間: {buff_time}", inline=False)
+                else:
+                    embed.add_field(name="空空如也.....", value="\u200b", inline=False)
+            else:
+                embed.add_field(name="空空如也.....", value="\u200b", inline=False)
+            if len(embed.fields) > 24:
+                del embed.fields[24:]
+                embed.add_field(name="由於超過Discord Embed 25行限制, 以下已被省略...", value="...", inline=False)
+            await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
+            self.stop()
+
+        async def button8_callback(self, button, interaction: discord.ApplicationContext):
+            self.disable_all_items()
+            await interaction.response.edit_message(view=self)
+            msg = interaction.message
+            user = self.player
             embed = discord.Embed(title=f"{user.name} 的PVP面板", color=0xFF0000)
             embed.add_field(name="玩家:", value=f"{user.mention}", inline=True)
             if user.avatar:
@@ -496,7 +540,7 @@ class Info(discord.Cog, name="資訊"):
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
             self.stop()
         
-        async def button8_callback(self, button, interaction: discord.ApplicationContext):
+        async def button9_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -547,7 +591,7 @@ class Info(discord.Cog, name="資訊"):
                     embed.add_field(name="<:ehh:1381359837476032612> 拜神:", value=f":x: 本日已經拜訪兔神 - 雪月‧緋綾 太多次了", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
         
-        async def button9_callback(self, button, interaction: discord.ApplicationContext):
+        async def button10_callback(self, button, interaction: discord.ApplicationContext):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
@@ -559,7 +603,7 @@ class Info(discord.Cog, name="資訊"):
             else:
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             
-            stock_check = await function_in.sql_check_table("rpg_food", f"{user.id}")
+            stock_check = await function_in.sql_check_table("rpg_stock", f"{user.id}")
             if stock_check:
                 stock_list = await function_in.sql_findall("rpg_stock", user.id)
                 if stock_list:

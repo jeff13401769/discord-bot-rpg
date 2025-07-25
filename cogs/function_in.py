@@ -1028,6 +1028,13 @@ class function_in(discord.Cog, name="模塊導入1"):
                     if f"{food}" == "變異海鮮大雜燴":
                         players_food_AD+=1000
                         players_food_max_hp+=1000
+
+        players_buff_check = await function_in.sql_check_table("rpg_buff", f"{user_id}")
+        if players_buff_check:
+            players_buff_list = await function_in.sql_findall("rpg_buff", f"{user_id}")
+            if players_buff_list:
+                for buff_info in players_buff_list:
+                    buff = buff_info[0]
         
         players_guild_str = int(0)
         players_guild_int = int(0)

@@ -21,7 +21,7 @@ class Aibot(discord.Cog, name="AI助手"):
             await function_in.sql_update("rpg_players", "aibot", "amount", 5, "user_id", player[0])
             check, day = await Premium.month_card_check(self, player[0])
             if not check:
-                await function_in.sql_update("rpg_players", "aibot", "affection", player[1]-5, "user_id", player[0])
+                await function_in.sql_update("rpg_players", "aibot", "affection", player[1]-2, "user_id", player[0])
         self.bot.log.info("[排程] 拜神次數重置完畢!")
             
 
@@ -90,6 +90,8 @@ class Aibot(discord.Cog, name="AI助手"):
         - 0~30: 高傲冷淡, 即使喜歡的東西也不太表露.
         - 31~70: 普通友好, 情緒較自然.
         - 71~100: 願意展露真心, 可能展現脆弱或親近的面.
+        3. 你對禮物的稀有度判斷, 可以直接來自道具介紹及獲取方式.
+        4. 若獲取方式為「贊助」, 代表該道具是使用現金購買, 你應該對該道具給予相對好的評價.
 
         【角色互動規則】
         1. 關於曖昧話題或成人話題的規定如下:
@@ -123,7 +125,7 @@ class Aibot(discord.Cog, name="AI助手"):
         好感度: {affection}/100, 語氣描述: {mood}
 
         你的任務:
-        1. 以符合語氣與背景設定的方式回覆訊息 (使用繁體中文).
+        1. 以符合語氣與背景設定的方式回覆訊息 (請完全使用繁體中文).
         2. 以 -7 ~ +5 的整數分數評估這段互動對好感度的影響.
 
         請用以下格式回覆 (不要加其他文字):
@@ -238,6 +240,7 @@ class Aibot(discord.Cog, name="AI助手"):
                 return
 
             ai_reply, score = result
+            ai_reply = ai_reply.replace("，", ", ").replace("。", ". ")
             new_affection = await self.update_affection(user.id, affection, score)
 
             # 顯示暱稱
@@ -317,7 +320,7 @@ class Aibot(discord.Cog, name="AI助手"):
                 return
 
             ai_reply, score = result
-            ai_reply = ai_reply.replace(", ", ", ").replace(". ", ". ")
+            ai_reply = ai_reply.replace("，", ", ").replace("。", ". ")
             new_affection = await self.update_affection(user.id, affection, score)
             await function_in.remove_item(self, user.id, item)
 

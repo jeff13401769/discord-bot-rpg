@@ -201,6 +201,20 @@ class Task(discord.Cog, name="後台1"):
                         if food_time < time_stamp:
                             await function_in.sql_delete("rpg_food", f"{players_id}", "food", food_info[0])
         
+        players_buff_check = await function_in.sql_findall_table("rpg_buff")
+        if players_buff_check:
+            for players_id in players_buff_check:
+                players_buff_list = await function_in.sql_findall("rpg_buff", f"{players_id}")
+                if players_buff_list:
+                    for buff_info in players_buff_list:
+                        buff_time = buff_info[1]
+                        now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
+                        timeString = now_time
+                        struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
+                        time_stamp = int(time.mktime(struct_time))
+                        if buff_time < time_stamp:
+                            await function_in.sql_delete("rpg_buff", f"{players_id}", "buff", buff_info[0])
+        
         event_list = await function_in.sql_findall("rpg_event", "random_event")
         if event_list:
             for event_info in event_list:

@@ -2,6 +2,7 @@ import functools
 import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
+import difflib
 
 from utility.config import config
 from cogs.function_in import function_in
@@ -26,17 +27,27 @@ class Guild(discord.Cog, name="公會"):
     async def func1_autocomplete(self, ctx: discord.AutocompleteContext):
         func = ctx.options['名稱']
         if func == '回覆公會申請' or func == '調整玩家權限':
-            members_list = []
+            query = ctx.value.lower() if ctx.value else ""
+            
             members = await function_in.sql_findall('rpg_players', 'players')
+            members_list = []
             for member in members:
-                name = ""
                 user = self.bot.get_user(member[0])
                 if not user:
                     name = f"機器人無法獲取名稱 ({member[0]})"
                 else:
                     name = f"{user.name} ({user.id})"
                 members_list.append(name)
-            return members_list
+            
+            if query:
+                # 依相似度排序，越接近輸入的越前面
+                members_list = sorted(
+                    members_list,
+                    key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                    reverse=True
+                )
+                members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
+            return members_list[:25]
         else:
             return []
     
