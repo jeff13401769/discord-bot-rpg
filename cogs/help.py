@@ -180,8 +180,7 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="於官方伺服器內時, 將不需要使用指令, 直接前往欲前往的地圖名稱之頻道即可, 不須等待冷卻, 同時, 若原本已使用指令前往某地區, 於該特定頻道內也會強制設定為該地圖", value="\u200b", inline=False)
             channel = self.guild.get_channel(1382640133487984691) #翠業林地
             embed.add_field(name=f"例如: 原本在翠葉林地, 於 {channel.mention} 使用 `/攻擊` 時, 將會屏蔽原本的設定, 自動召喚出 {channel.name} 的怪物, 且不會因為地圖轉換而進入冷卻, 但當不在官方伺服器內遊玩時, 將會自動回到翠葉林地, 不會受到影響", value="\u200b", inline=False)
-            embed.add_field(name=f"找不到怪物怎麼辦? 可以到官方Discord群, 於右上角搜尋框像下面圖片一樣, 並把怪物名稱改成你想要找的怪物, 這樣就可以找到了喔!", value="\u200b", inline=False)            
-            embed.set_image(url="https://cdn.discordapp.com/attachments/983627773736271902/1154463603299201137/image.png")
+            embed.add_field(name=f"找不到怪物怎麼辦? 可以到官方Discord群, 於右上角搜尋框像下面圖片一樣, 並把怪物名稱改成你想要找的怪物, 這樣就可以找到了喔!", value="\u200b", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
 

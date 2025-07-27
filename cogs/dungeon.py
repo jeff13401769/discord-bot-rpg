@@ -173,14 +173,6 @@ class Dungeon(discord.Cog, name="副本系統"):
             try:
                 await interaction.response.edit_message(view=None)
                 msg = interaction.message
-                embed = discord.Embed(title=f'你即將進入{self.dungeon_name}', color=0x28FF28)
-                a = 3
-                while a > 0:
-                    embed.add_field(name=f"你即將於{a}秒後進入副本 請稍後...", value="\u200b", inline=False)
-                    a-=1
-                    await msg.edit(embed=embed, view=None)
-                    embed.clear_fields()
-                    await asyncio.sleep(1)
                 user = interaction.user
                 players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
                 if self.dungeon_name == "古樹之森":
@@ -1401,15 +1393,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                 self.dungeon_time -= 1
                 embed.add_field(name="即將進入下回合...", value="\u200b", inline=False)
                 await interaction.message.edit(view=None, embed=embed)
-                await asyncio.sleep(5)
+                await asyncio.sleep(2)
                 embed.clear_fields()
-                a = 3
-                while a > 0:
-                    embed.add_field(name=f"你即將於{a}秒遇到下一隻怪物 請做好準備...", value="\u200b", inline=False)
-                    a-=1
-                    await interaction.message.edit(embed=embed, view=None)
-                    await asyncio.sleep(1)
-                    embed.clear_fields()
                 lot = {
                     "沒有": 78,
                     "經驗": 4,
