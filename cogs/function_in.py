@@ -896,60 +896,66 @@ class function_in(discord.Cog, name="模塊導入1"):
                         players_equip_def += 80
                         players_equip_max_hp += 300
 
-        skills_max_hp = int(0)
-        skills_max_mana = int(0)
-        skills_def = int(0)
-        skills_AD = int(0)
-        skills_AP = int(0)
-        skills_dodge = int(0)
-        skills_hit = int(0)
-        skills_crit_chance = int(0)
-        skills_crit_damage = int(0)
-        skills_drop_chance = int(0)
-        skills_ndef = int(0)
-        skills_str = int(0)
-        skills_int = int(0)
-        skills_dex = int(0)
-        skills_con = int(0)
-        skills_luk = int(0)
+        players_skills_max_hp = int(0)
+        players_skills_max_mana = int(0)
+        players_skills_def = int(0)
+        players_skills_AD = int(0)
+        players_skills_AP = int(0)
+        players_skills_dodge = int(0)
+        players_skills_hit = int(0)
+        players_skills_crit_chance = int(0)
+        players_skills_crit_damage = int(0)
+        players_skills_drop_chance = int(0)
+        players_skills_ndef = int(0)
+        players_skills_str = int(0)
+        players_skills_int = int(0)
+        players_skills_dex = int(0)
+        players_skills_con = int(0)
+        players_skills_luk = int(0)
                     
         skill_list = await function_in.sql_findall("rpg_skills", f"{user_id}")
         if not skill_list:
             skill_list = [["無", 0]]
         for skill_info in skill_list:
-            if skill_info[0] == "仙靈體魄" and skill_info[1] > 0:
-                skills_AD += skill_info[1]*200
-                skills_AP += skill_info[1]*200
-                skills_max_hp += skill_info[1]*1500
-                skills_max_mana += skill_info[1]*2000
-                skills_def += skill_info[1]*500
-                skills_crit_chance += skill_info[1]*15
-                skills_hit += skill_info[1]*15
-                skills_dodge += skill_info[1]*15
-                skills_crit_damage += skill_info[1]*50
-            if skill_info[0] == "弓手之心" and skill_info[1] > 0:
-                skills_crit_chance += skill_info[1]*1.5
-                skills_crit_damage += skill_info[1]*3.5
-            if skill_info[0] == "戰士的蠻力" and skill_info[1] > 0:
-                skills_str += skill_info[1]*3
-            if skill_info[0] == "致命精通" and skill_info[1] > 0:
-                skills_crit_damage += skill_info[1]*8
-                skills_ndef += skill_info[1]*1.5
-            if skill_info[0] == "鋼鐵意志" and skill_info[1] > 0:
-                skills_max_hp += skill_info[1]*60
-            if skill_info[0] == "劍之意志" and skill_info[1] > 0:
-                skills_AD += skill_info[1]*6
-            if skill_info[0] == "叢林本能" and skill_info[1] > 0:
-                skills_hit += skill_info[1]*2
-                skills_crit_damage += skill_info[1]*2
-            if skill_info[0] == "迅捷步伐" and skill_info[1] > 0:
-                skills_dodge += skill_info[1]*3
-            if skill_info[0] == "魔力湧泉" and skill_info[1] > 0:
-                skills_max_mana += skill_info[1]*70
-            if skill_info[0] == "隱匿" and skill_info[1] > 0:
-                skills_dodge += skill_info[1]*6
-            if skill_info[0] == "靈巧身法" and skill_info[1] > 0:
-                skills_dodge += skill_info[1]*3
+            if skill_info[1] > 0:
+                if skill_info[0] == "仙靈體魄":
+                    players_skills_AD += skill_info[1]*200
+                    players_skills_AP += skill_info[1]*200
+                    players_skills_max_hp += skill_info[1]*1500
+                    players_skills_max_mana += skill_info[1]*2000
+                    players_skills_def += skill_info[1]*500
+                    players_skills_crit_chance += skill_info[1]*15
+                    players_skills_hit += skill_info[1]*15
+                    players_skills_dodge += skill_info[1]*15
+                    players_skills_crit_damage += skill_info[1]*50
+                if skill_info[0] == "弓手之心":
+                    players_skills_crit_chance += skill_info[1]*1.5
+                    players_skills_crit_damage += skill_info[1]*3.5
+                if skill_info[0] == "戰士的蠻力":
+                    players_skills_str += skill_info[1]*3
+                if skill_info[0] == "致命精通":
+                    players_skills_crit_damage += skill_info[1]*8
+                    players_skills_ndef += skill_info[1]*0.5
+                if skill_info[0] == "鋼鐵意志":
+                    players_skills_max_hp += skill_info[1]*60
+                if skill_info[0] == "劍之意志":
+                    players_skills_AD += skill_info[1]*6
+                if skill_info[0] == "叢林本能":
+                    players_skills_hit += skill_info[1]*2
+                    players_skills_crit_damage += skill_info[1]*2
+                if skill_info[0] == "迅捷步伐":
+                    players_skills_dodge += skill_info[1]*3
+                if skill_info[0] == "魔力湧泉":
+                    players_skills_max_mana += skill_info[1]*120
+                    players_skills_int += skill_info[1]*3
+                if skill_info[0] == "隱匿":
+                    players_skills_dodge += skill_info[1]*6
+                if skill_info[0] == "靈巧身法":
+                    players_skills_dodge += skill_info[1]*3
+                if skill_info[0] == "魔靈之體":
+                    players_skills_AP += skill_info[1]*20
+                    players_skills_ndef += skill_info[1]
+                    players_skills_crit_damage += skill_info[1]*10
         
         players_food_max_hp = int(0)
         players_food_max_mana = int(0)
@@ -1051,11 +1057,11 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_guild_con += skills[4]
             players_guild_luk += skills[5]
 
-        players_str+=players_equip_str+players_medal_str+skills_str+players_food_str+players_guild_str
-        players_int+=players_equip_int+players_medal_int+skills_int+players_food_int+players_guild_int
-        players_dex+=players_equip_dex+players_medal_dex+skills_dex+players_food_dex+players_guild_dex
-        players_con+=players_equip_con+players_medal_con+skills_con+players_food_con+players_guild_con
-        players_luk+=players_equip_luk+players_medal_luk+skills_luk+players_food_luk+players_guild_luk
+        players_str+=players_equip_str+players_medal_str+players_skills_str+players_food_str+players_guild_str
+        players_int+=players_equip_int+players_medal_int+players_skills_int+players_food_int+players_guild_int
+        players_dex+=players_equip_dex+players_medal_dex+players_skills_dex+players_food_dex+players_guild_dex
+        players_con+=players_equip_con+players_medal_con+players_skills_con+players_food_con+players_guild_con
+        players_luk+=players_equip_luk+players_medal_luk+players_skills_luk+players_food_luk+players_guild_luk
         
         #一轉
         if players_class == "戰士":
@@ -1111,17 +1117,17 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_crit_damage+=int(((players_dex*1.95)+(players_int*3)))
             players_def+=int(((players_con*1)+(players_int*3.85)))
             
-        players_max_hp=int(players_max_hp+players_medal_max_hp+players_equip_max_hp+skills_max_hp+players_food_max_hp)
-        players_max_mana=int(players_max_mana+players_medal_max_mana+players_equip_max_mana+skills_max_mana+players_food_max_mana)
-        players_def=int(players_def+players_medal_def+players_equip_def+skills_def+players_food_def)
-        players_AD=int(players_AD+players_medal_AD+players_equip_AD+skills_AD+players_food_AD)
-        players_AP=int(players_AP+players_medal_AP+players_equip_AP+skills_AP+players_food_AP)
-        players_crit_chance=int(players_crit_chance+players_medal_crit_chance+players_equip_crit_chance+skills_crit_chance+players_food_crit_chance)
-        players_crit_damage=int(players_crit_damage+players_medal_crit_damage+players_equip_crit_damage+skills_crit_damage+players_food_crit_damage)
-        players_dodge=int(players_dodge+players_medal_dodge+players_equip_dodge+skills_dodge+players_food_dodge)
-        players_hit=int(players_hit+players_medal_hit+players_equip_hit+skills_hit+players_food_hit)
-        drop_chance=int(drop_chance+players_medal_drop_chance+players_equip_drop_chance+skills_drop_chance+players_food_drop_chance)
-        players_ndef=int(players_ndef+players_medal_ndef+players_equip_ndef+skills_ndef+players_food_ndef)
+        players_max_hp=int(players_max_hp+players_medal_max_hp+players_equip_max_hp+players_skills_max_hp+players_food_max_hp)
+        players_max_mana=int(players_max_mana+players_medal_max_mana+players_equip_max_mana+players_skills_max_mana+players_food_max_mana)
+        players_def=int(players_def+players_medal_def+players_equip_def+players_skills_def+players_food_def)
+        players_AD=int(players_AD+players_medal_AD+players_equip_AD+players_skills_AD+players_food_AD)
+        players_AP=int(players_AP+players_medal_AP+players_equip_AP+players_skills_AP+players_food_AP)
+        players_crit_chance=int(players_crit_chance+players_medal_crit_chance+players_equip_crit_chance+players_skills_crit_chance+players_food_crit_chance)
+        players_crit_damage=int(players_crit_damage+players_medal_crit_damage+players_equip_crit_damage+players_skills_crit_damage+players_food_crit_damage)
+        players_dodge=int(players_dodge+players_medal_dodge+players_equip_dodge+players_skills_dodge+players_food_dodge)
+        players_hit=int(players_hit+players_medal_hit+players_equip_hit+players_skills_hit+players_food_hit)
+        drop_chance=int(drop_chance+players_medal_drop_chance+players_equip_drop_chance+players_skills_drop_chance+players_food_drop_chance)
+        players_ndef=int(players_ndef+players_medal_ndef+players_equip_ndef+players_skills_ndef+players_food_ndef)
 
         #天花板
         if players_crit_chance > 80:

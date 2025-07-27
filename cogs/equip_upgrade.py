@@ -295,7 +295,6 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             self.add_item(self.button1)
             self.add_item(self.button2)
 
-
         async def on_timeout(self):
             await super().on_timeout()
             self.remove_item(self.button1)
