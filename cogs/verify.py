@@ -31,7 +31,7 @@ class Verify(discord.Cog, name="驗證系統"):
                     pixels[x, y] = src_pixels[new_x, y]
         return new_image
 
-    async def create_captcha(self, text, user_id, width=200, height=80):
+    async def create_captcha(self, text, user_id, width=230, height=80):
         image = Image.new('RGB', (width, height), (255, 255, 255))
         draw = ImageDraw.Draw(image)
         font = ImageFont.truetype("arial.ttf", 48)
@@ -55,7 +55,7 @@ class Verify(discord.Cog, name="驗證系統"):
             draw.point((x, y), fill=(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
 
         # 輕度扭曲 + 平滑
-        image = await Verify.wave_distort(self, image, amplitude=4.5, wavelength=30)
+        image = await Verify.wave_distort(self, image, amplitude=4.2, wavelength=35)
         image = image.filter(ImageFilter.SMOOTH_MORE)
 
         # 決定存檔路徑 (verify/verify-<user_id>.png)
