@@ -55,7 +55,7 @@ class Verify(discord.Cog, name="驗證系統"):
             draw.point((x, y), fill=(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
 
         # 輕度扭曲 + 平滑
-        image = await Verify.wave_distort(self, image, amplitude=5, wavelength=30)
+        image = await Verify.wave_distort(self, image, amplitude=4.5, wavelength=30)
         image = image.filter(ImageFilter.SMOOTH_MORE)
 
         # 決定存檔路徑 (verify/verify-<user_id>.png)
