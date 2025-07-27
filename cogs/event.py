@@ -31,28 +31,16 @@ class Event(discord.Cog, name="活動系統"):
         embed = discord.Embed(title=f"觸發了隨機活動!", description=f"一起{event}吧!", color=0x79FF79)
         if event == "伐木":
             lot_list = {
-                "破爛的木頭": 10,
-                "普通的木頭": 7,
-                "稀有的木頭": 5,
-                "高級的木頭": 3,
-                "超級的木頭": 2,
-                "神級的木頭": 1,
+                "普通的木頭": 1
             }
         elif event == "挖礦":
             lot_list = {
-                "破爛的礦石": 10,
-                "普通的礦石": 7,
-                "稀有的礦石": 5,
-                "高級的礦石": 3,
-                "超級的礦石": 2,
-                "神級的礦石": 1,
+                "普通的礦石": 1
             }
         elif event == "普通採藥":
             lot_list = {
-                "普通生命藥草": 2,
-                "高級生命藥草": 1,
-                "普通魔力藥草": 2,
-                "高級魔力藥草": 1,
+                "普通生命藥草": 1,
+                "普通魔力藥草": 1,
             }
         elif event == "特殊採藥":
             lot_list = {
@@ -96,10 +84,10 @@ class Event(discord.Cog, name="活動系統"):
         time_stamp = int(time.mktime(struct_time))+600
         end_time = datetime.datetime.fromtimestamp(time_stamp, pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M')
         if event == "打怪":
-            num = random.randint(100, 10000)
+            num = random.randint(1000, 30000)
             item = "晶幣"
         else:
-            num = random.randint(20, 50)
+            num = random.randint(20, 100)
             item = await function_in.lot(self, lot_list)
         embed.add_field(name = f"本次活動根據參與人數, 所有人最多可取得{num}個{item}", value="\u200b", inline=False)
         embed.add_field(name = f"直接輸入 `{event}` 以參與活動!", value="\u200b", inline=False)

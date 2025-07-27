@@ -447,13 +447,13 @@ class Monster(discord.Cog, name="怪物"):
                 defense = math.floor(level * (random.randint(35, 50)*0.1))
                 attack = math.floor((level * random.uniform(3.2, 5)))
                 exp = math.floor(level * 8)
-                money = math.floor(level * 7)
+                money = math.floor(level * 4)
             else:
                 hp = level * random.randint(40, 50)
                 defense = math.floor(level * (random.randint(20, 30)*0.1))
                 attack = math.floor(level * random.uniform(2.4, 3.8))
                 exp = math.floor(level * 5)
-                money = math.floor(level * 3.5)
+                money = math.floor(level * 1.5)
             dodge = math.floor(level * (random.randint(4, 6)*0.1))
             hit = math.floor(level * (random.randint(10, 15)*0.1))
             if map == "惡夢迷宮":
@@ -478,7 +478,7 @@ class Monster(discord.Cog, name="怪物"):
                 defense = math.floor(level * (random.randint(17, 28)*0.1))
                 attack = math.floor(level * random.uniform(1.5, 2.3))
                 exp = math.floor(level * 8)
-                money = math.floor(level * 7)
+                money = math.floor(level * random.uniform(1.7, 2.9))
             else:
                 if level_limit >= players_level >= level_limit-9:
                     result = random.randint(0, 10) - 5
@@ -495,7 +495,7 @@ class Monster(discord.Cog, name="怪物"):
                 defense = math.floor(level * (random.randint(15, 25)*0.1))
                 attack = math.floor(level * random.uniform(0.9, 1.8))
                 exp = math.floor(level * 5)
-                money = math.floor(level * 3.5)
+                money = math.floor(level * random.uniform(0.7, 1.2))
             dodge = math.floor(level * (random.randint(2, 5)*0.1))
             hit = math.floor(level * (random.randint(7, 12)*0.1))
         
