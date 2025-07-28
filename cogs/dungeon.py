@@ -1963,10 +1963,6 @@ class Dungeon(discord.Cog, name="副本系統"):
         
         async def dodge_check(self, dodge: int, hit: int):
             hit_chance = 20 + hit
-            if dodge-hit >= 75:
-                return True
-            if hit-dodge >= 75:
-                return False
             return random.choices(["命中", "閃避"], [hit_chance, dodge])[0] == "閃避"
         
         async def crit_check(self, crit_chance):

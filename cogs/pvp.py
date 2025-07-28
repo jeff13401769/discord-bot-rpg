@@ -1263,7 +1263,6 @@ class Pvp(discord.Cog, name="PVP系統"):
             embed.add_field(name=f"{self.now_player.name} 受到了致命傷害, 陣亡了", value="\u200b", inline=False)
             players_level1, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.players_1.id)
             players_level2, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.players_2.id)
-            embed.add_field(name=f"決鬥結束", value="\u200b", inline=False)
             if abs(players_level1-players_level2) > 20:
                 embed.add_field(name="由於雙方等級差過大, 無法獲得決鬥點數", value="\u200b", inline=False)
                 embed.add_field(name="獲勝者:", value=f"{atttacker.mention} 決鬥點數+0", inline=False)
@@ -1276,9 +1275,10 @@ class Pvp(discord.Cog, name="PVP系統"):
                 if not await function_in.check_money(self, loser, "pp", 3):
                     await function_in.sql_update("rpg_players", "money", "pp", 0, "user_id", loser.id)
                 else:
-                    money = await function_in.remove_money(self, loser, "pp", 3, "pvp")
+                    money = await function_in.remove_money(self, loser, "pp", 3)
                 await Quest_system.add_quest(self, loser, "決鬥", "任意", 1, msg)
                 embed.add_field(name="敗北者:", value=f"{loser.mention} 決鬥點數-3({money})", inline=False)
+            embed.description = f"決鬥結束"
             await msg.edit(embed=embed, view=None)
             self.stop()
             return
@@ -1340,10 +1340,6 @@ class Pvp(discord.Cog, name="PVP系統"):
         
         async def dodge_check(self, dodge: int, hit: int):
             hit_chance = 20 + hit
-            if dodge-hit >= 75:
-                return True
-            if hit-dodge >= 75:
-                return False
             return random.choices(["命中", "閃避"], [hit_chance, dodge])[0] == "閃避"
         
         async def crit_check(self, crit_chance):
