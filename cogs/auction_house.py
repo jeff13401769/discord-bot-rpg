@@ -295,7 +295,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
                 return
             price = int(self.price*0.1)
             gold = int(self.price - price)
-            await function_in.remove_money(self, user, "money", self.price)
+            moneya = await function_in.remove_money(self, user, "money", self.price)
             await function_in.give_money(self, ah_seller, "money", gold, "拍賣")
             await function_in.sql_delete("rpg_ah", "all", "ah_id", ah_id)
             embed = discord.Embed(title=f'💰{interaction.user.name} 成功購買物品!', color=0xFFE153)

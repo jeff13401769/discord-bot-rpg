@@ -199,7 +199,7 @@ class Guild(discord.Cog, name="公會"):
                     return
                 search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
                 if not search:
-                    await function_in.remove_money(self, user, "money", 100000)
+                    moneya = await function_in.remove_money(self, user, "money", 100000)
                     await function_in.remove_item(self, user.id, "冰霜巨龍的鱗片", 1)
                     await function_in.remove_item(self, user.id, "炎獄魔龍的鱗片", 1)
                     await function_in.sql_update("rpg_players", "players", "guild_name", func1, "user_id", user.id)

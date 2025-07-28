@@ -409,7 +409,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", equip_upgrade_chance1, "user_id", interaction.user.id)
             if give_item:
                 await function_in.give_item(self, interaction.user.id, give_item)
-            await function_in.remove_money(self, interaction.user, "money", self.money)
+            moneya = await function_in.remove_money(self, interaction.user, "money", self.money)
             await msg.edit(embed=embed, view=None)
             await function_in.checkactioning(self, self.interaction.user, "return")
             self.stop()
@@ -629,7 +629,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 await function_in.remove_item(self, user.id, self.material)
             await function_in.remove_item(self, user.id, "魔力晶核")
             await function_in.give_item(self, user.id, give_item)
-            await function_in.remove_money(self, user, "money", self.money)
+            moneya = await function_in.remove_money(self, user, "money", self.money)
             await msg.edit(embed=embed, view=None)
             await function_in.checkactioning(self, user, "return")
             self.stop()

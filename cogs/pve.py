@@ -171,7 +171,7 @@ class Pve(discord.Cog, name="PVE系統"):
         embed.add_field(name=f"技能三: {skill3}", value=f"冷卻時間: {h}", inline=True)
         guild = self.bot.get_guild(config.guild)
         await function_in.remove_hunger(self, user.id)
-        await function_in.remove_money(self, user, "money", 1000)
+        moneya = await function_in.remove_money(self, user, "money", 1000)
         msg = await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, 10, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, None, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0))
         await msg.reply('你成功花費1000晶幣來使用一次訓練假人!')
 

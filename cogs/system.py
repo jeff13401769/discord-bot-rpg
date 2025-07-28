@@ -1668,7 +1668,7 @@ class System(discord.Cog, name="主系統"):
                 gold = self.money
                 gold1 = round(self.money*1.1)
                 gold2 = round(self.money*0.1)
-                await function_in.remove_money(self, interaction.user, "money", gold1)
+                moneya = await function_in.remove_money(self, interaction.user, "money", gold1)
                 await function_in.give_money(self, self.player, "money", gold, "交易", msg)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
                 embed.add_field(name=f"{interaction.user} 付出 {gold1} 晶幣", value=f"\u200b", inline=False)
@@ -1678,14 +1678,14 @@ class System(discord.Cog, name="主系統"):
                 gold = self.money
                 gold1 = round(self.money*1.1)
                 gold2 = round(self.money*0.1)
-                await function_in.remove_money(self, interaction.user, "diamond", gold1)
+                moneya = await function_in.remove_money(self, interaction.user, "diamond", gold1)
                 await function_in.give_money(self, self.player, "diamond", gold, "交易", msg)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
                 embed.add_field(name=f"{interaction.user} 付出 {gold1} 水晶", value=f"\u200b", inline=False)
                 embed.add_field(name=f"{self.player} 獲得 {gold} 水晶", value=f"\u200b", inline=False)
                 embed.add_field(name=f"{interaction.user} 支付了 {gold2} 水晶 手續費", value=f"\u200b", inline=False)
             elif self.func == "物品":
-                await function_in.remove_money(self, interaction.user, "money", self.num*10)
+                moneya = await function_in.remove_money(self, interaction.user, "money", self.num*10)
                 await function_in.remove_item(self, interaction.user.id, self.item, self.num)
                 await function_in.give_item(self, self.player.id, self.item, self.num)
                 embed = discord.Embed(title=f'{interaction.user.name} 交易成功', color=0x28FF28)
@@ -1786,7 +1786,7 @@ class System(discord.Cog, name="主系統"):
             else:
                 exp = await System.respawn(self, interaction.user, 15)
                 embed = discord.Embed(title=f'{user.name} 你復活了', color=0xffe153)
-                await function_in.remove_money(self, user, "money", 3000)
+                moneya = await function_in.remove_money(self, user, "money", 3000)
                 embed.add_field(name=f"你使用了晶幣復活", value=f"你花費了3000晶幣及{exp}經驗值復活", inline=True)
                 await msg.edit(embed=embed, view=None)
             self.stop()

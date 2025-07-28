@@ -212,7 +212,7 @@ class Stock(discord.Cog, name="股票系統"):
                 await interaction.followup.send(f'你沒有足夠的晶幣! 股票 `{stock_name}` 目前價格為 {stock_price}/張')
                 return
             await function_in.sql_update("rpg_stock", f"{user.id}", "amount", stock_amount+samount, "stock_id", stock_id)
-            await function_in.remove_money(self, user, "money", stock_price*samount)
+            moneya = await function_in.remove_money(self, user, "money", stock_price*samount)
             await interaction.followup.send(f'你成功花費了 {stock_price*samount} 枚晶幣 <:coin:1078582446091665438> 購買了 {samount} 張股票 `{stock_name}` !\n你目前擁有 {stock_amount+samount} 張股票`{stock_name}`')
         if stype == 2:
             if stock_amount < 1:

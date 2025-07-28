@@ -274,7 +274,7 @@ class Shop(discord.Cog, name="商店"):
                 await interaction.followup.send(f"{name} 不存在於資料庫! 請聯繫GM處理!")
                 return
             await function_in.give_item(self, user.id, name, num)
-            await function_in.remove_money(self, user, money_type, price)
+            moneya = await function_in.remove_money(self, user, money_type, price)
             await interaction.followup.send(f'你成功購買了 {num} 個 {name}, 花費了 {price}{money_str}!')
         else:
             check, numa = await function_in.check_item(self, user.id, "奇異質點", price)

@@ -326,6 +326,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             money = search[5]
         money -= money1
         await function_in.sql_update("rpg_players", "money", money_type, money, "user_id", user.id)
+        return money
     
     async def is_gm(self, user_id):
         search = await function_in.sql_search("rpg_system", "gm", ["user_id"], [user_id])

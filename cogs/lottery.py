@@ -102,7 +102,7 @@ class Lottery(discord.Cog, name="轉蛋"):
         if not checkmoney:
             await interaction.followup.send(f'你的水晶不足以給付這次轉蛋!')
             return
-        await function_in.remove_money(self, interaction.user, "diamond", gold)
+        moneya = await function_in.remove_money(self, interaction.user, "diamond", gold)
         embed = discord.Embed(title=f'{interaction.user.name} 的轉蛋結果', color=0x66B3FF)
         msg = await interaction.followup.send(embed=embed)
         await Lottery.lottery(self, interaction, interaction.user, func, num, msg)
