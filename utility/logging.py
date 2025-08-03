@@ -15,40 +15,36 @@ from rich.syntax import PygmentsSyntaxTheme
 from pygments.styles.monokai import MonokaiStyle
 import pytz
 
-
 log = logging.getLogger("rpg_log")
 StrPath = Union[str, os.PathLike]
 
 
 class LogTimeRotatingFileHandler(BaseRotatingHandler):
-    """
-    from logging mode Modify
-    """
-
     def __init__(
         self,
         filename: str,
         directory: Optional[StrPath] = None,
         markup: bool = False,
         expired_interval: timedelta = timedelta(days=30),
-        maxBytes: int = 1e6,
+        maxBytes: int = 1_000_000,
         backupCount: int = 5,
         encoding: str = "utf-8",
     ) -> None:
-        directory = os.path.abspath(directory or "logs")
-        os.makedirs(directory, exist_ok=True)
-        current_date = datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d")
-        filepath = os.path.join(directory, f"rpg_log-{current_date}.log")
+        self.tz = pytz.timezone("Asia/Taipei")
+        self.filename = filename
+        self.directory = os.path.abspath(directory or "logs")
+        os.makedirs(self.directory, exist_ok=True)
+
+        today = datetime.now(self.tz).strftime("%Y-%m-%d")
+        self.baseFilename = os.path.join(self.directory, f"{self.filename}-{today}.log")
 
         super().__init__(
-            filepath,
+            self.baseFilename,
             mode="a",
             encoding=encoding,
             delay=False,
         )
 
-        self.filename = filename
-        self.directory = directory
         self.markup = markup
         self.interval_time = timedelta(days=1)
         self.expired_interval = expired_interval
@@ -58,93 +54,71 @@ class LogTimeRotatingFileHandler(BaseRotatingHandler):
         self.rolloverAt = self.computeRollover()
 
     def computeRollover(self) -> datetime:
-        return datetime.today() - self.interval_time
+        now = datetime.now(self.tz)
+        tomorrow = now + timedelta(days=1)
+        next_midnight = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+        return next_midnight
+
+    def shouldRollover(self, record: LogRecord) -> bool:
+        now = datetime.now(self.tz)
+        if now >= self.rolloverAt:
+            self.doRollover()
+            return True
+
+        if self.stream is None:
+            self.stream = self._open()
+
+        if self.maxBytes > 0:
+            self.stream.seek(0, os.SEEK_END)
+            if self.stream.tell() + len(f"{record.msg}\n") >= self.maxBytes:
+                return True
+
+        return False
+
+    def doRollover(self) -> None:
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+
+        # 建立新的 baseFilename（今日檔案）
+        today = datetime.now(self.tz).strftime("%Y-%m-%d")
+        self.baseFilename = os.path.join(self.directory, f"{self.filename}-{today}.log")
+
+        # 更新 rollover 時間
+        self.rolloverAt = self.computeRollover()
+
+        # 清除過期檔案
+        self.delete_expired_logs()
+
+        # 重新開啟 stream
+        self.stream = self._open()
+
+    def delete_expired_logs(self) -> None:
+        file_time_re = re.compile(
+            rf"{re.escape(self.filename)}\-(?P<time>\d{{4}}\-\d{{2}}\-\d{{2}})\.log"
+        )
+        end_time = datetime.now(self.tz) - self.expired_interval
+
+        for file in os.listdir(self.directory):
+            match = file_time_re.match(file)
+            if match:
+                file_time = datetime.strptime(match.group("time"), "%Y-%m-%d")
+                if file_time < end_time:
+                    try:
+                        os.unlink(os.path.join(self.directory, file))
+                        log.info(f"Deleted old log file: {file}")
+                    except Exception as e:
+                        log.warning(f"Failed to delete log file {file}: {e}")
 
     def format(self, record: LogRecord):
         if self.markup:
             try:
                 record = copy.deepcopy(record)
                 record.msg = Text.from_markup(record.msg)
-            except Exception as e:  # fix: aiohttp throw errors
+            except Exception as e:
                 log.debug(e)
 
         return (self.formatter or Formatter()).format(record)
-
-    def shouldRollover(self, record: LogRecord) -> bool:
-        if self.stream is None:
-            self.stream = self._open()
-        if self.rolloverAt >= datetime.today():
-            return True
-
-        if self.maxBytes > 0:
-            self.stream.seek(0, 2)
-            if self.stream.tell() + len(f"{record.msg}\n") >= self.maxBytes:
-                return True
-
-        return False
-
-    def delete_expired_logs(self) -> None:
-        file_time_re = re.compile(
-            rf"{self.filename}\-"
-            r"(?P<time>\d{4}\-\d{2}\-\d{2})"
-            r"(\.(?P<part>\d))?\.log"
-        )
-        end_time = datetime.today() - self.expired_interval
-
-        for file in os.listdir(self.directory):
-            if (match := file_time_re.match(file)) and datetime.strptime(
-                match.groupdict()["time"], "%Y-%m-%d"
-            ) < end_time:
-                log.info(f"Deleting old log file: {file}")
-                os.unlink(os.path.join(self.directory, file))
-
-    def get_file_name(
-        self,
-        filename: Optional[Union[str, object]] = None,
-        *,
-        base_file: bool = True,
-        time: bool = True,
-        time_str: Optional[str] = None,
-    ) -> str:
-        filenames = []
-
-        if base_file:
-            filenames.append(str(self.filename))
-        if time and time_str is not None:
-            filenames.append(
-                datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d") if time_str is None else time_str
-            )
-        if filename:
-            filenames.append(str(filename))
-
-        return self.directory / f"{'.'.join(filenames)}.log"
-
-    def doRollover(self) -> bool:
-        if self.stream:
-            self.stream.close()
-            self.stream = None
-
-        if self.rolloverAt >= datetime.today():
-            for i in range(self.backupCount, 0, -1):
-                if (old_file := self.get_file_name(i, time=False)).exists():
-                    old_file.rename(
-                        self.get_file_name(
-                            i, time_str=self.rolloverAt.strftime("%Y-%m-%d")
-                        )
-                    )
-            self.rolloverAt = self.computeRollover()
-            return self.delete_expired_logs()
-
-        if self.backupCount > 0:
-            self.get_file_name(self.backupCount, time=False).unlink(missing_ok=True)
-            for i in range(self.backupCount - 1, 0, -1):
-                if (old_file := self.get_file_name(i, time=False)).exists():
-                    old_file.rename(self.get_file_name(i + 1, time=False))
-            (base_file := self.get_file_name(time=False)).rename(
-                base_file.with_suffix(".1.log")
-            )
-
-        self.stream = self._open()
 
 
 def init_logging(level: int, directory: Optional[StrPath] = None) -> Logger:
@@ -161,6 +135,7 @@ def init_logging(level: int, directory: Optional[StrPath] = None) -> Logger:
         datefmt="%Y-%m-%d %H:%M:%S",
         style="{",
     )
+
     rich_console = rich.get_console()
     rich_console.push_theme(
         Theme(
@@ -180,10 +155,11 @@ def init_logging(level: int, directory: Optional[StrPath] = None) -> Logger:
             }
         )
     )
+
     shell_handler = RichHandler(
         markup=True,
         console=rich_console,
-        tracebacks_theme=(PygmentsSyntaxTheme(MonokaiStyle)),
+        tracebacks_theme=PygmentsSyntaxTheme(MonokaiStyle),
     )
     shell_handler.setLevel(logging.DEBUG)
     shell_handler.setFormatter(shell_formatter)

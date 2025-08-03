@@ -22,8 +22,6 @@ class Config(BaseModel):
     cd_拜神: int
     mysql_username: str
     mysql_password: str
-    paypal_Client_ID: str
-    paypal_Client_Secret: str
     bot_token: str
     openai_key: str
 

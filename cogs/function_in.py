@@ -1066,15 +1066,15 @@ class function_in(discord.Cog, name="模塊導入1"):
         
         #一轉
         if players_class == "戰士":
-            players_AD+=int(players_str*2.5)
-            players_max_hp+=int((players_str*3.75)+(players_con*5))
+            players_AD+=int(players_str*1)
+            players_max_hp+=int((players_str*2.5)+(players_con*4))
             players_AP+=int(players_int*0.8)
             players_max_mana+=int(players_int*4)
-            players_dodge+=int(players_dex*1)
+            players_dodge+=int(players_dex*0.9)
             players_hit+=int(players_dex*1.5)
-            players_crit_chance+=int(players_dex*0.5)
-            players_crit_damage+=int(players_dex*1)
-            players_def+=int((players_con*2)+(players_str*1.75))
+            players_crit_chance+=int(players_dex*0.7)
+            players_crit_damage+=int(players_dex*1.2)
+            players_def+=int((players_con*1.75)+(players_str*1.75))
         elif players_class == "弓箭手":
             players_AD+=int((players_str*1.3)+(players_dex*1))
             players_max_hp+=int((players_str*2.5)+(players_con*2.5))
@@ -1300,27 +1300,36 @@ class function_in(discord.Cog, name="模塊導入1"):
         return False
     
     async def delete_player(self, user_id, re=False):
-        search = await function_in.sql_findall_table("rpg_backpack")
-        if user_id in search:
+        if await function_in.sql_check_table("rpg_stock", f"{user_id}"):
+            await function_in.sql_drop_table("rpg_stock", f"{user_id}")
+        if await function_in.sql_check_table("rpg_backpack", f"{user_id}"):
             await function_in.sql_drop_table("rpg_backpack", f"{user_id}")
-        search = await function_in.sql_findall_table("rpg_equip")
-        if user_id in search:
+        if await function_in.sql_check_table("rpg_equip", f"{user_id}"):
             await function_in.sql_drop_table("rpg_equip", f"{user_id}")
-        search = await function_in.sql_findall_table("rpg_pet")
-        if user_id in search:
+        if await function_in.sql_check_table("rpg_pet", f"{user_id}"):
             await function_in.sql_drop_table("rpg_pet", f"{user_id}")
-        search = await function_in.sql_findall_table("rpg_skills")
-        if user_id in search:
+        if await function_in.sql_check_table("rpg_skills", f"{user_id}"):
             await function_in.sql_drop_table("rpg_skills", f"{user_id}")
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        if await function_in.sql_check_table("rpg_food", f"{user_id}"):
+            await function_in.sql_drop_table("rpg_food", f"{user_id}")
+        if await function_in.sql_check_table("rpg_buff", f"{user_id}"):
+            await function_in.sql_drop_table("rpg_buff", f"{user_id}")
+        check = await function_in.check_guild(self, user_id)
+        if check:
+            await function_in.sql_delete("rpg_guild", f"{check}", "user_id", f"{user_id}")
         medal_list = search[17]
         if not medal_list:
             medal_list = ""
+        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
         player_class = search[3]
         await function_in.sql_delete("rpg_players", "players", "user_id", user_id)
         await function_in.sql_delete("rpg_players", "money", "user_id", user_id)
         if await function_in.sql_search("rpg_players", "quest", ["user_id"], [user_id]):
             await function_in.sql_delete("rpg_players", "quest", "user_id", user_id)
+        if await function_in.sql_search("rpg_players", "aibot", ["user_id"], [user_id]):
+            await function_in.sql_delete("rpg_players", "aibot", "user_id", user_id)
+        if await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user_id]):
+            await function_in.sql_delete("rpg_players", "equip_upgrade_chance", "user_id", user_id)
         if await function_in.sql_search("rpg_system", "daily", ["user_id"], [user_id]):
             await function_in.sql_delete("rpg_system", "daily", "user_id", user_id)
         if await function_in.sql_search("rpg_players", "dps", ["user_id"], [user_id]):
@@ -1331,6 +1340,10 @@ class function_in(discord.Cog, name="模塊導入1"):
             await function_in.sql_delete("rpg_players", "life", "user_id", user_id)
         if await function_in.sql_search("rpg_ah", "all", ["seller"], [user_id]):
             await function_in.sql_delete("rpg_ah", "all", "seller", user_id)
+        if await function_in.sql_search("rpg_system", "verify", ["user_id"], [user_id]):
+            await function_in.sql_delete("rpg_system", "verify", "user_id", user_id)
+        if await function_in.sql_search("rpg_system", "month_card", ["user_id"], [user_id]):
+            await function_in.sql_delete("rpg_system", "month_card", "user_id", user_id)
         if re:
             await function_in.register_player(self, user_id, player_class, medal_list)
     
