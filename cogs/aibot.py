@@ -136,7 +136,7 @@ class Aibot(discord.Cog, name="AI助手"):
         loop = asyncio.get_running_loop()
         try:
             response = await loop.run_in_executor(None, lambda: self.client_ai.responses.create(
-                model="gpt-4.1-mini",
+                model="gpt-5-nano",
                 input=prompt
             ))
             text = response.output_text.strip()

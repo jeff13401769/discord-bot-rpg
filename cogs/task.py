@@ -89,7 +89,7 @@ class Task(discord.Cog, name="後台1"):
                     "msg": "OK",
                     "ping": ping
                 },
-                timeout=5
+                timeout=10
         )
         if now.minute < 1:
             self.bot.log.info("[排程] 開始自動修正所有玩家資料")

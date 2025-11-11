@@ -22,6 +22,29 @@ for item in worldboss_list:
 class Admin(discord.Cog, name="GM指令"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
+        
+    async def players_autocomplete(self, ctx: discord.AutocompleteContext):
+        query = ctx.value.lower() if ctx.value else ""
+        
+        members = await function_in.sql_findall('rpg_players', 'players')
+        members_list = []
+        for member in members:
+            user = self.bot.get_user(member[0])
+            if not user:
+                name = f"機器人無法獲取名稱 ({member[0]})"
+            else:
+                name = f"{user.name} ({user.id})"
+            members_list.append(name)
+        
+        if query:
+            # 依相似度排序，越接近輸入的越前面
+            members_list = sorted(
+                members_list,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
+        return members_list[:25]
 
     @commands.slash_command(name="start_random_event", description="開啟隨機事件",
         options=[
@@ -117,7 +140,7 @@ class Admin(discord.Cog, name="GM指令"):
                 monster_dodge = monster[5]
                 monster_hit = monster[6]
                 monster_exp = monster[7]
-                monster_money = monster[8] #
+                monster_money = monster[8]
                 drop_item = monster[9]
                 await function_in.sql_insert("rpg_worldboss", "boss", ["monster_name", "level", "hp", "max_hp", "def", "AD", "dodge", "hit", "exp", "money", "drop_item"], [monster_name, monster_level, monster_maxhp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, drop_item])
                 await function_in.sql_create_table("rpg_worldboss", f"**世界BOSS** {boss}", ["user_id", "damage"], ["BIGINT", "BIGINT"], "user_id")
@@ -146,14 +169,15 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="heal", description="強制治癒玩家",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="要治癒的玩家, 不填則為自己",
-                required=False
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             )
         ]
     )
-    async def heal(self, interaction: discord.ApplicationContext, user: discord.Member):
+    async def heal(self, interaction: discord.ApplicationContext, user: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -164,6 +188,8 @@ class Admin(discord.Cog, name="GM指令"):
             return
         if not user:
             user = interaction.user
+        else:
+            user = await function_in.players_list_to_players(self, user)
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
@@ -178,10 +204,11 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="ban", description="禁止一名玩家遊玩本遊戲",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="要停權的玩家",
-                required=True,
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             ),
             discord.Option(
                 str,
@@ -191,7 +218,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def ban(self, interaction: discord.ApplicationContext, user: discord.Member, reason: str):
+    async def ban(self, interaction: discord.ApplicationContext, user: str, reason: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -200,6 +227,7 @@ class Admin(discord.Cog, name="GM指令"):
         if is_gm < 2:
             await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
             return
+        user = await function_in.players_list_to_players(self, user)
         search = await function_in.sql_search("rpg_system", "banlist", ["user_id"], [user.id])
         if search:
             await interaction.followup.send(f'<@{user.id}> 當前已被從遊戲中停權!')
@@ -221,13 +249,15 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="delete", description="刪除玩家資料",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="要刪除資料的玩家, 不填則為自己",
-                required=False
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             )
-        ])
-    async def delete(self, interaction: discord.ApplicationContext, user: discord.Member):
+        ]
+    )
+    async def delete(self, interaction: discord.ApplicationContext, user: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -238,6 +268,8 @@ class Admin(discord.Cog, name="GM指令"):
             return
         if not user:
             user = interaction.user
+        else:
+            user = await function_in.players_list_to_players(self, user)
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
@@ -248,10 +280,11 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="giveexp", description="給予玩家經驗",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="選擇要給予經驗的玩家",
-                required=True
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             ),
             discord.Option(
                 int,
@@ -261,7 +294,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def giveexp(self, interaction: discord.ApplicationContext, player: discord.Member, exp: int):
+    async def giveexp(self, interaction: discord.ApplicationContext, player: str, exp: int):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -270,6 +303,7 @@ class Admin(discord.Cog, name="GM指令"):
         if is_gm < 1:
             await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
             return
+        player = await function_in.players_list_to_players(self, player)
         checkreg = await function_in.checkreg(self, interaction, player.id)
         if not checkreg:
             return
@@ -283,10 +317,11 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="givemedal", description="授予勳章",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="輸入要授予的玩家",
-                required=True
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             ),
             discord.Option(
                 str,
@@ -296,7 +331,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def givemedal(self, interaction: discord.ApplicationContext, player: discord.Member, medal: str):
+    async def givemedal(self, interaction: discord.ApplicationContext, player: str, medal: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -305,6 +340,7 @@ class Admin(discord.Cog, name="GM指令"):
         if is_gm < 1:
             await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
             return
+        player = await function_in.players_list_to_players(self, player)
         checkreg = await function_in.checkreg(self, interaction, player.id)
         if not checkreg:
             return
@@ -352,10 +388,11 @@ class Admin(discord.Cog, name="GM指令"):
     @commands.slash_command(name="giveitem", description="給予玩家物品",
         options=[
             discord.Option(
-                discord.Member,
+                str,
                 name="玩家",
-                description="選擇要給予物品的玩家",
-                required=True
+                description="選擇欲查看的玩家",
+                required=False,
+                autocomplete=players_autocomplete
             ),
             discord.Option(
                 str,
@@ -372,7 +409,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def giveitem(self, interaction: discord.ApplicationContext, player: discord.Member, name: str, num: int):
+    async def giveitem(self, interaction: discord.ApplicationContext, player: str, name: str, num: int):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -383,6 +420,7 @@ class Admin(discord.Cog, name="GM指令"):
             return
         if not num:
             num = 1
+        player = await function_in.players_list_to_players(self, player)
         checkreg = await function_in.checkreg(self, interaction, player.id)
         if not checkreg:
             return
