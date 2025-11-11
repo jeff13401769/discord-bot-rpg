@@ -176,6 +176,9 @@ class function_in(discord.Cog, name="模塊導入1"):
         #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
         #else:
         expfull = int((17 * players_level) ** 1.7) * special_exp
+        
+        if exp < 0:
+            exp = 0
                 
         exp+=players_exp
         while exp >= expfull:
@@ -1086,7 +1089,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_crit_damage+=int(players_dex*1.75)
             players_def+=int(players_con*1)
         elif players_class == "刺客":
-            players_AD+=int((players_str*1.1)+(players_dex*1.4))
+            players_AD+=int((players_str*1.25)+(players_dex*1.6))
             players_max_hp+=int((players_str*2.1)+(players_con*1.7))
             players_AP+=int(players_int*1)
             players_max_mana+=int(players_int*6)
@@ -1098,7 +1101,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         elif players_class == "法師":
             players_AD+=int(players_str*0.5)
             players_max_hp+=int((players_str*2)+(players_con*1))
-            players_AP+=int(players_int*4)
+            players_AP+=int(players_int*2.8)
             players_max_mana+=int(players_int*10)
             players_dodge+=int(players_int*0.55)
             players_hit+=int(players_dex*0.8+players_int*1.5)
@@ -1173,17 +1176,6 @@ class function_in(discord.Cog, name="模塊導入1"):
                         players_ndef = 80 + math.floor((players_ndef - 80)*0.2)
                         if players_ndef > 90:
                             players_ndef = 90
-
-        if players_max_hp < 1:
-            players_max_hp = 1
-        if players_max_mana < 0:
-            players_max_mana = 0
-        if players_hp > players_max_hp:
-            players_hp = players_max_hp
-            await function_in.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
-        if players_mana > players_max_mana:
-            players_mana = players_max_mana
-            await function_in.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
         
         if players_hunger > 80:
             players_AD = int(players_AD*1.2)
@@ -1206,6 +1198,17 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_dodge = int(players_dodge*0.5)
             players_crit_chance = int(players_crit_chance*0.5)
             players_max_hp = int(players_max_hp*0.7)
+
+        if players_max_hp < 1:
+            players_max_hp = 1
+        if players_max_mana < 0:
+            players_max_mana = 0
+        if players_hp > players_max_hp:
+            players_hp = players_max_hp
+            await function_in.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
+        if players_mana > players_max_mana:
+            players_mana = players_max_mana
+            await function_in.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
 
         return players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit,  players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger
     

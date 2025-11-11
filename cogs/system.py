@@ -1095,8 +1095,8 @@ class System(discord.Cog, name="主系統"):
             qname = search[2]
             qnum = search[3]
             qnum_1 = search[4]
-            qdaily_money = search[5]
-            qdaily_exp = search[6]
+            qdaily_money = search[6]
+            qdaily_exp = search[5]
             qdaily_qp = search[7]
             rewards = ""
             if qdaily_exp > 0:
