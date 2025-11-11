@@ -207,7 +207,7 @@ class Admin(discord.Cog, name="GM指令"):
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
-                required=False,
+                required=True,
                 autocomplete=players_autocomplete
             ),
             discord.Option(
@@ -283,7 +283,7 @@ class Admin(discord.Cog, name="GM指令"):
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
-                required=False,
+                required=True,
                 autocomplete=players_autocomplete
             ),
             discord.Option(
@@ -320,7 +320,7 @@ class Admin(discord.Cog, name="GM指令"):
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
-                required=False,
+                required=True,
                 autocomplete=players_autocomplete
             ),
             discord.Option(
@@ -391,7 +391,7 @@ class Admin(discord.Cog, name="GM指令"):
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
-                required=False,
+                required=True,
                 autocomplete=players_autocomplete
             ),
             discord.Option(

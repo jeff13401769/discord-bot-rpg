@@ -65,8 +65,9 @@ class Kits(discord.Cog, name="禮包碼"):
             await function_in.give_item(self, user.id, "破舊的布製胸甲")
             await function_in.give_item(self, user.id, "破舊的布製短褲")
             await function_in.give_item(self, user.id, "破舊的布製鞋子")
+            await function_in.give_item(self, user.id, "鮮肉包", 30)
             await function_in.give_money(self, user, "money", 1000, "kits")
-            kit_info = "一小瓶紅藥水x10, 一瓶紅藥水x5, 一小瓶藍藥水x10, 一瓶藍藥水x5, 破舊的布製頭盔x1, 破舊的布製胸甲x1, 破舊的布製短褲x1, 破舊的布製鞋子x1, 晶幣x1000"
+            kit_info = "一小瓶紅藥水x10, 一瓶紅藥水x5, 一小瓶藍藥水x10, 一瓶藍藥水x5, 鮮肉包x30, 破舊的布製頭盔x1, 破舊的布製胸甲x1, 破舊的布製短褲x1, 破舊的布製鞋子x1, 晶幣x1000"
         elif code == "dungeon":
             await function_in.give_item(self, user.id, "「古樹之森」副本入場卷", 10)
             await function_in.give_item(self, user.id, "「寒冰之地」副本入場卷", 10)
