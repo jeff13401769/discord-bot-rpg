@@ -265,6 +265,9 @@ class Guild(discord.Cog, name="公會"):
             if gold > money:
                 await interaction.followup.send("公會資金不足, 無法學習此技能!")
                 return
+            if skills.get(func1, 0) > 10:
+                await interaction.followup.send(f"公會技能 {func1} 最高僅可升到 10 級!")
+                return
             await function_in.sql_update("rpg_guild", "all", "money", money-gold, "guild_name", guild_info)
             await function_in.sql_update("rpg_guild", "skills", name1, skills.get(func1, 0)+1, "guild_name", guild_info)
             embed = discord.Embed(title=f"{guild_info} 公會技能", color=0x79FF79)
@@ -644,11 +647,11 @@ class Guild(discord.Cog, name="公會"):
             skill_9 = skills[9]
             skill_10 = skills[10]
             embed = discord.Embed(title=f"{self.guild_name} 公會技能", color=0x79FF79)
-            embed.add_field(name="群眾之力量", value=f"{skill_1}", inline=True)
-            embed.add_field(name="群眾之智慧", value=f"{skill_2}", inline=True)
-            embed.add_field(name="群眾之敏捷", value=f"{skill_3}", inline=True)
-            embed.add_field(name="群眾之體質", value=f"{skill_4}", inline=True)
-            embed.add_field(name="群眾之幸運", value=f"{skill_5}", inline=True)
+            embed.add_field(name="群眾之力量", value=f"{skill_1} / 10", inline=True)
+            embed.add_field(name="群眾之智慧", value=f"{skill_2} / 10", inline=True)
+            embed.add_field(name="群眾之敏捷", value=f"{skill_3} / 10", inline=True)
+            embed.add_field(name="群眾之體質", value=f"{skill_4} / 10", inline=True)
+            embed.add_field(name="群眾之幸運", value=f"{skill_5} / 10", inline=True)
             embed.add_field(name="若要學習技能, 請使用以下指令(以群眾之力量為比方, 請自行更改為需要學習的技能)", value="/公會 功能: 學習公會技能 名稱: 群眾之力量", inline=False)
             await msg.edit(embed=embed, view=Guild.guild_menu(interaction, self.bot, self.guild_name))
             self.stop()

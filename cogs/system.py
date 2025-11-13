@@ -82,13 +82,26 @@ class System(discord.Cog, name="主系統"):
         if players_hp > 0:
             await interaction.followup.send('你目前並沒有死亡!')
             return
+        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+        if search[21]:
+            await System.respawn(self, user, 0)
+            await function_in.sql_update("rpg_players", "players", "world_boss_kill", False, "user_id", user.id)
+            now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d %H:%M:%S")
+            timeString = now_time
+            struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
+            time_stamp = int(time.mktime(struct_time))
+            await function_in.sql_update("rpg_players", "players", "action", time_stamp+60, "user_id", user.id)
+            embed = discord.Embed(title=f'{user.name} 你復活了', color=0xbe77ff)
+            embed.add_field(name=f"你使用了世界復活", value="\u200b", inline=False)
+            embed.add_field(name=f"由於你被世界BOSS擊殺, 你進入了一分鐘的虛弱狀態...", value="\u200b", inline=False)
+            await interaction.followup.send(embed=embed)
+            return
         embed = discord.Embed(title=f'{user.name} 請選擇你的復活方式...', color=0xbe77ff)
         if players_level <= 10:
             embed.add_field(name=f"👼 新手復活", value="復活後不會損失任何經驗(10等及以下可使用)", inline=True)
         embed.add_field(name=f"<:exp:1078583848381710346> 普通復活", value="復活後會損失當前等級滿級所需經驗之30%", inline=True)
         embed.add_field(name=f"<:coin:1078582446091665438> 晶幣復活", value="復活後損失當前等級滿級所需經驗之15%(需要消耗3000晶幣)", inline=True)
         embed.add_field(name=f"<:magic_stone:1078155095126056971> 神聖復活", value="復活後不會損失任何經驗(需要消耗一顆魔法石)", inline=True)
-        embed.add_field(name=f"🌎 世界復活", value="復活後不會損失任何經驗(僅限被世界王殺死時使用)", inline=True)
         await interaction.followup.send(embed=embed, view=self.respawn_menu(interaction, players_level))
 
     @commands.slash_command(name="交易", description="與別人交易",
@@ -1724,15 +1737,12 @@ class System(discord.Cog, name="主系統"):
             self.button1 = discord.ui.Button(emoji="🔮", style=discord.ButtonStyle.grey, custom_id="button1")
             self.button2 = discord.ui.Button(emoji="🪙", style=discord.ButtonStyle.blurple, custom_id="button2")
             self.button3 = discord.ui.Button(emoji="<:magic_stone:1078155095126056971>", style=discord.ButtonStyle.green, custom_id="button3")
-            self.button4 = discord.ui.Button(emoji="🌎", style=discord.ButtonStyle.red, custom_id="button4")
             self.button1.callback = functools.partial(self.button1_callback, interaction)
             self.button2.callback = functools.partial(self.button2_callback, interaction)
             self.button3.callback = functools.partial(self.button3_callback, interaction)
-            self.button4.callback = functools.partial(self.button4_callback, interaction)
             self.add_item(self.button1)
             self.add_item(self.button2)
             self.add_item(self.button3)
-            self.add_item(self.button4)
 
         async def on_timeout(self):
             await super().on_timeout()
@@ -1751,8 +1761,9 @@ class System(discord.Cog, name="主系統"):
         async def button0_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             await interaction.response.defer()
-            exp = await System.respawn(self, interaction.user, 0)
-            embed = discord.Embed(title=f'{interaction.user.name} 你復活了', color=0x9d9d9d)
+            user = interaction.user
+            exp = await System.respawn(self, user, 0)
+            embed = discord.Embed(title=f'{user.name} 你復活了', color=0x9d9d9d)
             embed.add_field(name=f"你使用了新手復活", value=f"你花費了0經驗值復活", inline=True)
             await interaction.followup.edit_message(interaction.message.id, view=None, embed=embed)
             self.stop()
@@ -1760,8 +1771,9 @@ class System(discord.Cog, name="主系統"):
         async def button1_callback(self, button, interaction: discord.Interaction):
             self.disable_all_items()
             await interaction.response.defer()
-            exp = await System.respawn(self, interaction.user, 30)
-            embed = discord.Embed(title=f'{interaction.user.name} 你復活了', color=0x9d9d9d)
+            user = interaction.user
+            exp = await System.respawn(self, user, 30)
+            embed = discord.Embed(title=f'{user.name} 你復活了', color=0x9d9d9d)
             embed.add_field(name=f"你使用了普通復活", value=f"你花費了{exp}經驗值復活", inline=True)
             await interaction.followup.edit_message(interaction.message.id, view=None, embed=embed)
             self.stop()
@@ -1779,12 +1791,11 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name=f"<:exp:1078583848381710346> 普通復活", value="復活後會損失當前等級滿級所需經驗之30%", inline=True)
                 embed.add_field(name=f"<:coin:1078582446091665438> 晶幣復活", value="復活後損失當前等級滿級所需經驗之15%(需要消耗3000晶幣)", inline=True)
                 embed.add_field(name=f"<:magic_stone:1078155095126056971> 神聖復活", value="復活後不會損失任何經驗(需要消耗一顆魔法石)", inline=True)
-                embed.add_field(name=f"🌎 世界復活", value="復活後不會損失任何經驗(僅限被世界王殺死時使用)", inline=True)
                 embed.add_field(name="\u200b", value="\u200b", inline=True)
                 embed.add_field(name=":x: 你沒有足夠的晶幣來復活!", value="\u200b", inline=False)
-                await msg.edit(embed=embed, view=System.respawn_menu(interaction, self.players_level))
+                await msg.edit(embed=embed, view=System.respawn_menu(interaction, self.players_level, self.wbk))
             else:
-                exp = await System.respawn(self, interaction.user, 15)
+                exp = await System.respawn(self, user, 15)
                 embed = discord.Embed(title=f'{user.name} 你復活了', color=0xffe153)
                 moneya = await function_in.remove_money(self, user, "money", 3000)
                 embed.add_field(name=f"你使用了晶幣復活", value=f"你花費了3000晶幣及{exp}經驗值復活", inline=True)
@@ -1804,41 +1815,14 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name=f"<:exp:1078583848381710346> 普通復活", value="復活後會損失當前等級滿級所需經驗之30%", inline=True)
                 embed.add_field(name=f"<:coin:1078582446091665438> 晶幣復活", value="復活後損失當前等級滿級所需經驗之15%(需要消耗3000晶幣)", inline=True)
                 embed.add_field(name=f"<:magic_stone:1078155095126056971> 神聖復活", value="復活後不會損失任何經驗(需要消耗一顆魔法石)", inline=True)
-                embed.add_field(name=f"🌎 世界復活", value="復活後不會損失任何經驗(僅限被世界王殺死時使用)", inline=True)
                 embed.add_field(name="\u200b", value="\u200b", inline=True)
                 embed.add_field(name=":x: 你沒有足夠的魔法石來復活!", value="\u200b", inline=False)
-                await msg.edit(embed=embed, view=System.respawn_menu(interaction, self.players_level))
+                await msg.edit(embed=embed, view=System.respawn_menu(interaction, self.players_level, self.wbk))
             else:
                 await function_in.remove_item(self, user.id, "魔法石")
-                await System.respawn(self, interaction.user, 0)
+                await System.respawn(self, user, 0)
                 embed = discord.Embed(title=f'{user.name} 你復活了', color=0xbe77ff)
                 embed.add_field(name=f"你使用了神聖復活", value=f"你花費了一顆魔法石復活", inline=True)
-                await msg.edit(embed=embed, view=None)
-            self.stop()
-
-        async def button4_callback(self, button, interaction: discord.Interaction):
-            self.disable_all_items()
-            await interaction.response.edit_message(view=self)
-            msg = interaction.message
-            user = interaction.user
-            search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
-            wbk = search[21]
-            if not wbk:
-                embed = discord.Embed(title=f'{user.name} 請選擇你的復活方式...', color=0xbe77ff)
-                if self.players_level <= 10:
-                    embed.add_field(name=f"👼 新手復活", value="復活後不會損失任何經驗(10等及以下可使用)", inline=True)
-                embed.add_field(name=f"<:exp:1078583848381710346> 普通復活", value="復活後會損失當前等級滿級所需經驗之30%", inline=True)
-                embed.add_field(name=f"<:coin:1078582446091665438> 晶幣復活", value="復活後損失當前等級滿級所需經驗之15%(需要消耗3000晶幣)", inline=True)
-                embed.add_field(name=f"<:magic_stone:1078155095126056971> 神聖復活", value="復活後不會損失任何經驗(需要消耗一顆魔法石)", inline=True)
-                embed.add_field(name=f"🌎 世界復活", value="復活後不會損失任何經驗(僅限被世界王殺死時使用)", inline=True)
-                embed.add_field(name="\u200b", value="\u200b", inline=True)
-                embed.add_field(name=":x: 你並不是被世界王殺死的, 無法接受來自世界的力量!", value="\u200b", inline=False)
-                await msg.edit(embed=embed, view=System.respawn_menu(interaction, self.players_level))
-            else:
-                await System.respawn(self, interaction.user, 0)
-                await function_in.sql_update("rpg_players", "players", "world_boss_kill", False, "user_id", user.id)
-                embed = discord.Embed(title=f'{user.name} 你復活了', color=0xbe77ff)
-                embed.add_field(name=f"你使用了世界復活", value="\u200b", inline=True)
                 await msg.edit(embed=embed, view=None)
             self.stop()
 
