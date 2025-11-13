@@ -188,13 +188,13 @@ class Guild(discord.Cog, name="公會"):
                 if not check_itemb:
                     await interaction.followup.send("你的炎獄魔龍的鱗片不足 1, 無法創建公會!")
                     return
-                if not name:
+                if not func1:
                     await interaction.followup.send("請輸入欲創建的公會名稱!")
                     return
-                if name in ["all", "skills", "quest"]:
+                if func1 in ["all", "skills", "quest"]:
                     await interaction.followup.send("此公會名稱無法使用!")
                     return
-                if len(name) > 20 or len(name) < 1:
+                if len(func1) > 20 or len(func1) < 1:
                     await interaction.followup.send("公會名稱長度必須介於1~20之間!")
                     return
                 search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
@@ -204,12 +204,12 @@ class Guild(discord.Cog, name="公會"):
                     await function_in.remove_item(self, user.id, "炎獄魔龍的鱗片", 1)
                     await function_in.sql_update("rpg_players", "players", "guild_name", func1, "user_id", user.id)
                     await function_in.sql_insert("rpg_guild", "all", ["guild_name", "owner_id", "level", "exp", "money"], [func1, user.id, 1, 0, 0])
-                    await function_in.sql_create_table("rpg_guild", f"{name}", ["user_id", "position"], ["BIGINT", "TEXT"], "user_id")
-                    await function_in.sql_insert(f"rpg_guild", f"{name}", ["user_id", "position"], [user.id, "會長"])
+                    await function_in.sql_create_table("rpg_guild", f"{func1}", ["user_id", "position"], ["BIGINT", "TEXT"], "user_id")
+                    await function_in.sql_insert(f"rpg_guild", f"{func1}", ["user_id", "position"], [user.id, "會長"])
                     await function_in.sql_insert("rpg_guild", "skills", ["guild_name", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6", "skill_7", "skill_8", "skill_9", "skill_10"], [func1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-                    await interaction.followup.send(f"你成功創建了 `{name}` 公會!")
+                    await interaction.followup.send(f"你成功創建了 `{func1}` 公會!")
                 else:
-                    await interaction.followup.send(f"公會名稱 `{name}` 已存在!")
+                    await interaction.followup.send(f"公會名稱 `{func1}` 已存在!")
                     return
             else:
                 await interaction.followup.send("你已經加入了公會!")

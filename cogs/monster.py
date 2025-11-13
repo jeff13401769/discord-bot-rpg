@@ -69,10 +69,8 @@ class Monster(discord.Cog, name="怪物"):
                     "10%全服經驗加倍卷": 15,
                 }
             elif worldboss == "紫羽狐神●日月粉碎者●銀夢浮絮":
-                boss_level = await function_in.check_super_worldboss_level(self)
+                boss_level = await function_in.check_super_worldboss_level(self, 30)
                 level = int(boss_level+10)
-                if level > 30:
-                    level = 30
                 prizes = {
                     "銀燼幻羽": 500,
                     "隨機職業技能書(15等)": 200,
@@ -104,13 +102,13 @@ class Monster(discord.Cog, name="怪物"):
                 }
             else:
                 return False
-            if worldboss:
-                name = f"**世界BOSS** {worldboss}"
-            hp = int(level * random.randint(80000, 120000))
-            defense = math.floor(level * (random.randint(50, 60)*0.1))
-            attack = math.floor(level * random.randint(5, 7))
+            
+            name = f"**世界BOSS** {worldboss}"
+            hp = int(level * random.randint(450000, 500000))
+            defense = math.floor(level * (random.randint(55, 62)*0.15))
+            attack = math.floor(level * random.randint(6, 8))
             dodge = math.floor(level * (random.randint(6, 10)*0.1))
-            hit = math.floor(level * (random.randint(24, 35)*0.1))
+            hit = math.floor(level * (random.randint(29, 35)*0.125))
             exp = math.floor(level * 150)
             money = math.floor(level * 70)
             item = await function_in.lot(self, prizes)

@@ -89,7 +89,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             num += 1
         return num
 
-    async def check_super_worldboss_level(self):
+    async def check_super_worldboss_level(self, level: int):
         search = await function_in.sql_findall("rpg_players", "players")
         alllevel = 0
         player_num = 0
@@ -98,6 +98,8 @@ class function_in(discord.Cog, name="模塊導入1"):
                 alllevel += player[1]
                 player_num += 1
         boss_level = int(alllevel / player_num)
+        if boss_level < level:
+            boss_level = level
         return boss_level
     
     async def send_msg_to_user(self, user: discord.User, msg: str):
@@ -1089,7 +1091,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_crit_damage+=int(players_dex*1.75)
             players_def+=int(players_con*1)
         elif players_class == "刺客":
-            players_AD+=int((players_str*1.25)+(players_dex*1.6))
+            players_AD+=int((players_str*1.05)+(players_dex*1.4))
             players_max_hp+=int((players_str*2.1)+(players_con*1.7))
             players_AP+=int(players_int*1)
             players_max_mana+=int(players_int*6)
