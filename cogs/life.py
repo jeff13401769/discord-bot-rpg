@@ -1,14 +1,10 @@
 import asyncio
-import random
-import math
+import difflib
 import os
 import yaml
-
-import certifi
 import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -18,6 +14,60 @@ from cogs.premium import Premium
 class Life(discord.Cog, name="生活系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
+    
+    async def func_autocomplete(self, ctx: discord.AutocompleteContext):
+        func = ctx.options['功能']
+        if func == '查看生活等級':
+            query = ctx.value.lower() if ctx.value else ""
+            
+            members = await function_in.sql_findall('rpg_players', 'players')
+            members_list = []
+            for member in members:
+                user = self.bot.get_user(member[0])
+                if not user:
+                    name = f"機器人無法獲取名稱 ({member[0]})"
+                else:
+                    name = f"{user.name} ({user.id})"
+                members_list.append(name)
+            
+            if query:
+                # 依相似度排序，越接近輸入的越前面
+                members_list = sorted(
+                    members_list,
+                    key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                    reverse=True
+                )
+                members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
+            return members_list[:25]
+        elif func == '烹飪':
+            query = ctx.value.lower() if ctx.value else ""
+
+            base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            cook_path = os.path.join(base_path, "rpg", "配方", "烹飪.yml")
+
+            if not os.path.exists(cook_path):
+                return []
+
+            with open(cook_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+
+            dish_names = list(data.keys())
+            
+            if not query:
+                return dish_names[:25]
+            else:
+                dish_names = sorted(
+                    dish_names,
+                    key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                    reverse=True
+                )
+                dish_names = [
+                    d for d in dish_names
+                    if query in d.lower() or difflib.SequenceMatcher(None, query, d.lower()).ratio() > 0.3
+                ]
+            return dish_names[:25]
+        else:
+            return []
     
     @discord.user_command(name="查看生活", description="生活系統",
         options=[
@@ -29,46 +79,42 @@ class Life(discord.Cog, name="生活系統"):
             )
         ])
     async def 查看生活(self, interaction: discord.ApplicationContext, member: discord.Member):
-        await self.生活(interaction, 0, None, member)
+        name = f"{member.name} ({member.id})"
+        await self.生活(interaction, "查看生活等級", name)
     
     @commands.slash_command(name="生活", description="生活系統",
         options=[
             discord.Option(
-                int,
+                str,
                 name="功能",
                 description="選擇一個功能",
                 required=True,
                 choices=[
-                    OptionChoice(name="查看生活等級", value=0),
-                    OptionChoice(name="烹飪", value=1)
+                    OptionChoice(name="查看生活等級", value="查看生活等級"),
+                    OptionChoice(name="烹飪", value="烹飪")
                 ],
             ),
             discord.Option(
                 str,
-                name="名稱",
-                description="本欄位請按照提示輸入",
-                required=False
+                name="玩家名稱或料理名稱",
+                description="本欄位請按照提示輸入, 若功能欄位選擇查看生活等級且該欄位不輸入, 則默認為自己",
+                required=False,
+                autocomplete=func_autocomplete
             ),
             discord.Option(
                 int,
                 name="次數",
-                description="輸入需要執行的次數",
+                description="輸入需要執行的次數, 僅在功能欄位選擇非查看生活等級時需要",
                 required=False,
                 choices=[
                     OptionChoice(name="1次", value=1),
                     OptionChoice(name="5次", value=5),
                     OptionChoice(name="10次", value=10)
                 ]
-            ),
-            discord.Option(
-                discord.Member,
-                name="玩家",
-                description="選擇要查看的玩家",
-                required=False
             )
         ]
     )
-    async def 生活(self, interaction: discord.ApplicationContext, func: int, name: str, num: int, member: discord.Member):
+    async def 生活(self, interaction: discord.ApplicationContext, func: str, name: str, num: int):
         await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
@@ -81,11 +127,14 @@ class Life(discord.Cog, name="生活系統"):
             else:
                 await interaction.followup.send('驗證碼已發送至您的私聊')
             return
-        if func == 0:
-            if member:
-                user = member
-        if not num:
-            num = 1
+        if func == "查看生活等級":
+            if not name:
+                user = interaction.user
+            else:
+                user = await function_in.players_list_to_players(self, name)
+        elif func == "烹飪":
+            if not num:
+                num = 1
         search = await function_in.sql_search("rpg_players", "life", ["user_id"], [user.id])
         if not search:
             await function_in.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
@@ -95,12 +144,12 @@ class Life(discord.Cog, name="生活系統"):
             cook_lv = search[1]
             cook_exp = search[2]
         cook_lv = int(cook_lv)
-        if func == 0:
+        if func == "查看生活等級":
             embed = discord.Embed(title=f"{user.name} 的生活等級", color=0x4DFFFF)
             lifelv = await self.lifelv(cook_lv)
             embed.add_field(name="烹飪", value=f"等級: {lifelv}\n經驗值: {cook_exp}", inline=False)
             await interaction.followup.send(embed=embed)
-        if func == 1:
+        if func == "烹飪":
             if not name:
                 await interaction.followup.send("請輸入烹飪名稱!")
                 return

@@ -1,22 +1,14 @@
-import datetime
 from discord.ui.item import Item
-import pytz
 import asyncio
-import time
 import math
 import random
 import functools
 import yaml
-import certifi
 import os
 import numpy as np
-
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
-import mysql.connector
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.monster import Monster

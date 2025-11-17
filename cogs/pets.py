@@ -38,16 +38,10 @@ class Pets(discord.Cog, name="寵物系統"):
         ]
     )
     async def 查看寵物(self, interaction: discord.ApplicationContext, player: discord.Member):
-        await self.寵物(interaction, player, 0)
+        await self.寵物(interaction, 0)
 
     @commands.slash_command(name="寵物", description="寵物系統",
         options=[
-            discord.Option(
-                discord.Member,
-                name="玩家",
-                description="選擇一位玩家, 不填默認自己",
-                required=False
-            ),
             discord.Option(
                 int,
                 name="功能",
@@ -57,20 +51,26 @@ class Pets(discord.Cog, name="寵物系統"):
                     OptionChoice(name="查看", value=0),
                     OptionChoice(name="出戰", value=1)
                 ],
+            ),
+            discord.Option(
+                str,
+                name="玩家",
+                description="選擇一位玩家, 不填默認自己, 僅在功能欄位選擇查看時需要",
+                required=False
             )
         ]
     )
-    async def 寵物(self, interaction: discord.ApplicationContext, player:  discord.Member, func: int = 0):
+    async def 寵物(self, interaction: discord.ApplicationContext, func: int = 0, player: discord.Member = None):
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
         if not checkreg:
             return
-        if player:
-            checkreg = await function_in.checkreg(self, interaction, player.id)
-            if not checkreg:
-                return
-            user = player
         if func == 0:
+            if player:
+                checkreg = await function_in.checkreg(self, interaction, player.id)
+                if not checkreg:
+                    return
+                user = player
             await interaction.defer()
             petlist = ["寵物一", "寵物二", "寵物三"]
             embed = discord.Embed(title=f"{user.name} 的寵物", color=0xFF0000)
@@ -85,7 +85,7 @@ class Pets(discord.Cog, name="寵物系統"):
                 embed.add_field(name=f"{pets}:", value=f"{pet}", inline=True)
             await interaction.followup.send(embed=embed)
         if func == 1:
-            checkactioning, stat = await function_in.checkactioning(self, user)
+            checkactioning, stat = await function_in.checkactioning(self, interaction.user)
             if not checkactioning:
                 await interaction.response.send_message(f'你當前正在 {stat} 中, 無法使用寵物系統!')
                 return

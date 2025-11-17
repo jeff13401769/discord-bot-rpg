@@ -1,8 +1,6 @@
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-import os
-import difflib
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.monster import Monster
@@ -22,31 +20,8 @@ for item in worldboss_list:
 class Admin(discord.Cog, name="GM指令"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
-        
-    async def players_autocomplete(self, ctx: discord.AutocompleteContext):
-        query = ctx.value.lower() if ctx.value else ""
-        
-        members = await function_in.sql_findall('rpg_players', 'players')
-        members_list = []
-        for member in members:
-            user = self.bot.get_user(member[0])
-            if not user:
-                name = f"機器人無法獲取名稱 ({member[0]})"
-            else:
-                name = f"{user.name} ({user.id})"
-            members_list.append(name)
-        
-        if query:
-            # 依相似度排序，越接近輸入的越前面
-            members_list = sorted(
-                members_list,
-                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
-                reverse=True
-            )
-            members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
-        return members_list[:25]
 
-    @commands.slash_command(name="start_random_event", description="開啟隨機事件",
+    @commands.slash_command(name="gmcmd_start_random_event", description="開啟隨機事件",
         options=[
             discord.Option(
                 str,
@@ -67,7 +42,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def start_random_event(self, interaction: discord.ApplicationContext, event: str):
+    async def gmcmd_start_random_event(self, interaction: discord.ApplicationContext, event: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -94,7 +69,7 @@ class Admin(discord.Cog, name="GM指令"):
                 await interaction.followup.send(f'成功開啟隨機事件: {event}!')
                 self.bot.log.info(f'{interaction.user.id} 使用指令 start_random_event 開啟 {event} 隨機事件')
     
-    @commands.slash_command(name="summon_worldboss", description="召喚世界王",
+    @commands.slash_command(name="gmcmd_summon_worldboss", description="召喚世界王",
         options=[
             discord.Option(
                 str,
@@ -115,7 +90,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def summon_worldboss(self, interaction: discord.ApplicationContext, boss: str, func: str):
+    async def gmcmd_summon_worldboss(self, interaction: discord.ApplicationContext, boss: str, func: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -166,18 +141,18 @@ class Admin(discord.Cog, name="GM指令"):
                 self.bot.log.info(f'{interaction.user.id} 使用指令 summon_worldboss 移除世界BOSS {boss}')
                 return
 
-    @commands.slash_command(name="heal", description="強制治癒玩家",
+    @commands.slash_command(name="gmcmd_heal", description="強制治癒玩家",
         options=[
             discord.Option(
                 str,
                 name="玩家",
-                description="選擇欲查看的玩家",
+                description="選擇欲治癒的玩家",
                 required=False,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             )
         ]
     )
-    async def heal(self, interaction: discord.ApplicationContext, user: str):
+    async def gmcmd_heal(self, interaction: discord.ApplicationContext, user: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -201,14 +176,14 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'你成功將 {user.mention} 血量魔力飽食度回滿並消除冷卻值!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 heal 治療了 {user.id}')
 
-    @commands.slash_command(name="ban", description="禁止一名玩家遊玩本遊戲",
+    @commands.slash_command(name="gmcmd_ban", description="禁止一名玩家遊玩本遊戲",
         options=[
             discord.Option(
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=True,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             ),
             discord.Option(
                 str,
@@ -218,7 +193,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def ban(self, interaction: discord.ApplicationContext, user: str, reason: str):
+    async def gmcmd_ban(self, interaction: discord.ApplicationContext, user: str, reason: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -246,18 +221,18 @@ class Admin(discord.Cog, name="GM指令"):
             await msg.reply(f'停權警告無法傳送給該用戶: {user.id}')
         self.bot.log.info(f'{interaction.user.id} 使用指令 ban 停權了 {user.id}')
     
-    @commands.slash_command(name="delete", description="刪除玩家資料",
+    @commands.slash_command(name="gmcmd_delete", description="刪除玩家資料",
         options=[
             discord.Option(
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=False,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             )
         ]
     )
-    async def delete(self, interaction: discord.ApplicationContext, user: str):
+    async def gmcmd_delete(self, interaction: discord.ApplicationContext, user: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -277,14 +252,71 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'你成功清除了 <@{user.id}> 的資料!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 delete 刪除了 {user.id}')
     
-    @commands.slash_command(name="giveexp", description="給予玩家經驗",
+    @commands.slash_command(name="gmcmd_givemoney", description="給予玩家貨幣",
         options=[
             discord.Option(
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=True,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
+            ),
+            discord.Option(
+                str,
+                name="貨幣種類",
+                description="選擇要給予的貨幣種類",
+                choices = [
+                    OptionChoice(name="晶幣", value="money"),
+                    OptionChoice(name="水晶", value="diamond"),
+                    OptionChoice(name="任務點數", value="qp"),
+                    OptionChoice(name="世界幣", value="wbp"),
+                    OptionChoice(name="決鬥點數", value="pp")
+                ],
+                required=True
+            ),
+            discord.Option(
+                int,
+                name="貨幣數量",
+                description="選擇要給予的貨幣數量",
+                required=True
+            )
+        ]
+    )
+    async def gmcmd_givemoney(self, interaction: discord.ApplicationContext, player: str, mtype: str, mnum: int):
+        await interaction.defer()
+        is_gm = await function_in.is_gm(self, interaction.user.id)
+        if not is_gm:
+            await interaction.followup.send("你不是GM, 無法使用此指令!")
+            return
+        if is_gm < 1:
+            await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
+            return
+        player = await function_in.players_list_to_players(self, player)
+        checkreg = await function_in.checkreg(self, interaction, player.id)
+        if not checkreg:
+            return
+        if mtype == "money":
+            mtype_str = "晶幣"
+        elif mtype == "diamond":
+            mtype_str = "水晶"
+        elif mtype == "qp":
+            mtype_str = "任務點數"
+        elif mtype == "wbp":
+            mtype_str = "世界幣"
+        elif mtype == "pp":
+            mtype_str = "決鬥點數"
+        money = await function_in.give_money(self, player, mtype, mnum, "管理員給予")
+        await interaction.followup.send(f'成功給予 {player.mention} {mnum} {mtype_str}! 現在 {player.mention} 擁有 {money} {mtype_str}')
+        self.bot.log.info(f'{interaction.user.id} 使用指令 givemoney 給予了 {player.id} {mnum} {mtype_str}')
+    
+    @commands.slash_command(name="gmcmd_giveexp", description="給予玩家經驗",
+        options=[
+            discord.Option(
+                str,
+                name="玩家",
+                description="選擇欲查看的玩家",
+                required=True,
+                autocomplete=function_in.players_autocomplete
             ),
             discord.Option(
                 int,
@@ -294,7 +326,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def giveexp(self, interaction: discord.ApplicationContext, player: str, exp: int):
+    async def gmcmd_giveexp(self, interaction: discord.ApplicationContext, player: str, exp: int):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -314,14 +346,14 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'成功給予 {player.mention} {exp} 經驗!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 giveexp 給予了 {player.id} {exp}經驗')
     
-    @commands.slash_command(name="givemedal", description="授予勳章",
+    @commands.slash_command(name="gmcmd_givemedal", description="授予勳章",
         options=[
             discord.Option(
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=True,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             ),
             discord.Option(
                 str,
@@ -331,7 +363,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def givemedal(self, interaction: discord.ApplicationContext, player: str, medal: str):
+    async def gmcmd_givemedal(self, interaction: discord.ApplicationContext, player: str, medal: str):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:
@@ -347,59 +379,22 @@ class Admin(discord.Cog, name="GM指令"):
         msg = await function_in.give_medal(self, player.id, medal)
         await interaction.followup.send(msg)
         self.bot.log.info(f'{interaction.user.id} 使用指令 givemedal 給予了 {player.id} {medal} 勳章')
-        
-    async def item_autocomplete(self, ctx: discord.AutocompleteContext):
-        query = ctx.value.lower() if ctx.value else ""
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        
-        folders_to_search = [
-            ("裝備", "armor"),
-            ("裝備", "weapon"),
-            ("裝備", "accessories"),
-            ("物品", "材料"),
-            ("物品", "道具"),
-            ("物品", "料理"),
-            ("物品", "技能書"),
-            ("裝備", "pet"),
-            ("裝備", "card"),
-            ("裝備", "class_item"),
-        ]
-        all_items = []
-        for folder_a, folder_b in folders_to_search:
-            folder_path = os.path.join(base_path, "rpg", folder_a, folder_b)
-            if os.path.exists(folder_path):
-                for file_name in os.listdir(folder_path):
-                    if file_name.endswith(".yml"):
-                        all_items.append(file_name[:-4])
-        
-        if query:
-            all_items = sorted(
-                all_items,
-                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
-                reverse=True
-            )
-            all_items = [
-                i for i in all_items
-                if query in i.lower() or difflib.SequenceMatcher(None, query, i.lower()).ratio() > 0.3
-            ]
-            
-        return all_items[:25]
     
-    @commands.slash_command(name="giveitem", description="給予玩家物品",
+    @commands.slash_command(name="gmcmd_giveitem", description="給予玩家物品",
         options=[
             discord.Option(
                 str,
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=True,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             ),
             discord.Option(
                 str,
                 name="名稱",
                 description="輸入要給予的物品名稱",
                 required=True,
-                autocomplete=item_autocomplete
+                autocomplete=function_in.item_autocomplete
             ),
             discord.Option(
                 int,
@@ -409,7 +404,7 @@ class Admin(discord.Cog, name="GM指令"):
             )
         ]
     )
-    async def giveitem(self, interaction: discord.ApplicationContext, player: str, name: str, num: int):
+    async def gmcmd_giveitem(self, interaction: discord.ApplicationContext, player: str, name: str, num: int):
         await interaction.defer()
         is_gm = await function_in.is_gm(self, interaction.user.id)
         if not is_gm:

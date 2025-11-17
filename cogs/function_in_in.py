@@ -1,13 +1,3 @@
-import asyncio
-import random
-from random import choice
-import datetime
-import time
-import pytz
-import os
-import yaml
-
-import certifi
 import discord
 from utility.config import config
 import mysql.connector

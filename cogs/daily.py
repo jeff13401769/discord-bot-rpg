@@ -1,18 +1,9 @@
 import datetime
 import pytz
-import asyncio
 import time
-import math
-import random
-import functools
-import yaml
-import certifi
-import os
-
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in

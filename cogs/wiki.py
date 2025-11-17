@@ -1,10 +1,7 @@
 
 import discord
-import difflib
-import os
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -12,44 +9,6 @@ from cogs.function_in_in import function_in_in
 class Wiki(discord.Cog, name="Wiki系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
-        
-    async def item_autocomplete(self, ctx: discord.AutocompleteContext):
-        query = ctx.value.lower() if ctx.value else ""
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        
-        folders_to_search = [
-            ("裝備", "armor"),
-            ("裝備", "weapon"),
-            ("裝備", "accessories"),
-            ("物品", "材料"),
-            ("物品", "道具"),
-            ("物品", "料理"),
-            ("物品", "技能書"),
-            ("裝備", "pet"),
-            ("裝備", "medal"),
-            ("裝備", "card"),
-            ("裝備", "class_item"),
-        ]
-        all_items = []
-        for folder_a, folder_b in folders_to_search:
-            folder_path = os.path.join(base_path, "rpg", folder_a, folder_b)
-            if os.path.exists(folder_path):
-                for file_name in os.listdir(folder_path):
-                    if file_name.endswith(".yml"):
-                        all_items.append(file_name[:-4])
-        
-        if query:
-            all_items = sorted(
-                all_items,
-                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
-                reverse=True
-            )
-            all_items = [
-                i for i in all_items
-                if query in i.lower() or difflib.SequenceMatcher(None, query, i.lower()).ratio() > 0.3
-            ]
-            
-        return all_items[:25]
 
     @commands.slash_command(name="wiki", description="查看裝備、材料、道具",
         options=[
@@ -58,7 +17,7 @@ class Wiki(discord.Cog, name="Wiki系統"):
                 name="名稱",
                 description="輸入要查詢的名稱",
                 required=True,
-                autocomplete=item_autocomplete
+                autocomplete=function_in.item_autocomplete
             )
         ]
     )

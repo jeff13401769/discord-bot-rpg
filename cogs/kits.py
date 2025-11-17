@@ -1,12 +1,6 @@
-import asyncio
-import random
-import math
-
-import certifi
 import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in

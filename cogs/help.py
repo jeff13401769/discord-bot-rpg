@@ -1,11 +1,9 @@
 import datetime
 import pytz
 import functools
-
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
 from utility.config import config
 
 class Help(discord.Cog, name="幫助"):
@@ -136,8 +134,7 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="/簽到", value="每天簽到都會有獎勵喔!", inline=False)
             embed.add_field(name="/寵物", value="看看自己或別人出陣的寵物, 也可以決定派出甚麼寵物!", inline=False)
             embed.add_field(name="/wiki", value="查看道具資訊及介紹", inline=False)
-            embed.add_field(name="/合成", value="合成物品", inline=False)
-            embed.add_field(name="/分解", value="分解物品", inline=False)
+            embed.add_field(name="/合成台", value="合成或分解物品", inline=False)
             embed.add_field(name="/幫助", value="查看遊戲幫助", inline=False)
             embed.add_field(name="/fix", value="覺得資料有問題嗎? 可以使用這個指令來修復.若還是有問題, 請聯繫GM", inline=False)
             embed.add_field(name="/傷害測試", value="可以召喚一隻稻草人出來, 傷害將登記於系統, 最高的前十個玩家將被載入官網!", inline=False)

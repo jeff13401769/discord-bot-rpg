@@ -1,4 +1,5 @@
 import asyncio
+import difflib
 import random
 from random import choice
 import datetime
@@ -126,6 +127,66 @@ class function_in(discord.Cog, name="模塊導入1"):
                         except Exception as e:
                             self.bot.log.warn(f'在 {file_path} 中解析時出現錯誤: {e}')
         return random.choice(card_list)
+        
+    async def players_autocomplete(self, ctx: discord.AutocompleteContext):
+        query = ctx.value.lower() if ctx.value else ""
+        
+        members = await function_in.sql_findall('rpg_players', 'players')
+        members_list = []
+        for member in members:
+            user = self.bot.get_user(member[0])
+            if not user:
+                name = f"機器人無法獲取名稱 ({member[0]})"
+            else:
+                name = f"{user.name} ({user.id})"
+            members_list.append(name)
+        
+        if query:
+            # 依相似度排序，越接近輸入的越前面
+            members_list = sorted(
+                members_list,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
+        return members_list[:25]
+        
+    async def item_autocomplete(self, ctx: discord.AutocompleteContext):
+        query = ctx.value.lower() if ctx.value else ""
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        
+        folders_to_search = [
+            ("裝備", "armor"),
+            ("裝備", "weapon"),
+            ("裝備", "accessories"),
+            ("物品", "材料"),
+            ("物品", "道具"),
+            ("物品", "料理"),
+            ("物品", "技能書"),
+            ("裝備", "pet"),
+            ("裝備", "card"),
+            ("裝備", "class_item"),
+        ]
+        all_items = []
+        for folder_a, folder_b in folders_to_search:
+            folder_path = os.path.join(base_path, "rpg", folder_a, folder_b)
+            if os.path.exists(folder_path):
+                for file_name in os.listdir(folder_path):
+                    if file_name.endswith(".yml"):
+                        all_items.append(file_name[:-4])
+        
+        if query:
+            all_items = sorted(
+                all_items,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            all_items = [
+                i for i in all_items
+                if query in i.lower() or difflib.SequenceMatcher(None, query, i.lower()).ratio() > 0.3
+            ]
+            
+        return all_items[:25]
     
     async def give_skill_exp(self, user_id, skill_name):
         if skill_name == "所有被動":

@@ -5,12 +5,9 @@ import pytz
 import time
 import functools
 import os
-import difflib
-
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -19,29 +16,6 @@ from cogs.aibot import Aibot
 class Info(discord.Cog, name="資訊"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
-        
-    async def players_autocomplete(self, ctx: discord.AutocompleteContext):
-        query = ctx.value.lower() if ctx.value else ""
-        
-        members = await function_in.sql_findall('rpg_players', 'players')
-        members_list = []
-        for member in members:
-            user = self.bot.get_user(member[0])
-            if not user:
-                name = f"機器人無法獲取名稱 ({member[0]})"
-            else:
-                name = f"{user.name} ({user.id})"
-            members_list.append(name)
-        
-        if query:
-            # 依相似度排序，越接近輸入的越前面
-            members_list = sorted(
-                members_list,
-                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
-                reverse=True
-            )
-            members_list = [m for m in members_list if query in m.lower() or difflib.SequenceMatcher(None, query, m.lower()).ratio() > 0.3]
-        return members_list[:25]
         
     @discord.user_command(name="rpg資訊", description="查看自己或別人的資訊",
         options=[
@@ -63,7 +37,7 @@ class Info(discord.Cog, name="資訊"):
                 name="玩家",
                 description="選擇欲查看的玩家",
                 required=False,
-                autocomplete=players_autocomplete
+                autocomplete=function_in.players_autocomplete
             )
         ]
     )

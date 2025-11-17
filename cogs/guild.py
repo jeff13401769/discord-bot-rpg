@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
 import difflib
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.quest import Quest_system

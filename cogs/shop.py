@@ -1,3 +1,4 @@
+import difflib
 import yaml
 import os
 
@@ -12,6 +13,81 @@ from cogs.function_in_in import function_in_in
 class Shop(discord.Cog, name="商店"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
+    
+    async def shop_auto_complete(self, ctx: discord.AutocompleteContext):
+        query = ctx.value.lower() if ctx.value else ""
+
+        shop_name = ctx.options.get("商店名稱")
+
+        if not shop_name:
+            return []
+
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        shop_path = os.path.join(base_path, "rpg", "商店", "shop.yml")
+
+        if not os.path.exists(shop_path):
+            return []
+
+        with open(shop_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        if shop_name not in data:
+            return []
+
+        items = list(data[shop_name].keys())
+            
+        if not query:
+            return items[:25]
+        else:
+            items = sorted(
+                items,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            items = [
+                item for item in items
+                if query in item.lower() or difflib.SequenceMatcher(None, query, item.lower()).ratio() > 0.3
+            ]
+
+        return items[:25]
+    
+    async def sell_auto_complete(self, ctx: discord.AutocompleteContext):
+        query = ctx.value.lower() if ctx.value else ""
+
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        sell_path = os.path.join(base_path, "rpg", "商店", "sell.yml")
+
+        if not os.path.exists(sell_path):
+            return []
+
+        items = []
+
+        with open(sell_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+
+                if not line or line.startswith("#"):
+                    continue
+
+                if ":" in line:
+                    name = line.split(":")[0].strip()
+                    items.append(name)
+
+        if not query:
+            return items[:25]
+        else:
+            items = sorted(
+                items,
+                key=lambda x: difflib.SequenceMatcher(None, query, x.lower()).ratio(),
+                reverse=True
+            )
+            items = [
+                item for item in items
+                if query in item.lower() or difflib.SequenceMatcher(None, query, item.lower()).ratio() > 0.3
+            ]
+
+        return items[:25]
+
 
     @commands.slash_command(name="商店", description="看看商店有賣什麼吧",
         options=[
@@ -119,7 +195,8 @@ class Shop(discord.Cog, name="商店"):
                 str,
                 name="物品名稱",
                 description="請輸入你要購買的物品名稱",
-                required=True
+                required=True,
+                autocomplete=sell_auto_complete
             ),
             discord.Option(
                 int,
@@ -179,27 +256,28 @@ class Shop(discord.Cog, name="商店"):
     @commands.slash_command(name="購買", description="買東西囉",
         options=[
             discord.Option(
-                int,
-                name="商店名",
+                str,
+                name="商店名稱",
                 description="選擇你要購買的東西在哪間商店裡",
                 required=True,
                 choices=[
-                    OptionChoice(name="藥水商店", value=0),
-                    OptionChoice(name="道具商店", value=1),
-                    OptionChoice(name="技能書商店", value=2),
-                    OptionChoice(name="裝備商店", value=3),
-                    OptionChoice(name="武器商店", value=4),
-                    OptionChoice(name="任務商店", value=5),
-                    OptionChoice(name="世界商店", value=6),
-                    OptionChoice(name="決鬥商店", value=7),
-                    OptionChoice(name="質點商城", value=8)
+                    OptionChoice(name="藥水商店", value="藥水商店"),
+                    OptionChoice(name="道具商店", value="道具商店"),
+                    OptionChoice(name="技能書商店", value="技能書商店"),
+                    OptionChoice(name="裝備商店", value="裝備商店"),
+                    OptionChoice(name="武器商店", value="武器商店"),
+                    OptionChoice(name="任務商店", value="任務商店"),
+                    OptionChoice(name="世界商店", value="世界商店"),
+                    OptionChoice(name="決鬥商店", value="決鬥商店"),
+                    OptionChoice(name="質點商城", value="質點商城")
                 ],
             ),
             discord.Option(
                 str,
                 name="物品名稱",
                 description="請輸入你要購買的物品名稱",
-                required=True
+                required=True,
+                autocomplete=shop_auto_complete
             ),
             discord.Option(
                 int,
@@ -209,7 +287,7 @@ class Shop(discord.Cog, name="商店"):
             )
         ]
     )
-    async def 購買(self, interaction: discord.ApplicationContext, type: int, name: str, num: int):
+    async def 購買(self, interaction: discord.ApplicationContext, shop_name: str, name: str, num: int):
         await interaction.defer()
         user = interaction.user
         checkreg = await function_in.checkreg(self, interaction, user.id)
@@ -229,37 +307,19 @@ class Shop(discord.Cog, name="商店"):
         yaml_path = os.path.join(base_path, "rpg", "商店", "shop.yml")
         with open(yaml_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        if type == 0:
-            shop_name = "藥水商店"
-        if type == 1:
-            shop_name = "道具商店"
-        if type == 2:
-            shop_name = "技能書商店"
-        if type == 3:
-            shop_name = "裝備商店"
-        if type == 4:
-            shop_name = "武器商店"
-        if type == 5:
-            shop_name = "任務商店"
-        if type == 6:
-            shop_name = "世界商店"
-        if type == 7:
-            shop_name = "決鬥商店"
-        if type == 8:
-            shop_name = "質點商城"
         if shop_name and name in data.get(shop_name, {}):
             price = data[shop_name][name] * num
         else:
             await interaction.followup.send("無法找到指定的物品或商店, 或該物品不在指定的商店.")
             return
-        if type != 8:
-            if type == 5:
+        if shop_name != "質點商店":
+            if shop_name == "任務商店":
                 money_type = "qp"
                 money_str = "任務點數"
-            elif type == 6:
+            elif shop_name == "世界商店":
                 money_type = "wbp"
                 money_str = "世界幣"
-            elif type == 7:
+            elif shop_name == "決鬥商店":
                 money_type = "pp"
                 money_str = "決鬥點數"
             else:

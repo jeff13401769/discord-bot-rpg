@@ -21,7 +21,12 @@ class Aibot(discord.Cog, name="AI助手"):
             await function_in.sql_update("rpg_players", "aibot", "amount", 5, "user_id", player[0])
             check, day = await Premium.month_card_check(self, player[0])
             if not check:
-                await function_in.sql_update("rpg_players", "aibot", "affection", player[1]-2, "user_id", player[0])
+                affection = player[1]
+                if affection - 5 == 0:
+                    affection = 0
+                else:
+                    affection -= 5
+                await function_in.sql_update("rpg_players", "aibot", "affection", affection, "user_id", player[0])
         self.bot.log.info("[排程] 拜神次數重置完畢!")
             
 
@@ -188,7 +193,7 @@ class Aibot(discord.Cog, name="AI助手"):
     @commands.cooldown(1, 30, commands.BucketType.user)
     async def 神明(self, interaction: discord.ApplicationContext, func: int, msg: str = None):
         if func == 0:
-            await interaction.response.send_message('緋綾原本是「月隱聖域」的 至高神, 是所有世界的秩序與平衡之源\n然而, 在千年前的一場「神與虛無之戰」中, 緋綾選擇犧牲自身力量, 封印威脅世界的「虛無之核」\n她的神格因此破碎, 被逐出聖域, 墜入凡界, 化為一隻外表柔弱的「神聖兔子女神」. \n失去神格的她, 無法再完全掌控現實, 使世界逐漸變質為「幻境」, 許多法則與現實界限開始扭曲, 成為如今冒險者探索的世界.\n\n規則:\n每日可進行對話或送禮共五次, 次數於早上6點時重置, 並同時 -5好感度\n送禮的物品, 無法增送無法交易的物品\n增送給神明的禮物並沒有稀有度之分, 而是物品介紹內, 是否能讓神明喜歡',ephemeral=True)
+            await interaction.response.send_message('緋綾原本是「月隱聖域」的 至高神, 是所有世界的秩序與平衡之源\n然而, 在千年前的一場「神與虛無之戰」中, 緋綾選擇犧牲自身力量, 封印威脅世界的「虛無之核」\n她的神格因此破碎, 被逐出聖域, 墜入凡界, 化為一隻外表柔弱的「神聖兔子女神」. \n失去神格的她, 無法再完全掌控現實, 使世界逐漸變質為「幻境」, 許多法則與現實界限開始扭曲, 成為如今冒險者探索的世界.\n\n規則:\n每日可進行對話或送禮共五次, 次數於早上6點時重置, 並同時 -5 好感度\n送禮的物品, 無法增送無法交易的物品\n增送給神明的禮物並沒有稀有度之分, 而是物品介紹內, 是否能讓神明喜歡',ephemeral=True)
             return
         await interaction.defer()
         user = interaction.user
