@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.verify import Verify
@@ -20,7 +21,7 @@ class Life(discord.Cog, name="生活系統"):
         if func == '查看生活等級':
             query = ctx.value.lower() if ctx.value else ""
             
-            members = await function_in.sql_findall('rpg_players', 'players')
+            members = await db.sql_findall('rpg_players', 'players')
             members_list = []
             for member in members:
                 user = self.bot.get_user(member[0])
@@ -135,9 +136,9 @@ class Life(discord.Cog, name="生活系統"):
         elif func == "烹飪":
             if not num:
                 num = 1
-        search = await function_in.sql_search("rpg_players", "life", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "life", ["user_id"], [user.id])
         if not search:
-            await function_in.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
+            await db.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
             cook_lv = 1
             cook_exp = 0
         else:
@@ -267,9 +268,9 @@ class Life(discord.Cog, name="生活系統"):
             
     
     async def 生活經驗(self, user: discord.Member, ltype, exp: int):
-        search = await function_in.sql_search("rpg_players", "life", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "life", ["user_id"], [user.id])
         if not search:
-            await function_in.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
+            await db.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user.id, 1, 0])
             cook_lv = 1
             cook_exp = 0
         else:
@@ -278,12 +279,12 @@ class Life(discord.Cog, name="生活系統"):
         if ltype == "cook":
             exp += cook_exp
             lv = cook_lv
-        await function_in.sql_update("rpg_players", "life", f"{ltype}_exp", exp, "user_id", user.id)
+        await db.sql_update("rpg_players", "life", f"{ltype}_exp", exp, "user_id", user.id)
         while exp >= cook_lv*100:
             exp -= cook_lv*100
             lv += 1
-            await function_in.sql_update("rpg_players", "life", f"{ltype}_lv", lv, "user_id", user.id)
-            await function_in.sql_update("rpg_players", "life", f"{ltype}_exp", exp, "user_id", user.id)
+            await db.sql_update("rpg_players", "life", f"{ltype}_lv", lv, "user_id", user.id)
+            await db.sql_update("rpg_players", "life", f"{ltype}_exp", exp, "user_id", user.id)
     
     async def cook_item_required_check(self, itemlist, user: discord.Member, number: int):
         req_msg = ""

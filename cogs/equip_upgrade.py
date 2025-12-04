@@ -6,7 +6,7 @@ from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 from utility.config import config
 from cogs.function_in import function_in
-from cogs.function_in_in import function_in_in
+from utility import db
 
 class Equip_upgrade(discord.Cog, name="強化系統"):
     def __init__(self, bot):
@@ -183,7 +183,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 return
         upgrade_chance2 = 0
         upgrade_chance2_1 = 0
-        search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
         if search:
             upgrade_chance2 = search[1]
             if up > 15:
@@ -332,9 +332,9 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 await asyncio.sleep(0.15)
                 
             chance = self.chance * 0.01
-            search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [interaction.user.id])
+            search = await db.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [interaction.user.id])
             if not search:
-                await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [interaction.user.id, 1])
+                await db.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [interaction.user.id, 1])
                 equip_upgrade_chance = 0
             else:
                 equip_upgrade_chance = search[1]
@@ -404,7 +404,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
                 await function_in.remove_item(self, interaction.user.id, self.support)
             await function_in.remove_item(self, interaction.user.id, self.item)
             await function_in.remove_item(self, interaction.user.id, self.material)
-            await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", equip_upgrade_chance1, "user_id", interaction.user.id)
+            await db.sql_update("rpg_players", "equip_upgrade_chance", "amount", equip_upgrade_chance1, "user_id", interaction.user.id)
             if give_item:
                 await function_in.give_item(self, interaction.user.id, give_item)
             moneya = await function_in.remove_money(self, interaction.user, "money", self.money)

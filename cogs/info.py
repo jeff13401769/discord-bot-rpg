@@ -9,6 +9,7 @@ import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.aibot import Aibot
@@ -49,7 +50,7 @@ class Info(discord.Cog, name="資訊"):
             return
         if players:
             players = await function_in.players_list_to_players(self, players)
-            checkreg = await function_in.checkreg(self, interaction, players.id)
+            checkreg = await function_in.checkreg(self, interaction, players.id, True)
             if not checkreg:
                 return
             player_id = players.id
@@ -213,7 +214,7 @@ class Info(discord.Cog, name="資訊"):
             embed.add_field(name="\u200b", value="\u200b", inline=False)
             item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","卡牌欄位1","卡牌欄位2","卡牌欄位3", "職業專用道具"]
             for item_type in item_type_list:
-                search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [item_type])
+                search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [item_type])
                 equip = search[1]
                 embed.add_field(name=f"{item_type}: {equip}", value="\u200b", inline=False)
             await msg.edit(view=Info.info_menu(interaction, user), embed=embed)
@@ -231,7 +232,7 @@ class Info(discord.Cog, name="資訊"):
             else:
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             embed.add_field(name="\u200b", value="\u200b", inline=False)
-            players_medal_list = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+            players_medal_list = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
             medal_list = players_medal_list[17]
             if medal_list == "":
                 embed.add_field(name="空空如也.....", value="\u200b", inline=False)
@@ -256,7 +257,7 @@ class Info(discord.Cog, name="資訊"):
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             embed.add_field(name="\u200b", value="\u200b", inline=False)
             che = False
-            skills = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skills = await db.sql_findall("rpg_skills", f"{user.id}")
             for skill in skills:
                 embed.add_field(name=f"{skill[0]}", value=f"等級: {skill[1]} | 技能熟練度: {skill[2]}", inline=False)
                 che=True
@@ -342,9 +343,9 @@ class Info(discord.Cog, name="資訊"):
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
             time_stamp = int(time.mktime(struct_time))
-            players_food_check = await function_in.sql_check_table("rpg_food", f"{user.id}")
+            players_food_check = await db.sql_check_table("rpg_food", f"{user.id}")
             if players_food_check:
-                players_food_list = await function_in.sql_findall("rpg_food", f"{user.id}")
+                players_food_list = await db.sql_findall("rpg_food", f"{user.id}")
                 if players_food_list:
                     for food_info in players_food_list:
                         food = food_info[0]
@@ -377,9 +378,9 @@ class Info(discord.Cog, name="資訊"):
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
             time_stamp = int(time.mktime(struct_time))
-            players_buff_check = await function_in.sql_check_table("rpg_buff", f"{user.id}")
+            players_buff_check = await db.sql_check_table("rpg_buff", f"{user.id}")
             if players_buff_check:
-                players_buff_list = await function_in.sql_findall("rpg_buff", f"{user.id}")
+                players_buff_list = await db.sql_findall("rpg_buff", f"{user.id}")
                 if players_buff_list:
                     for buff_info in players_buff_list:
                         buff = buff_info[0]
@@ -424,7 +425,7 @@ class Info(discord.Cog, name="資訊"):
             players_equip_con = 0
             players_equip_luk = 0
 
-            equips = await function_in.sql_findall("rpg_equip", f"{user.id}")
+            equips = await db.sql_findall("rpg_equip", f"{user.id}")
             set_effects = {}
             for equip in equips:
                 slot = equip[0]
@@ -525,13 +526,13 @@ class Info(discord.Cog, name="資訊"):
                 embed.set_thumbnail(url=f"{user.avatar.url}")
             else:
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
-            search = await function_in.sql_search("rpg_system", "daily", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_system", "daily", ["user_id"], [user.id])
             candaily = search[1]
             if candaily:
                 embed.add_field(name=":date: 簽到狀態:", value=":x: 今日尚未簽到", inline=False)
             else:
                 embed.add_field(name=":date: 簽到狀態:", value=":white_check_mark: 今日已簽到", inline=False)
-            search = await function_in.sql_search("rpg_system", "month_card", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_system", "month_card", ["user_id"], [user.id])
             if search:
                 day = search[1]
                 embed.add_field(name=":credit_card: 星辰之約狀態:", value=f":white_check_mark: 目前月卡剩餘 {day} 天", inline=False)
@@ -541,21 +542,21 @@ class Info(discord.Cog, name="資訊"):
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
             time_stamp = int(time.mktime(struct_time))
-            search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
             action = search[14]
             actiontime = await function_in_in.time_calculate(action-time_stamp)
             if time_stamp <= action:
                 embed.add_field(name="<a:clock:1220799040782864405> 冷卻條:", value=f":x: 你還需要等待 {actiontime}!", inline=False)
             else:
                 embed.add_field(name="<a:clock:1220799040782864405> 冷卻條:", value=":white_check_mark: 可以進行行動!", inline=False)
-            search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
             players_level = search[1]
             players_all_attr_point = search[20]
             if int(players_level*0.1)*5 < players_all_attr_point:
                 embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":x: 當前已使用 {players_all_attr_point} 顆神性之石, 當前已無法使用更多神性之石", inline=False)
             else:
                 embed.add_field(name="<:rpg_boost:1382689893129388073> 神性之石:", value=f":white_check_mark: 當前已使用 {players_all_attr_point} 顆神性之石, 還可以使用 {int(players_level*0.1)*5 - players_all_attr_point} 顆神性之石", inline=False)
-            affection, amount = await Aibot.check_favorability(self, user)
+            affection, amount = await Aibot.check_favorability(self, user, False)
             if not affection:
                 embed.add_field(name="<:ehh:1381359837476032612> 拜神:", value=f":x: 於50等時開放", inline=False)
             else:
@@ -577,23 +578,23 @@ class Info(discord.Cog, name="資訊"):
             else:
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             
-            stock_check = await function_in.sql_check_table("rpg_stock", f"{user.id}")
+            stock_check = await db.sql_check_table("rpg_stock", f"{user.id}")
             if stock_check:
-                stock_list = await function_in.sql_findall("rpg_stock", user.id)
+                stock_list = await db.sql_findall("rpg_stock", user.id)
                 if stock_list:
                     for stock in stock_list:
                         stock_id = stock[0]
                         stock_amount = stock[1]
-                        check = await function_in.sql_search("rpg_stock", "all", ["stock_id"], [stock_id])
+                        check = await db.sql_search("rpg_stock", "all", ["stock_id"], [stock_id])
                         if not check:
-                            await function_in.sql_delete("rpg_stock", user.id, "stock_id", stock_id)
+                            await db.sql_delete("rpg_stock", user.id, "stock_id", stock_id)
                             continue
                         stock_name = check[1]
                         embed.add_field(name=f"股票名稱: {stock_name}", value=f"股票數量: {stock_amount} 張", inline=False)
                 else:
                     embed.add_field(name="空空如也.....", value="\u200b", inline=False)
             else:
-                await function_in.sql_create_table("rpg_stock", user.id, ["stock_id", "amount"], ["BIGINT", "BIGINT"], "stock_id")
+                await db.sql_create_table("rpg_stock", user.id, ["stock_id", "amount"], ["BIGINT", "BIGINT"], "stock_id")
                 embed.add_field(name="空空如也.....", value="\u200b", inline=False)
             if len(embed.fields) > 24:
                 del embed.fields[24:]

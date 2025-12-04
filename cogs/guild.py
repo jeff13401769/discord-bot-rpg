@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord import Option, OptionChoice
 import difflib
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.quest import Quest_system
 
@@ -14,7 +15,7 @@ class Guild(discord.Cog, name="公會"):
     async def func_autocomplete(self, ctx: discord.AutocompleteContext):
         func = ctx.options['功能']
         if func == '查看公會資訊' or func == '申請加入公會':
-            guilds = await function_in.sql_findall("rpg_guild", "all")
+            guilds = await db.sql_findall("rpg_guild", "all")
             return [guild[0] for guild in guilds if ctx.value.lower() in guild[0].lower()]
         elif func == '學習公會技能':
             return ["群眾之力量", "群眾之智慧", "群眾之敏捷", "群眾之體質", "群眾之幸運"]
@@ -28,7 +29,7 @@ class Guild(discord.Cog, name="公會"):
         if func == '回覆公會申請' or func == '調整玩家權限':
             query = ctx.value.lower() if ctx.value else ""
             
-            members = await function_in.sql_findall('rpg_players', 'players')
+            members = await db.sql_findall('rpg_players', 'players')
             members_list = []
             for member in members:
                 user = self.bot.get_user(member[0])
@@ -107,17 +108,17 @@ class Guild(discord.Cog, name="公會"):
         if not checkreg:
             return
         guild_info = await function_in.check_guild(self, user.id)
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
         players_level = search[1]
         if func == "查看公會資訊":
             if func1:
-                search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
+                search = await db.sql_search("rpg_guild", "all", ["guild_name"], [func1])
                 if not search:
                     await interaction.followup.send(f'公會名稱 `{func1}` 不存在!')
                     return
                 else:
                     embed = discord.Embed(title=f"{func1} 公會資訊", color=0x79FF79)
-                    search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
+                    search = await db.sql_search("rpg_guild", "all", ["guild_name"], [func1])
                     owner_id = search[1]
                     level = search[2]
                     exp = search[3]
@@ -136,7 +137,7 @@ class Guild(discord.Cog, name="公會"):
                     await interaction.followup.send("你還沒有加入任何公會!")
                     return
                 embed = discord.Embed(title=f"{guild_info} 公會資訊", color=0x79FF79)
-                search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [guild_info])
+                search = await db.sql_search("rpg_guild", "all", ["guild_name"], [guild_info])
                 owner_id = search[1]
                 level = search[2]
                 exp = search[3]
@@ -155,11 +156,11 @@ class Guild(discord.Cog, name="公會"):
                 await interaction.followup.send("請輸入欲加入的公會名稱!")
                 return
             if not guild_info:
-                search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
+                search = await db.sql_search("rpg_guild", "all", ["guild_name"], [func1])
                 if search:
-                    check = await function_in.sql_search("rpg_guild", "invite", ["user_id"], [user.id])
+                    check = await db.sql_search("rpg_guild", "invite", ["user_id"], [user.id])
                     if not check:
-                        await function_in.sql_insert("rpg_guild", "invite", ["user_id", "guild_name"], [user.id, func1])
+                        await db.sql_insert("rpg_guild", "invite", ["user_id", "guild_name"], [user.id, func1])
                         await interaction.followup.send(f"你成功申請加入 `{func1}` 公會!")
                     else:
                         await interaction.followup.send(f"你當前已經申請加入公會 `{check[1]}`!")
@@ -196,16 +197,16 @@ class Guild(discord.Cog, name="公會"):
                 if len(func1) > 20 or len(func1) < 1:
                     await interaction.followup.send("公會名稱長度必須介於1~20之間!")
                     return
-                search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [func1])
+                search = await db.sql_search("rpg_guild", "all", ["guild_name"], [func1])
                 if not search:
                     moneya = await function_in.remove_money(self, user, "money", 100000)
                     await function_in.remove_item(self, user.id, "冰霜巨龍的鱗片", 1)
                     await function_in.remove_item(self, user.id, "炎獄魔龍的鱗片", 1)
-                    await function_in.sql_update("rpg_players", "players", "guild_name", func1, "user_id", user.id)
-                    await function_in.sql_insert("rpg_guild", "all", ["guild_name", "owner_id", "level", "exp", "money"], [func1, user.id, 1, 0, 0])
-                    await function_in.sql_create_table("rpg_guild", f"{func1}", ["user_id", "position"], ["BIGINT", "TEXT"], "user_id")
-                    await function_in.sql_insert(f"rpg_guild", f"{func1}", ["user_id", "position"], [user.id, "會長"])
-                    await function_in.sql_insert("rpg_guild", "skills", ["guild_name", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6", "skill_7", "skill_8", "skill_9", "skill_10"], [func1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                    await db.sql_update("rpg_players", "players", "guild_name", func1, "user_id", user.id)
+                    await db.sql_insert("rpg_guild", "all", ["guild_name", "owner_id", "level", "exp", "money"], [func1, user.id, 1, 0, 0])
+                    await db.sql_create_table("rpg_guild", f"{func1}", ["user_id", "position"], ["BIGINT", "TEXT"], "user_id")
+                    await db.sql_insert(f"rpg_guild", f"{func1}", ["user_id", "position"], [user.id, "會長"])
+                    await db.sql_insert("rpg_guild", "skills", ["guild_name", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6", "skill_7", "skill_8", "skill_9", "skill_10"], [func1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                     await interaction.followup.send(f"你成功創建了 `{func1}` 公會!")
                 else:
                     await interaction.followup.send(f"公會名稱 `{func1}` 已存在!")
@@ -223,14 +224,14 @@ class Guild(discord.Cog, name="公會"):
             if not func1 in ["群眾之力量", "群眾之智慧", "群眾之敏捷", "群眾之體質", "群眾之幸運"]:
                 await interaction.followup.send("此技能不存在!")
                 return
-            search = await function_in.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
             position = search[1]
             if not position in ["會長", "副會長"]:
                 await interaction.followup.send("你的職位無法學習公會技能!")
                 return
-            search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [guild_info])
+            search = await db.sql_search("rpg_guild", "all", ["guild_name"], [guild_info])
             money = search[4]
-            search = await function_in.sql_search("rpg_guild", "skills", ["guild_name"], [guild_info])
+            search = await db.sql_search("rpg_guild", "skills", ["guild_name"], [guild_info])
             name_mapping = {
                 "群眾之力量": "skill_1",
                 "群眾之智慧": "skill_2",
@@ -267,8 +268,8 @@ class Guild(discord.Cog, name="公會"):
             if skills.get(func1, 0) > 10:
                 await interaction.followup.send(f"公會技能 {func1} 最高僅可升到 10 級!")
                 return
-            await function_in.sql_update("rpg_guild", "all", "money", money-gold, "guild_name", guild_info)
-            await function_in.sql_update("rpg_guild", "skills", name1, skills.get(func1, 0)+1, "guild_name", guild_info)
+            await db.sql_update("rpg_guild", "all", "money", money-gold, "guild_name", guild_info)
+            await db.sql_update("rpg_guild", "skills", name1, skills.get(func1, 0)+1, "guild_name", guild_info)
             embed = discord.Embed(title=f"{guild_info} 公會技能", color=0x79FF79)
             embed.add_field(name=f"你成功學習了 {func1} !", value=f"目前該技能等級 {skills.get(func1, 0)+1}", inline=False)
             embed.add_field(name="消耗公會資金:", value=f"{gold}", inline=False)
@@ -277,7 +278,7 @@ class Guild(discord.Cog, name="公會"):
             if not guild_info:
                 await interaction.followup.send("你還沒有加入任何公會!")
                 return
-            search = await function_in.sql_search("rpg_guild", "quest", ["guild_name"], [guild_info])
+            search = await db.sql_search("rpg_guild", "quest", ["guild_name"], [guild_info])
             if search:
                 qtype = search[1]
                 qname = search[2]
@@ -327,7 +328,7 @@ class Guild(discord.Cog, name="公會"):
                     a = quest_daily["gp"]
                     rewards+=f"{a}公會資金 "
                 embed.add_field(name=f"任務獎勵:", value=f"{rewards}", inline=False)
-                await function_in.sql_insert("rpg_guild", "quest", ["guild_name", "qtype", "qname", "qnum", "qnum_1", "qdaily_gexp", "qdaily_gp"], [guild_info, quest_type, quest_name, quest_num, 0, quest_daily["gexp"], quest_daily["gp"]])
+                await db.sql_insert("rpg_guild", "quest", ["guild_name", "qtype", "qname", "qnum", "qnum_1", "qdaily_gexp", "qdaily_gp"], [guild_info, quest_type, quest_name, quest_num, 0, quest_daily["gexp"], quest_daily["gp"]])
             await interaction.followup.send(embed=embed)
         elif func == "管理":
             if not func1 in ["回覆公會申請", "查看公會申請名單", "調整玩家權限", "解散公會"]:
@@ -336,13 +337,13 @@ class Guild(discord.Cog, name="公會"):
             if not guild_info:
                 await interaction.followup.send("你還沒有加入任何公會!")
                 return
-            search = await function_in.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
             position = search[1]
             if not position in ["會長", "副會長"]:
                 await interaction.followup.send("你的職位無法管理公會!")
                 return
             if func1 == "查看公會申請名單":
-                search = await function_in.sql_search_all("rpg_guild", "invite", ["guild_name"], [guild_info])
+                search = await db.sql_search_all("rpg_guild", "invite", ["guild_name"], [guild_info])
                 if not search:
                     embed = discord.Embed(title=f"{guild_info} 公會申請名單", color=0x79FF79)
                     embed.add_field(name="目前沒有任何人申請加入公會!", value="\u200b", inline=False)
@@ -368,18 +369,18 @@ class Guild(discord.Cog, name="公會"):
                     return
                 users = await function_in.players_list_to_players(self, name)
                 user_id = users.id
-                search = await function_in.sql_search("rpg_guild", "invite", ["user_id"], [user_id])
+                search = await db.sql_search("rpg_guild", "invite", ["user_id"], [user_id])
                 if not search:
                     await interaction.followup.send("此玩家並沒有申請加入公會或已經加入公會!")
                     return
                 if select == "同意":
-                    await function_in.sql_update("rpg_players", "players", "guild_name", guild_info, "user_id", user_id)
-                    await function_in.sql_delete("rpg_guild", "invite", "user_id", user_id)
-                    await function_in.sql_insert(f"rpg_guild", f"{guild_info}", ["user_id", "position"], [user_id, "普通成員"])
+                    await db.sql_update("rpg_players", "players", "guild_name", guild_info, "user_id", user_id)
+                    await db.sql_delete("rpg_guild", "invite", "user_id", user_id)
+                    await db.sql_insert(f"rpg_guild", f"{guild_info}", ["user_id", "position"], [user_id, "普通成員"])
                     await interaction.followup.send(f"你成功同意了 {users.mention} 加入公會!")
                     await users.send(f"你成功加入了 `{guild_info}` 公會!")
                 if select == "拒絕":
-                    await function_in.sql_delete("rpg_guild", "invite", "user_id", user_id)
+                    await db.sql_delete("rpg_guild", "invite", "user_id", user_id)
                     await interaction.followup.send(f"你成功拒絕了 {users.mention} 加入公會!")
                     await users.send(f"你加入 `{guild_info}` 公會的申請已被拒絕!")
             if func1 == "調整玩家權限":
@@ -394,7 +395,7 @@ class Guild(discord.Cog, name="公會"):
                     return
                 users = await function_in.players_list_to_players(self, name)
                 user_id = users.id
-                search = await function_in.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user_id])
+                search = await db.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user_id])
                 if not search:
                     await interaction.followup.send("此玩家並沒有加入公會!")
                     return
@@ -416,7 +417,7 @@ class Guild(discord.Cog, name="公會"):
                                 await interaction.followup.send("你的職位無法將其他副會長降級為普通成員!")
                                 return
                     user = await self.bot.fetch_user(user_id)
-                    await function_in.sql_update(f"rpg_guild", f"{guild_info}", "position", select, "user_id", user_id)
+                    await db.sql_update(f"rpg_guild", f"{guild_info}", "position", select, "user_id", user_id)
                     await interaction.followup.send(f"你成功將 {user.mention} 職位設定為 {select}!")
                     await user.send(f"你在 `{guild_info}` 公會的職位被設定為 {select}!")
                     
@@ -425,8 +426,8 @@ class Guild(discord.Cog, name="公會"):
                         if position != "會長":
                             await interaction.followup.send("你的職位無法將其他副會長踢出公會!")
                             return
-                    await function_in.sql_delete(f"rpg_guild", f"{guild_info}", "user_id", user_id)
-                    await function_in.sql_update("rpg_players", "players", "guild_name", "無", "user_id", user_id)
+                    await db.sql_delete(f"rpg_guild", f"{guild_info}", "user_id", user_id)
+                    await db.sql_update("rpg_players", "players", "guild_name", "無", "user_id", user_id)
                     user = await self.bot.fetch_user(user_id)
                     await interaction.followup.send(f"你成功將 {user.mention} 踢出公會!")
                     await user.send(f"你被踢出了 `{guild_info}` 公會!")
@@ -442,7 +443,7 @@ class Guild(discord.Cog, name="公會"):
             if not guild_info:
                 await interaction.followup.send("你還沒有加入任何公會!")
                 return
-            search = await function_in.sql_findall(f"rpg_guild", f"{guild_info}")
+            search = await db.sql_findall(f"rpg_guild", f"{guild_info}")
             member_list = "公會成員名單:\n"
             for i in search:
                 user = await self.bot.fetch_user(i[0])
@@ -455,7 +456,7 @@ class Guild(discord.Cog, name="公會"):
             if not guild_info:
                 await interaction.followup.send("你還沒有加入任何公會!")
                 return
-            search = await function_in.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_guild", f"{guild_info}", ["user_id"], [user.id])
             position = search[1]
             if position  == "會長":
                 await interaction.followup.send("你是會長無法離開公會!")
@@ -499,13 +500,13 @@ class Guild(discord.Cog, name="公會"):
             embed = discord.Embed(title=f"{self.guild_name} 公會", color=0x79FF79)
             embed.add_field(name="已解散公會!", value="\u200b", inline=False)
             await msg.edit(embed=embed)
-            await function_in.sql_delete("rpg_guild", "all", "guild_name", self.guild_name)
-            await function_in.sql_delete("rpg_guild", "skills", "guild_name", self.guild_name)
-            await function_in.sql_delete("rpg_guild", "invite", "guild_name", self.guild_name)
-            await function_in.sql_delete("rpg_guild", "quest", "guild_name", self.guild_name)
-            members = await function_in.sql_findall(f"rpg_guild", f"{self.guild_name}")
+            await db.sql_delete("rpg_guild", "all", "guild_name", self.guild_name)
+            await db.sql_delete("rpg_guild", "skills", "guild_name", self.guild_name)
+            await db.sql_delete("rpg_guild", "invite", "guild_name", self.guild_name)
+            await db.sql_delete("rpg_guild", "quest", "guild_name", self.guild_name)
+            members = await db.sql_findall(f"rpg_guild", f"{self.guild_name}")
             for i in members:
-                await function_in.sql_update("rpg_players", "players", "guild_name", "無", "user_id", i[0])
+                await db.sql_update("rpg_players", "players", "guild_name", "無", "user_id", i[0])
                 user = await self.bot.fetch_user(i[0])
                 await user.send(f"你所在的 `{self.guild_name}` 公會已經解散!")
             self.stop()
@@ -562,8 +563,8 @@ class Guild(discord.Cog, name="公會"):
             embed.add_field(name="你已成功離開公會!", value="\u200b", inline=False)
             await msg.edit(embed=embed)
             user = interaction.user
-            await function_in.sql_delete(f"rpg_guild", f"{self.guild_name}", "user_id", user.id)
-            await function_in.sql_update("rpg_players", "players", "guild_name", "無", "user_id", user.id)
+            await db.sql_delete(f"rpg_guild", f"{self.guild_name}", "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "guild_name", "無", "user_id", user.id)
             self.stop()
         
         async def guild_leave_cancel_button_callback(self, button, interaction: discord.ApplicationContext):
@@ -615,7 +616,7 @@ class Guild(discord.Cog, name="公會"):
             await interaction.response.edit_message(view=self)
             msg = interaction.message
             embed = discord.Embed(title=f"{self.guild_name} 公會資訊", color=0x79FF79)
-            search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [self.guild_name])
+            search = await db.sql_search("rpg_guild", "all", ["guild_name"], [self.guild_name])
             owner_id = search[1]
             level = search[2]
             exp = search[3]
@@ -634,7 +635,7 @@ class Guild(discord.Cog, name="公會"):
             self.disable_all_items()
             await interaction.response.edit_message(view=self)
             msg = interaction.message
-            skills = await function_in.sql_search("rpg_guild", "skills", ["guild_name"], [self.guild_name])
+            skills = await db.sql_search("rpg_guild", "skills", ["guild_name"], [self.guild_name])
             skill_1 = skills[1]
             skill_2 = skills[2]
             skill_3 = skills[3]

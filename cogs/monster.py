@@ -12,7 +12,7 @@ class Monster(discord.Cog, name="怪物"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    async def summon_mob(self, map, players_level, mob_name: str, boss: bool, worldboss=False, ramdomboss=False):
+    async def summon_mob(self, mobmap, players_level, mob_name: str, boss: bool, worldboss=False, ramdomboss=False):
         is_boss = round(random.random(), 2) <= 0.03
         if boss:
             is_boss = True
@@ -116,7 +116,7 @@ class Monster(discord.Cog, name="怪物"):
             return monster
         else:
             #普通
-            if map == "翠葉林地":
+            if mobmap == "翠葉林地":
                 level_limit = 10
                 if is_boss:
                     name = "BOSS 古樹守衛 - 樹心巨像"
@@ -156,7 +156,7 @@ class Monster(discord.Cog, name="怪物"):
                         "古樹碎片": 450,
                         "古樹之心": 130,
                     }
-            elif map == "無盡山脊":
+            elif mobmap == "無盡山脊":
                 level_limit = 20
                 if is_boss:
                     name = "BOSS 寒峰翼虎 - 霜牙獸"
@@ -201,7 +201,7 @@ class Monster(discord.Cog, name="怪物"):
                         "山脊碎片": 450,
                         "山脊之心": 130,
                     }
-            elif map == "極寒之地":
+            elif mobmap == "極寒之地":
                 level_limit = 30
                 if is_boss:
                     name = "BOSS 冰雪妖皇 - 寒冰霜帝"
@@ -243,7 +243,7 @@ class Monster(discord.Cog, name="怪物"):
                         "極寒碎片": 450,
                         "極寒之心": 130,
                     }
-            elif map == "熔岩深谷":
+            elif mobmap == "熔岩深谷":
                 level_limit = 40
                 if is_boss:
                     name = "BOSS 熔岩巨獸 - 火山魔龍"
@@ -285,7 +285,7 @@ class Monster(discord.Cog, name="怪物"):
                         "熔岩碎片": 450,
                         "熔岩之心": 130,
                     }
-            elif map == "矮人礦山":
+            elif mobmap == "矮人礦山":
                 level_limit = 50
                 if is_boss:
                     name = "BOSS 礦坑霸主 - 巨型哥布林"
@@ -328,7 +328,7 @@ class Monster(discord.Cog, name="怪物"):
                         "矮人碎片": 450,
                         "矮人之心": 130,
                     }
-            elif map == "幽暗迷宮":
+            elif mobmap == "幽暗迷宮":
                 level_limit = 60
                 if is_boss:
                     name = "BOSS 迷宮守衛者 - 暗影巨魔"
@@ -371,9 +371,50 @@ class Monster(discord.Cog, name="怪物"):
                         "迷宮碎片": 450,
                         "幽暗之心": 130,
                     }
+            elif mobmap == "星落荒原(未啟用)":
+                level_limit = 70
+                if is_boss:
+                    name = "BOSS 星落荒主 - 艾克爾"
+                    level = random.randint(68, 73)
+                    prizes = {
+                        "星紋護盔": 250,
+                        "荒域胸鎧": 250,
+                        "隕紋護臂": 250,
+                        "荒原星靴": 250,
+                        "裂隙之環": 100,
+                        "星影幕紗": 180,
+                        "星紋心核": 180,
+                        "星蝕聚能符印": 180,
+                        "「星落荒原」破碎核心": 100,
+                        "高級強化晶球": 150,
+                        "魔法石": 100,
+                        "星蝕碎片": 500,
+                        "星蝕核心": 200,
+                        "隨機職業技能書(30等)": 90,
+                    }
+                else:
+                    namelist = ["星蝕獵犬", "荒原影蠍", "星殞浮蟲", "裂隙巡遊者", "星核巨甲蟲", "虛光怨靈"]
+                    if mob_name in namelist:
+                        namelist.append(mob_name)
+                    name = random.choice(namelist)
+                    level = random.randint(61, 70)
+                    prizes = {
+                        "星紋護盔": 200,
+                        "荒域胸鎧": 200,
+                        "隕紋護臂": 200,
+                        "荒原星靴": 200,
+                        "裂隙之環": 125,
+                        "星影幕紗": 125,
+                        "星紋心核": 125,
+                        "星蝕聚能符印": 125,
+                        "「星落荒原」破碎核心": 75,
+                        "普通強化晶球": 140,
+                        "星蝕碎片": 450,
+                        "星蝕核心": 130,
+                    }
 
             #副本
-            elif map == "古樹之森":
+            elif mobmap == "古樹之森":
                 is_boss = False
                 namelist = ["綠蔭魔花", "深林影狼", "雙刃棘鬃", "樹林守衛", "青苔魔人"]
                 if mob_name in namelist:
@@ -383,7 +424,7 @@ class Monster(discord.Cog, name="怪物"):
                 prizes = {
                     "無": 1
                 }
-            elif map == "寒冰之地":
+            elif mobmap == "寒冰之地":
                 if is_boss:
                     name = "BOSS 冰雪妖皇 - 寒冰霜帝"
                     level = random.randint(28, 35)
@@ -399,7 +440,7 @@ class Monster(discord.Cog, name="怪物"):
                     prizes = {
                         "無": 1
                     }
-            elif map == "黑暗迴廊":
+            elif mobmap == "黑暗迴廊":
                 if is_boss:
                     name = "BOSS 迷宮守衛者 - 暗影巨魔"
                     level = random.randint(58, 66)
@@ -415,7 +456,7 @@ class Monster(discord.Cog, name="怪物"):
                     prizes = {
                         "無": 1
                     }
-            elif map == "惡夢迷宮":
+            elif mobmap == "惡夢迷宮":
                 is_boss = True
                 namelist = ["BOSS 礦坑霸主 - 巨型哥布林", "BOSS 迷宮守衛者 - 暗影巨魔", "BOSS 冰雪妖皇 - 寒冰霜帝", "BOSS 惡夢之主 - 魅魔女王", "BOSS 惡魔之主 - 冰霜巨龍"]
                 if mob_name in namelist:
@@ -425,7 +466,7 @@ class Monster(discord.Cog, name="怪物"):
                 prizes = {
                     "無": 1
                 }
-            elif map == "夢魘級惡夢迷宮":
+            elif mobmap == "夢魘級惡夢迷宮":
                 is_boss = True
                 namelist = ["BOSS 礦坑霸主 - 巨型哥布林", "BOSS 迷宮守衛者 - 暗影巨魔", "BOSS 冰雪妖皇 - 寒冰霜帝", "BOSS 惡夢之主 - 魅魔女王", "BOSS 惡魔之主 - 冰霜巨龍", "BOSS 惡魔之主 - 炎獄魔龍"]
                 if mob_name in namelist:
@@ -437,8 +478,8 @@ class Monster(discord.Cog, name="怪物"):
                 }
             else:
                 return False
-        dungeon_map = ["古樹之森", "寒冰之地", "黑暗迴廊", "惡夢迷宮", "夢魘級惡夢迷宮"]
-        if map in dungeon_map:
+        dungeon_mobmap = ["古樹之森", "寒冰之地", "黑暗迴廊", "惡夢迷宮", "夢魘級惡夢迷宮"]
+        if mobmap in dungeon_mobmap:
             item = False
             if is_boss:
                 hp = level * random.randint(60, 80)
@@ -454,7 +495,7 @@ class Monster(discord.Cog, name="怪物"):
                 money = math.floor(level * 1.5)
             dodge = math.floor(level * (random.randint(4, 6)*0.1))
             hit = math.floor(level * (random.randint(10, 15)*0.1))
-            if map == "惡夢迷宮":
+            if mobmap == "惡夢迷宮":
                 defense = int(defense*1.3)
                 hp = int(hp*2.5)
                 dodge = int(dodge*1.3)
@@ -462,7 +503,7 @@ class Monster(discord.Cog, name="怪物"):
                 exp = int(exp*1.5)
                 money = int(money*1.5)
                 attack = int(attack*1.2)
-            if map == "夢魘級惡夢迷宮":
+            if mobmap == "夢魘級惡夢迷宮":
                 defense = int(defense*2.5)
                 hp = int(hp*3.75)
                 dodge = int(dodge*1.6)

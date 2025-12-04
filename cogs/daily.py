@@ -8,6 +8,7 @@ from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.verify import Verify
+from utility import db
 
 class Daily(discord.Cog, name="簽到"):
     def __init__(self, bot):
@@ -31,10 +32,10 @@ class Daily(discord.Cog, name="簽到"):
             return
     
     async def daily(self, user_id, premium=False):
-        checkreg = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        checkreg = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if checkreg:
             user = self.bot.get_user(user_id)
-            search = await function_in.sql_search("rpg_system", "daily", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_system", "daily", ["user_id"], [user.id])
 
             now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
             now_time1 = datetime.datetime.now(pytz.timezone("Asia/Taipei"))
@@ -57,7 +58,7 @@ class Daily(discord.Cog, name="簽到"):
             time_stamp1 = int(time.mktime(struct_time1))
 
             if not search:
-                await function_in.sql_insert("rpg_system", "daily", ["user_id", "can_daily", "dailyday"], [user.id, 0, 1])
+                await db.sql_insert("rpg_system", "daily", ["user_id", "can_daily", "dailyday"], [user.id, 0, 1])
                 await function_in.give_money(self, user, "money", 500, "每日")
                 return '你成功領取了每日獎金500晶幣 <:coin:1078582446091665438>!'
             else:
@@ -75,8 +76,8 @@ class Daily(discord.Cog, name="簽到"):
                             await function_in.give_item(self, user.id, "追光寶匣")
                             msg += "\n因為你連續簽到天數達到10的倍數, 你獲得了一個追光寶匣"
                     await function_in.give_money(self, user, "money", 500+dailydaygold, "每日")
-                    await function_in.sql_update("rpg_system", "daily", "can_daily", False, "user_id", user.id)
-                    await function_in.sql_update("rpg_system", "daily", "dailyday", dailyday+1, "user_id", user.id)
+                    await db.sql_update("rpg_system", "daily", "can_daily", False, "user_id", user.id)
+                    await db.sql_update("rpg_system", "daily", "dailyday", dailyday+1, "user_id", user.id)
                     return msg
                 else:
                     timea = await function_in_in.time_calculate(time_stamp1-time_stamp)

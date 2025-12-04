@@ -10,7 +10,7 @@ import datetime
 import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
-
+from utility import db
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.verify import Verify
@@ -21,7 +21,7 @@ class Stock(discord.Cog, name="股票系統"):
         
     async def update_stock(self):
         self.bot.log.info("[排程] 開始股市更新...")
-        stock_list = await function_in.sql_findall("rpg_stock", "all")
+        stock_list = await db.sql_findall("rpg_stock", "all")
         for stock in stock_list:
             stock_id = stock[0]
             stock_name = stock[1]
@@ -39,24 +39,24 @@ class Stock(discord.Cog, name="股票系統"):
             stock_price_11 = stock[13]
             stock_price_12 = stock[14]
             stock_price_13 = stock[15]
-            await function_in.sql_update("rpg_stock", "all", "price_1", stock_price, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_2", stock_price_1, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_3", stock_price_2, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_4", stock_price_3, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_5", stock_price_4, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_6", stock_price_5, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_7", stock_price_6, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_8", stock_price_7, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_9", stock_price_8, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_10", stock_price_9, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_11", stock_price_10, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_12", stock_price_11, "stock_id", stock_id)
-            await function_in.sql_update("rpg_stock", "all", "price_13", stock_price_12, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_1", stock_price, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_2", stock_price_1, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_3", stock_price_2, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_4", stock_price_3, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_5", stock_price_4, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_6", stock_price_5, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_7", stock_price_6, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_8", stock_price_7, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_9", stock_price_8, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_10", stock_price_9, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_11", stock_price_10, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_12", stock_price_11, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "price_13", stock_price_12, "stock_id", stock_id)
             a = random.randint(-100, 100)
             stock_price_0 = int(stock_price + (stock_price * (a * 0.001)))
             if stock_price_0 < 100:
                 stock_price_0 = 100
-            await function_in.sql_update("rpg_stock", "all", "now_price", stock_price_0, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", "all", "now_price", stock_price_0, "stock_id", stock_id)
             prices = [stock_price_13, stock_price_12, stock_price_11, stock_price_10, stock_price_9, stock_price_8, stock_price_7, stock_price_6, stock_price_5, stock_price_4, stock_price_3, stock_price_2, stock_price_1, stock_price, stock_price_0]
             await Stock.summon_stock_png(self, stock_id, stock_name, prices)
         self.bot.log.info("[排程] 股市更新完畢!")
@@ -140,7 +140,7 @@ class Stock(discord.Cog, name="股票系統"):
         plt.close()
     
     async def stock_autocomplete(self, ctx: discord.AutocompleteContext):
-        stocks = await function_in.sql_findall("rpg_stock", "all")
+        stocks = await db.sql_findall("rpg_stock", "all")
         return [stock[1] for stock in stocks if ctx.value.lower() in stock[1].lower()]
     
     @commands.slash_command(name="股票", description="股票系統",
@@ -186,7 +186,7 @@ class Stock(discord.Cog, name="股票系統"):
         if samount < 1:
             await interaction.followup.send("數量不可輸入低於1!")
             return
-        stock_info = await function_in.sql_search('rpg_stock', "all", ["name"], [sname])
+        stock_info = await db.sql_search('rpg_stock', "all", ["name"], [sname])
         if not stock_info:
             await interaction.followup.send(f"股票名稱 `{sname}` 不存在!")
             return
@@ -197,12 +197,12 @@ class Stock(discord.Cog, name="股票系統"):
         stock_id = stock_info[0]
         stock_name = stock_info[1]
         stock_price = stock_info[2]
-        stock_check = await function_in.sql_check_table("rpg_stock", f"{user.id}")
+        stock_check = await db.sql_check_table("rpg_stock", f"{user.id}")
         if not stock_check:
-            await function_in.sql_create_table("rpg_stock", f"{user.id}", ["stock_id", "amount"], ["BIGINT", "BIGINT"], "stock_id")
-        search = await function_in.sql_search("rpg_stock", f"{user.id}", ["stock_id"], [stock_id])
+            await db.sql_create_table("rpg_stock", f"{user.id}", ["stock_id", "amount"], ["BIGINT", "BIGINT"], "stock_id")
+        search = await db.sql_search("rpg_stock", f"{user.id}", ["stock_id"], [stock_id])
         if not search:
-            await function_in.sql_insert("rpg_stock", f"{user.id}", ["stock_id", "amount"], [stock_id, 0])
+            await db.sql_insert("rpg_stock", f"{user.id}", ["stock_id", "amount"], [stock_id, 0])
             stock_amount = 0
         else:
             stock_amount = search[1]
@@ -211,7 +211,7 @@ class Stock(discord.Cog, name="股票系統"):
             if not check:
                 await interaction.followup.send(f'你沒有足夠的晶幣! 股票 `{stock_name}` 目前價格為 {stock_price}/張')
                 return
-            await function_in.sql_update("rpg_stock", f"{user.id}", "amount", stock_amount+samount, "stock_id", stock_id)
+            await db.sql_update("rpg_stock", f"{user.id}", "amount", stock_amount+samount, "stock_id", stock_id)
             moneya = await function_in.remove_money(self, user, "money", stock_price*samount)
             await interaction.followup.send(f'你成功花費了 {stock_price*samount} 枚晶幣 <:coin:1078582446091665438> 購買了 {samount} 張股票 `{stock_name}` !\n你目前擁有 {stock_amount+samount} 張股票`{stock_name}`')
         if stype == 2:
@@ -222,9 +222,9 @@ class Stock(discord.Cog, name="股票系統"):
                 await interaction.followup.send(f'你並沒有足夠的股票! 股票 `{stock_name}` 你僅有 {stock_amount} 張!')
                 return
             if stock_amount-samount == 0:
-                await function_in.sql_delete("rpg_stock", f"{user.id}", "stock_id", stock_id)
+                await db.sql_delete("rpg_stock", f"{user.id}", "stock_id", stock_id)
             else:
-                await function_in.sql_update("rpg_stock", f"{user.id}", "amount", stock_amount-samount, "stock_id", stock_id)
+                await db.sql_update("rpg_stock", f"{user.id}", "amount", stock_amount-samount, "stock_id", stock_id)
             await function_in.give_money(self, user, "money", stock_price*samount, "販賣股票")
             await interaction.followup.send(f'你成功販賣了 {samount} 張股票 `{stock_name}` !\n你目前擁有 {stock_amount-samount} 張股票`{stock_name}`\n你獲得了 {stock_price*samount} 枚晶幣 <:coin:1078582446091665438>!')
 

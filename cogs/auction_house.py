@@ -10,6 +10,7 @@ from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 import functools
+from utility import db
 
 class Auction_House(discord.Cog, name="拍賣行"):
     def __init__(self, bot):
@@ -67,7 +68,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             if not auction_id:
                 await interaction.followup.send(f'請輸入欲購買的拍賣品ID!')
                 return
-            search = await function_in.sql_search("rpg_ah", "all", ["ah_id"], [auction_id])
+            search = await db.sql_search("rpg_ah", "all", ["ah_id"], [auction_id])
             if not search:
                 await interaction.followup.send(f'拍賣品ID `{auction_id}` 已被購買或被下架')
                 return
@@ -127,12 +128,12 @@ class Auction_House(discord.Cog, name="拍賣行"):
             if d < 10:
                 d = f"0{d}"
             ah_id = f"{now.year}{m}{d}{random.randint(1, 99)}"
-            search = await function_in.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
+            search = await db.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
             while search:
                 ah_id = f"{now.year}{m}{d}{random.randint(1, 99)}"
-                search = await function_in.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
+                search = await db.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
             ah_id = int(ah_id)
-            search = await function_in.sql_search_all("rpg_ah", "all", ["seller"], [user.id])
+            search = await db.sql_search_all("rpg_ah", "all", ["seller"], [user.id])
             if search:
                 if len(search) >= 5:
                     await interaction.followup.send('一個人最多只能在拍賣行上架5樣物品')
@@ -150,7 +151,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
                 return
             await interaction.followup.send(embed=embed, view=self.ah_sell_menu(interaction, item, amount,  item_type, price, ah_id, channel))
         if func == "unbuy":
-            search = await function_in.sql_search("rpg_ah", "all", ["ah_id"], [auction_id])
+            search = await db.sql_search("rpg_ah", "all", ["ah_id"], [auction_id])
             seller = search[5]
             if seller != user.id:
                 await interaction.followup.send(f'拍賣品ID `{auction_id}` 不是你上架的!')
@@ -158,7 +159,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             ah_item = search[1]
             ah_amont = search[2]
             ah_item_type = search[3]
-            await function_in.sql_delete("rpg_ah", "all", "ah_id", auction_id)
+            await db.sql_delete("rpg_ah", "all", "ah_id", auction_id)
             await function_in.give_item(self, user.id, ah_item, ah_amont)
             await interaction.followup.send(f'你成功下架了拍賣品ID `{auction_id}`! 你獲得了拍賣品 {ah_amont} 個 {ah_item_type} `{ah_item}`')
             embed = discord.Embed(title=f'💰拍賣品ID {auction_id} 已被下架!', color=0xFFE153) 
@@ -214,7 +215,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
             time_stamp = int(time.mktime(struct_time))
             time_stamp+=604800
-            await function_in.sql_insert("rpg_ah", "all", ["ah_id", "item", "amount", "item_type", "price", "seller", "time_stamp"], [ah_id, item, amount, item_type, price, user.id, time_stamp])
+            await db.sql_insert("rpg_ah", "all", ["ah_id", "item", "amount", "item_type", "price", "seller", "time_stamp"], [ah_id, item, amount, item_type, price, user.id, time_stamp])
             embed = discord.Embed(title=f'💰{interaction.user.name} 拍賣上架成功', color=0xFFE153)
             embed.add_field(name=f"你已將 {amount} 個 {item_type} `{item}` 上架", value="\u200b", inline=False)
             embed.add_field(name=f"販賣價格: {price}", value="\u200b", inline=False)
@@ -288,7 +289,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             ah_seller = self.ah_seller
             amount = self.amount
             item = self.item
-            search = await function_in.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
+            search = await db.sql_search("rpg_ah", "all", ["ah_id"], [ah_id])
             if not search:
                 await interaction.followup.send(f'拍賣品ID `{ah_id}` 已被購買或被下架')
                 await function_in.checkactioning(self, interaction.user, "return")
@@ -297,7 +298,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
             gold = int(self.price - price)
             moneya = await function_in.remove_money(self, user, "money", self.price)
             await function_in.give_money(self, ah_seller, "money", gold, "拍賣")
-            await function_in.sql_delete("rpg_ah", "all", "ah_id", ah_id)
+            await db.sql_delete("rpg_ah", "all", "ah_id", ah_id)
             embed = discord.Embed(title=f'💰{interaction.user.name} 成功購買物品!', color=0xFFE153)
             embed.add_field(name=f"你購買了 {amount} 個 {item_type} `{item}`", value="\u200b", inline=False)
             embed.add_field(name=f"購買價格: {self.price}", value="\u200b", inline=False)

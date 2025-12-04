@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in import function_in
-import mysql.connector
+from utility import db
 
 class Equip(discord.Cog, name="裝備系統"):
     def __init__(self, bot):
@@ -31,7 +31,7 @@ class Equip(discord.Cog, name="裝備系統"):
         ])
     async def 裝備(self, interaction: discord.ApplicationContext, equip_type: int):
         user = interaction.user
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
         if not search:
             await interaction.response.send_message("你尚未註冊帳號! 請先使用 `/註冊` 來註冊一個帳號!")
             return
@@ -39,7 +39,15 @@ class Equip(discord.Cog, name="裝備系統"):
         if not checkactioning:
             await interaction.response.send_message(f'你當前正在 {stat} 中, 無法裝備!')
             return
-        await interaction.response.send_modal(self.equip_menu(title="裝備欄", user=user, players_class=search[7], itype=equip_type))
+        modal = self.equip_menu(title="裝備欄", user=user, players_class=search[7], itype=equip_type)
+        try:
+            await modal.load_data_and_add_items()
+        except Exception as e:
+            await interaction.response.send_message("❌ 載入裝備資料時發生錯誤, 請稍後再試.", ephemeral=True)
+            self.bot.log.warn(f'使用裝備指令載入裝備時發生錯誤, 玩家ID: {user.id}')
+            return
+        await interaction.response.send_modal(modal)
+        #await interaction.response.send_modal(self.equip_menu(title="裝備欄", user=user, players_class=search[7], itype=equip_type))
 
     class equip_menu(discord.ui.Modal):
         def __init__(self, user: discord.Member, players_class: str, itype, *args, **kwargs) -> None:
@@ -47,61 +55,58 @@ class Equip(discord.Cog, name="裝備系統"):
             self.itype = itype
             self.user = user
             self.players_class = players_class
-            item_type_list = []
+            self.item_type_list = []
             if self.itype == 1:
-                item_type_list = ["武器","頭盔","胸甲","護腿","鞋子"]
+                self.item_type_list = ["武器","頭盔","胸甲","護腿","鞋子"]
             elif self.itype == 2:
-                item_type_list = ["戒指","披風","副手","項鍊","護身符"]
+                self.item_type_list = ["戒指","披風","副手","項鍊","護身符"]
             elif self.itype == 3:
-                item_type_list = ["戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5"]
+                self.item_type_list = ["戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5"]
             elif self.itype == 4:
-                item_type_list = ["技能欄位1","技能欄位2","技能欄位3"]
-            elif self.itype == 5:
-                a = 1
-                while a <= 3:
-                    db = mysql.connector.connect(
-                        host="localhost",
-                        user=config.mysql_username,
-                        password=config.mysql_password,
-                        database="rpg_equip",
+                self.item_type_list = ["技能欄位1","技能欄位2","技能欄位3"]
+            elif self.itype == 6:
+                self.item_type_list = ["職業專用道具"]
+        
+        async def load_data_and_add_items(self):
+            table_name = str(self.user.id)
+            database = "rpg_equip"
+            if self.itype == 5:
+                for a in range(1, 4):
+                    slot_name = f"卡牌欄位{a}"
+                    result = await db.sql_search(
+                        database=database, 
+                        table_name=table_name, 
+                        column_name=['slot'],
+                        data=[slot_name]
                     )
-                    cursor = db.cursor()
-                    query = f"SELECT * FROM `{self.user.id}` WHERE slot = %s"
-                    cursor.execute(query, (f"卡牌欄位{a}",))
-                    result = cursor.fetchone()
-
-                    cursor.close()
-                    db.close()
+                    value_to_display = "未解鎖" 
+                    if result and isinstance(result, tuple) and len(result) > 1:
+                        value_to_display = str(result[1])
                     self.add_item(
                         discord.ui.InputText(
-                            label=f"卡牌欄位{a}",
+                            label=slot_name,
                             style=discord.InputTextStyle.short,
                             required=False,
-                            value=result[1]
+                            value=value_to_display
                         )
                     )
-                    if result[1] != "未解鎖":
-                        item_type_list.append(f"卡牌欄位{a}")
-                    a+=1
-                    continue
-            elif self.itype == 6:
-                item_type_list = ["職業專用道具"]
-                
-            if self.itype < 5 or self.itype == 6:
-                for item_type in item_type_list:
-                    db = mysql.connector.connect(
-                        host="localhost",
-                        user=config.mysql_username,
-                        password=config.mysql_password,
-                        database="rpg_equip",
+                    
+                    # 追蹤未解鎖的項目
+                    if value_to_display != "未解鎖":
+                        self.item_type_list.append(slot_name)
+            elif self.item_type_list:
+                for item_type in self.item_type_list:
+                    result = await db.sql_search(
+                        database=database,
+                        table_name=table_name,
+                        column_name=['slot'],
+                        data=[item_type]
                     )
-                    cursor = db.cursor()
-                    query = f"SELECT * FROM `{self.user.id}` WHERE slot = %s"
-                    cursor.execute(query, (item_type,))
-                    result = cursor.fetchone()
-                    item = result[1]
-                    cursor.close()
-                    db.close()
+                    
+                    item = ""
+                    if result and isinstance(result, tuple) and len(result) > 1:
+                        item = str(result[1])
+                    
                     self.add_item(
                         discord.ui.InputText(
                             label=item_type,
@@ -126,7 +131,7 @@ class Equip(discord.Cog, name="裝備系統"):
             elif self.itype == 5:
                 a = 1
                 while a <= 3:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"卡牌欄位{a}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"卡牌欄位{a}"])
                     if search[1] != "未解鎖":
                         item_type_list.append(f"卡牌欄位{a}")
                     a+=1
@@ -138,7 +143,7 @@ class Equip(discord.Cog, name="裝備系統"):
             for item_type in item_type_list:
                 che = False
                 a += 1
-                search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item_type}"])
+                search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item_type}"])
                 equip = search[1]
                 equipa = self.children[a].value.replace(" ", "")
 
@@ -154,7 +159,7 @@ class Equip(discord.Cog, name="裝備系統"):
                     players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
                     if f"{equip}" == "無":
                         if "技能欄位" in item_type:
-                            skill_info = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [equipa])
+                            skill_info = await db.sql_search("rpg_skills", f"{user.id}", ["skill"], [equipa])
                             if not skill_info:
                                 await msg.reply(f'你尚未學習技能 `{equipa}`!')
                                 continue
@@ -181,7 +186,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                         continue
                                     else:
                                         await msg.reply(f'你成功將技能 `{equipa}` 裝備在 {item_type}!')
-                                        await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                        await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                         continue
                             if not skill_in:
                                 await msg.reply(f'技能 `{equipa}` 不存在於資料庫! 請聯繫GM處理!')
@@ -215,7 +220,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                     await msg.reply(f"{item_type1} `{equipa}` 需要 {reqlevel} 級以上才能裝備")
                                     continue
                                 await function_in.remove_item(self, user.id, equipa, 1)
-                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                 embed = discord.Embed(title=f'你成功裝備了 {item_type} `{equipa}`', color=0x28FF28)
                                 embed.add_field(name="增加屬性: ", value="\u200b", inline=False)
                                 for attname, value in data.get(equipa).get("增加屬性", {}).items():
@@ -238,7 +243,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                 await msg.reply(f"{item_type1} `{equipa}` 需要 {reqlevel} 級以上才能裝備")
                                 continue
                             await function_in.remove_item(self, user.id, equipa, 1)
-                            await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                            await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                             embed = discord.Embed(title=f'你成功裝備了 {item_type} `{equipa}`', color=0x28FF28)
                             embed.add_field(name="增加屬性: ", value="\u200b", inline=False)
                             for attname, value in data.get(equipa).get("增加屬性", {}).items():
@@ -247,7 +252,7 @@ class Equip(discord.Cog, name="裝備系統"):
                             continue
                     else:
                         if "技能欄位" in item_type:
-                            skill_info = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [equipa])
+                            skill_info = await db.sql_search("rpg_skills", f"{user.id}", ["skill"], [equipa])
                             if equipa != "無":
                                 if not skill_info:
                                     await msg.reply(f'你尚未學習技能 `{equipa}`!')
@@ -275,14 +280,14 @@ class Equip(discord.Cog, name="裝備系統"):
                                             continue
                                         else:
                                             await msg.reply(f'你成功將技能 `{equipa}` 裝備在 {item_type}!')
-                                            await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                            await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                             continue
                                 if not skill_in:
                                     await msg.reply(f'技能 `{equipa}` 不存在於資料庫! 請聯繫GM處理!')
                                     continue
                             else:
                                 await msg.reply(f'你成功將解除裝備 {item_type} 的技能!')
-                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", item_type)
+                                await db.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", item_type)
                                 skilla = True
                             if skilla:
                                 continue
@@ -290,7 +295,7 @@ class Equip(discord.Cog, name="裝備系統"):
                         if not data:
                             await msg.reply(f"{item_type} `{equip}` 不存在於資料庫! 請聯繫GM處理!")
                             continue
-                        await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", item_type)
+                        await db.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", item_type)
                         if "戰鬥道具欄位" in f"{item_type}":
                             await msg.reply(f'你成功解除裝備 {item_type} `{equip}`!')
                             continue
@@ -320,7 +325,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                             await msg.reply(f"{item_type1} `{equipa}` 需要 {reqlevel} 級以上才能裝備")
                                             continue
                                         await function_in.remove_item(self, user.id, equipa, 1)
-                                        await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                        await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                         await msg.reply(f'成功將 `{equipa}` 裝備於 {item_type}!')
                                         continue
                                     else:
@@ -332,7 +337,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                         await msg.reply(f"{item_type1} `{equipa}` 需要 {reqlevel} 級以上才能裝備")
                                         continue
                                     await function_in.remove_item(self, user.id, equipa, 1)
-                                    await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                    await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                     embed = discord.Embed(title=f'你成功裝備了 {item_type} `{equipa}`', color=0x28FF28)
                                     embed.add_field(name="增加屬性: ", value="\u200b", inline=False)
                                     for attname, value in data.get(equipa).get("增加屬性", {}).items():
@@ -355,7 +360,7 @@ class Equip(discord.Cog, name="裝備系統"):
                                     await msg.reply(f"{item_type1} `{equipa}` 需要 {reqlevel} 級以上才能裝備")
                                     continue
                                 await function_in.remove_item(self, user.id, equipa, 1)
-                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
+                                await db.sql_update("rpg_equip", f"{user.id}", "equip", equipa, "slot", item_type)
                                 embed = discord.Embed(title=f'你成功裝備了 {item_type} `{equipa}`', color=0x28FF28)
                                 embed.add_field(name="增加屬性: ", value="\u200b", inline=False)
                                 for attname, value in data.get(equipa).get("增加屬性", {}).items():

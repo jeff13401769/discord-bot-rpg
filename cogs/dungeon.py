@@ -17,6 +17,7 @@ from cogs.quest import Quest_system
 from cogs.pets import Pets
 from cogs.event import Event
 from cogs.verify import Verify
+from utility import db
 
 class Dungeon(discord.Cog, name="副本系統"):
     def __init__(self, bot):
@@ -63,10 +64,10 @@ class Dungeon(discord.Cog, name="副本系統"):
         if not checkactioning:
             await interaction.followup.send(f'你當前正在 {stat} 中, 無法進入副本!')
             return
-        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
         if not search:
-            await function_in.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1", "dungeon_2", "dungeon_3", "dungeon_4"], [f"{user.id}", 1, 1, 1, 1])
-            search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+            await db.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1", "dungeon_2", "dungeon_3", "dungeon_4"], [f"{user.id}", 1, 1, 1, 1])
+            search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
         if f"{dungeon_map}" == "古樹之森":
             sql = 1
         elif f"{dungeon_map}" == "寒冰之地":
@@ -77,7 +78,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             sql = 4
         elif f"{dungeon_map}" == "夢魘級惡夢迷宮":
             sql = 5
-        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
         if search[sql] <= 0:
             await interaction.followup.send(f'你今天{dungeon_map}副本次數已用完! 請等待明天再進入副本!')
             await function_in.checkactioning(self, user, "return")
@@ -207,7 +208,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -265,8 +266,8 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name=f"技能一: {skill1}", value=f"冷卻時間: {f}", inline=True)
                 embed.add_field(name=f"技能二: {skill2}", value=f"冷卻時間: {g}", inline=True)
                 embed.add_field(name=f"技能三: {skill3}", value=f"冷卻時間: {h}", inline=True)
-                search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
-                await function_in.sql_update("rpg_players", "dungeon", f"dungeon_{sql}", search[sql]-1, "user_id", user.id)
+                search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+                await db.sql_update("rpg_players", "dungeon", f"dungeon_{sql}", search[sql]-1, "user_id", user.id)
                 await function_in.remove_hunger(self, user.id, 5)
                 await msg.edit(embed=embed, view=Dungeon.dungeon_menu(interaction, False, embed, self.bot, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, drop_item, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0, self.dungeon_name, dround, dungeon_monster_amount, False, False, True))
                 self.stop()
@@ -536,7 +537,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             dmg_a = 0
             dmg_type = False
 
-            equips = await function_in.sql_findall("rpg_equip", f"{user.id}")
+            equips = await db.sql_findall("rpg_equip", f"{user.id}")
             for item_info in equips:
                 slot = item_info[0]
                 equip = item_info[1]
@@ -611,7 +612,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                             self.monster_異常_暈眩 = True
                             self.monster_異常_暈眩_round = enchant_level
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-            skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -650,7 +651,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             dmg_a = 0
             dmg_type = False
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-            equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+            equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
             for equip in equip_list:
                 if equip[1] == "無" or equip[1] == "未解鎖":
                     continue
@@ -699,14 +700,14 @@ class Dungeon(discord.Cog, name="副本系統"):
                             if players_mana > players_max_mana:
                                 players_mana = players_max_mana
                             embed.add_field(name=f"{user.name} 觸發被動技能 冰龍之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
                         if "「炎龍之軀」" in f"{info}":
                             reg_hp = int(players_max_hp*0.1)
                             players_hpb += reg_hp
                             if players_hpb > players_max_hp:
                                 players_hpb = players_max_hp
                             embed.add_field(name=f"{user.name} 觸發被動技能 炎龍之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
                         if "「魅魔之軀」" in f"{info}":
                             reg_hp = int(players_max_hp*0.05)
                             reg_mana = int(players_max_mana*0.1)
@@ -722,15 +723,15 @@ class Dungeon(discord.Cog, name="副本系統"):
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
                             embed.add_field(name=f"{user.name} 觸發被動技能 魅魔之軀 使 Lv.{self.monster_level} {self.monster_name} {self.monster_異常_減傷_round} 回合內降低 {self.monster_異常_減傷_range}% 傷害", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
-                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
 
             return dmg_a, dmg_type, monster_hp, embed
         
         async def passive_skill(self, user, embed, msg, players_hpb): #怪物攻擊時玩家觸發被動
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             dodge = False
-            skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -748,14 +749,14 @@ class Dungeon(discord.Cog, name="副本系統"):
                         players_hpb += reg_hp_HP
                         if players_hpb > players_max_hp:
                             players_hpb = players_max_hp
-                        await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", user.id)
                         embed.add_field(name=f"{user.name} 觸發被動技能 喘一口氣 回復了 {reg_hp_HP} HP", value="\u200b", inline=False)   
             return dodge, players_hpb
         
         async def def_passive_skill(self, user, embed, dmg, players_mana):
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             remove_dmg = False
-            skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -771,7 +772,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                                     players_mana -= remove_mana
                                     embed.add_field(name=f"{user.name} 觸發被動技能 魔法護盾 減免了來自 Lv.{self.monster_level} {self.monster_name} 的 {remove_dmg} 點傷害", value="\u200b", inline=False)
                                     embed.add_field(name=f"{user.name} 因為觸發被動技能 魔法護盾 消耗 {remove_mana} MP!", value="\u200b", inline=False)
-                                    await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
+                                    await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", user.id)
             return remove_dmg, players_mana
 
         async def damage(self, user, embed, msg, player_def, monster_AD, players_dodge, monster_hit, players_hp, players_mana, players_class, monster_hpa): #怪物攻擊時觸發
@@ -1221,7 +1222,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                         dmg = 0
             players_hpa = players_hp - dmg - dmga
             if players_hpa <= 0:
-                skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+                skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
                 if not skill_list:
                     skill_list = [["無", 0]]
                 for skill_info in skill_list:
@@ -1234,17 +1235,17 @@ class Dungeon(discord.Cog, name="副本系統"):
                                 self.skill_2_cd = 0
                             if self.skill_3_cd:
                                 self.skill_3_cd = 0
-                            await function_in.sql_update("rpg_players", "players", "hp", players_hpa, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "hp", players_hpa, "user_id", user.id)
                             embed.add_field(name=f"{user.name} 觸發了被動技能 最後的癲狂, 免疫致命傷害, 血量減少至1, 所有技能冷卻重置!", value="\u200b", inline=False)
                             return embed, players_hpa, players_mana, monster_hpa
-                await function_in.sql_update("rpg_players", "players", "hp", 0, "user_id", user.id)
+                await db.sql_update("rpg_players", "players", "hp", 0, "user_id", user.id)
                 embed.add_field(name=f"你的血量歸零了!", value="\u200b", inline=False)
                 embed.add_field(name=f"請回到神殿復活!", value="\u200b", inline=False)
                 await function_in.checkactioning(self, user, "return")
                 await msg.edit(view=None, embed=embed)
                 self.stop()
                 return None, None, None, None
-            await function_in.sql_update("rpg_players", "players", "hp", players_hpa, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "hp", players_hpa, "user_id", user.id)
             return embed, players_hpa, players_mana, monster_hpa
         
         async def win(self, embed, user, interaction):
@@ -1263,18 +1264,18 @@ class Dungeon(discord.Cog, name="副本系統"):
                 exp = int(exp - (exp*(level_limit*0.01)))
                 self.monster_exp = int(self.monster_exp - (self.monster_exp*(level_limit*0.01)))
             add_exp = 0.0
-            all_exp_list = await function_in.sql_findall("rpg_exp", "all")
+            all_exp_list = await db.sql_findall("rpg_exp", "all")
             if all_exp_list:
                 for exp_info in all_exp_list:
                     add_exp += exp_info[2]
-            user_exp_list = await function_in.sql_search("rpg_exp", "player", ["user_id"], [user.id])
+            user_exp_list = await db.sql_search("rpg_exp", "player", ["user_id"], [user.id])
             if user_exp_list:
                 add_exp += user_exp_list[2]
             if add_exp != 0.0:
                 exp = int(exp * (add_exp+1))
             guild_name = await function_in.check_guild(self, user.id)
             if guild_name:
-                search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [guild_name])
+                search = await db.sql_search("rpg_guild", "all", ["guild_name"], [guild_name])
                 glevel = search[2]
                 if glevel > 1:
                     glevel-=1
@@ -1286,7 +1287,7 @@ class Dungeon(discord.Cog, name="副本系統"):
             embed.add_field(name=f"你獲得了 {self.monster_money} 枚晶幣!", value="\u200b", inline=False)
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
             embed.add_field(name=f"目前飽食度剩餘 {players_hunger}", value="\u200b", inline=False)
-            skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
             aexp = 0
             if not skill_list:
                 skill_list = [["無", 0]]
@@ -1503,7 +1504,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -1592,7 +1593,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 if level_limit > 20:
                     level_limit = 20
                 mdmg = int(mdmg - (mdmg*(level_limit*0.01)))
-            skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -1814,7 +1815,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                     if self.player_詠唱:
                         self.player_詠唱_range*=0.01
                         skill_type_damage+=(skill_type_damage*self.player_詠唱_range)
-                    skill_list = await function_in.sql_findall("rpg_skills", f"{user.id}")
+                    skill_list = await db.sql_findall("rpg_skills", f"{user.id}")
                     if not skill_list:
                         skill_list = [["無", 0]]
                     for skill_info in skill_list:
@@ -2069,7 +2070,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2166,7 +2167,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2247,7 +2248,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2336,7 +2337,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2425,7 +2426,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2520,7 +2521,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2610,7 +2611,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2695,7 +2696,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2790,7 +2791,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2885,7 +2886,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -2949,7 +2950,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 embed.add_field(name=f"道具一: {item1}                    道具二: {item2}                    道具三: {item3}", value="\u200b", inline=False)
                 embed.add_field(name=f"道具四: {item4}                    道具五: {item5}", value="\u200b", inline=False)
@@ -2990,33 +2991,33 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "血量回復50%但魔力減少20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.5)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "魔力回復20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "魔力回復50%但血量減少20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "血量全部回滿但魔力減少50%":
                     await function_in.heal(self, user.id, "hp", "max")
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "魔力全部回滿但血量減少50%":
                     await function_in.heal(self, user.id, "mana", "max")
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff但血量/魔力減少5%":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3040,15 +3041,15 @@ class Dungeon(discord.Cog, name="副本系統"):
                     self.player_異常_減防_range = 0
                     self.player_異常_減防_round = 0
                     if players_max_hp*0.05 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.05)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
                     if players_max_mana*0.05 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
                 elif buff == "清除所有正面Buff但血量/魔力回復5%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.05)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.05)
@@ -3081,7 +3082,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -3161,33 +3162,33 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "血量回復50%但魔力減少20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.5)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "魔力回復20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "魔力回復50%但血量減少20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "血量全部回滿但魔力減少50%":
                     await function_in.heal(self, user.id, "hp", "max")
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "魔力全部回滿但血量減少50%":
                     await function_in.heal(self, user.id, "mana", "max")
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff但血量/魔力減少5%":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3211,15 +3212,15 @@ class Dungeon(discord.Cog, name="副本系統"):
                     self.player_異常_減防_range = 0
                     self.player_異常_減防_round = 0
                     if players_max_hp*0.05 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.05)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
                     if players_max_mana*0.05 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
                 elif buff == "清除所有正面Buff但血量/魔力回復5%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.05)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.05)
@@ -3252,7 +3253,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -3332,33 +3333,33 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "血量回復50%但魔力減少20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.5)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "魔力回復20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "魔力回復50%但血量減少20%":
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "血量全部回滿但魔力減少50%":
                     await function_in.heal(self, user.id, "hp", "max")
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "魔力全部回滿但血量減少50%":
                     await function_in.heal(self, user.id, "mana", "max")
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff但血量/魔力減少5%":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3382,15 +3383,15 @@ class Dungeon(discord.Cog, name="副本系統"):
                     self.player_異常_減防_range = 0
                     self.player_異常_減防_round = 0
                     if players_max_hp*0.05 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.05)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.05)), "user_id", user.id)
                     if players_max_mana*0.05 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.05)), "user_id", user.id)
                 elif buff == "清除所有正面Buff但血量/魔力回復5%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.05)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.05)
@@ -3423,7 +3424,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -3517,42 +3518,42 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                 elif buff == "血量減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "魔力減少20%":
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量/魔力回復20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.2)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "血量/魔力減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量減少50%":
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "魔力減少50%":
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3586,9 +3587,9 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
                 elif buff == "血量歸三":
-                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
-                    await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":
                     self.player_異常_減傷 = True
                     self.player_異常_減傷_range = 0.5
@@ -3620,7 +3621,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -3714,42 +3715,42 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                 elif buff == "血量減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "魔力減少20%":
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量/魔力回復20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.2)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "血量/魔力減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量減少50%":
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "魔力減少50%":
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3783,9 +3784,9 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
                 elif buff == "血量歸三":
-                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
-                    await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":
                     self.player_異常_減傷 = True
                     self.player_異常_減傷_range = 0.5
@@ -3817,7 +3818,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]
@@ -3911,42 +3912,42 @@ class Dungeon(discord.Cog, name="副本系統"):
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.5)
                 elif buff == "血量減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                 elif buff == "魔力減少20%":
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量/魔力回復20%":
                     await function_in.heal(self, user.id, "hp", players_max_hp*0.2)
                     await function_in.heal(self, user.id, "mana", players_max_mana*0.2)
                 elif buff == "血量/魔力減少20%":
                     if players_max_hp*0.2 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.2)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.2)), "user_id", user.id)
                     if players_max_mana*0.2 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.2)), "user_id", user.id)
                 elif buff == "血量減少50%":
                     if players_max_hp*0.5 > players_hp:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     elif int(players_hp-(players_max_hp*0.5)) <= 0:
-                        await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", 1, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hp", int(players_hp-(players_max_hp*0.5)), "user_id", user.id)
                 elif buff == "魔力減少50%":
                     if players_max_mana*0.5 > players_mana:
-                        await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                     else:
-                        await function_in.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "mana", int(players_mana-(players_max_mana*0.5)), "user_id", user.id)
                 elif buff == "清除所有負面Buff":
                     self.player_異常_中毒 = False
                     self.player_異常_中毒_dmg = 0
@@ -3980,9 +3981,9 @@ class Dungeon(discord.Cog, name="副本系統"):
                 elif buff == "魔力回滿":
                     await function_in.heal(self, user.id, "mana", "max")
                 elif buff == "血量歸三":
-                    await function_in.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "hp", 3, "user_id", user.id)
                 elif buff == "魔力歸零":
-                    await function_in.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "mana", 0, "user_id", user.id)
                 elif buff == "3回合內減少50%傷害":
                     self.player_異常_減傷 = True
                     self.player_異常_減傷_range = 0.5
@@ -4014,7 +4015,7 @@ class Dungeon(discord.Cog, name="副本系統"):
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的血量: {players_hp}/{players_max_hp}", value="\u200b", inline=False)
                 embed.add_field(name=f"{user.name} 的魔力 {players_mana}/{players_max_mana}", value="\u200b", inline=False)
-                equip_list = await function_in.sql_findall("rpg_equip", f"{user.id}")
+                equip_list = await db.sql_findall("rpg_equip", f"{user.id}")
                 for equip in equip_list:
                     item_type = equip[0]
                     item = equip[1]

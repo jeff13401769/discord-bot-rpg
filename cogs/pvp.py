@@ -1,12 +1,8 @@
-import datetime
-import pytz
 import asyncio
-import time
 import math
 import random
 import functools
 import yaml
-import certifi
 import os
 import numpy as np
 
@@ -14,9 +10,8 @@ import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 
-import mysql.connector
-
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.skill import Skill
@@ -158,7 +153,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
             items = {}
             for item in item_type_list:
-                search = await function_in.sql_search("rpg_equip", f"{self.player_1.id}", ["slot"], [f"{item}"])
+                search = await db.sql_search("rpg_equip", f"{self.player_1.id}", ["slot"], [f"{item}"])
                 items[item] = search[1]
             player_1_item1 = items["戰鬥道具欄位1"]
             player_1_item2 = items["戰鬥道具欄位2"]
@@ -210,7 +205,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             embed.add_field(name=f"{self.player_2.name}     魔力: {next_player_mana}/{next_player_max_mana}", value="\u200b", inline=False)
             items = {}
             for item in item_type_list:
-                search = await function_in.sql_search("rpg_equip", f"{self.player_2.id}", ["slot"], [f"{item}"])
+                search = await db.sql_search("rpg_equip", f"{self.player_2.id}", ["slot"], [f"{item}"])
                 items[item] = search[1]
             player_2_item1 = items["戰鬥道具欄位1"]
             player_2_item2 = items["戰鬥道具欄位2"]
@@ -594,7 +589,7 @@ class Pvp(discord.Cog, name="PVP系統"):
         async def passive_damage_skill(self, embed, players_hpb): #玩家普攻時觸發
             dmg_a = 0
             dmg_type = False
-            equips = await function_in.sql_findall("rpg_equip", f"{self.now_player.id}")
+            equips = await db.sql_findall("rpg_equip", f"{self.now_player.id}")
             for item_info in equips:
                 slot = item_info[0]
                 equip = item_info[1]
@@ -670,7 +665,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                             self.next_player_異常_暈眩 = True
                             self.next_player_異常_暈眩_round = enchant_level
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.now_player.id)
-            skill_list = await function_in.sql_findall("rpg_skills", f"{self.now_player.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{self.now_player.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -700,7 +695,7 @@ class Pvp(discord.Cog, name="PVP系統"):
         async def passive_skill(self, embed: discord.Embed): #被攻擊時觸發被動
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.next_player.id)
             dodge = False
-            skill_list = await function_in.sql_findall("rpg_skills", f"{self.next_player.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{self.next_player.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -718,14 +713,14 @@ class Pvp(discord.Cog, name="PVP系統"):
                         players_hp += reg_hp_HP
                         if players_hp > players_max_hp:
                             players_hp = players_max_hp
-                        await function_in.sql_update("rpg_players", "players", "hp", players_hp, "user_id", self.next_player.id)
+                        await db.sql_update("rpg_players", "players", "hp", players_hp, "user_id", self.next_player.id)
                         embed.add_field(name=f"{self.next_player.name} 觸發被動技能 喘一口氣 回復了 {reg_hp_HP} HP", value="\u200b", inline=False)   
             return dodge, embed
         
         async def def_passive_skill(self, embed: discord.Embed, dmg):
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.next_player.id)
             remove_dmg = False
-            skill_list = await function_in.sql_findall("rpg_skills", f"{self.next_player.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{self.next_player.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -741,7 +736,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                                     players_mana -= remove_mana
                                     embed.add_field(name=f"{self.next_player.name} 觸發被動技能 魔法護盾 減免了來自 {self.now_player.name} 的 {remove_dmg} 點傷害", value="\u200b", inline=False)
                                     embed.add_field(name=f"{self.next_player.name} 因為觸發被動技能 魔法護盾 消耗 {remove_mana} MP!", value="\u200b", inline=False)
-                                    await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.next_player.id)
+                                    await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.next_player.id)
             return remove_dmg, embed
 
         async def damage(self, embed: discord.Embed, msg: discord.Message): #玩家與寵物攻擊完畢後觸發
@@ -784,7 +779,7 @@ class Pvp(discord.Cog, name="PVP系統"):
 
             players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await Pvp.pvp_menu.checkattr_pvp(self, self.now_player.id)
             
-            equip_list = await function_in.sql_findall("rpg_equip", f"{self.now_player.id}")
+            equip_list = await db.sql_findall("rpg_equip", f"{self.now_player.id}")
             for equip in equip_list:
                 if equip[1] == "無" or equip[1] == "未解鎖":
                     continue
@@ -830,14 +825,14 @@ class Pvp(discord.Cog, name="PVP系統"):
                             if players_mana > players_max_mana:
                                 players_mana = players_max_mana
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 冰龍之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
+                            await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
                         if "「炎龍之軀」" in f"{info}":
                             reg_hp = int(players_max_hp*0.1)
                             players_hpb += reg_hp
                             if players_hpb > players_max_hp:
                                 players_hpb = players_max_hp
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 炎龍之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
+                            await db.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
                         if "「魅魔之軀」" in f"{info}":
                             reg_hp = int(players_max_hp*0.05)
                             reg_mana = int(players_max_mana*0.1)
@@ -853,11 +848,11 @@ class Pvp(discord.Cog, name="PVP系統"):
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 回復了 {reg_hp} HP", value="\u200b", inline=False)
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 回復了 {reg_mana} MP", value="\u200b", inline=False)
                             embed.add_field(name=f"{self.now_player.name} 觸發被動技能 魅魔之軀 使 {self.next_player.name} {self.next_player_異常_減傷_round} 回合內降低 {self.next_player_異常_減傷_range}% 傷害", value="\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
-                            await function_in.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
+                            await db.sql_update("rpg_players", "players", "hp", players_hpb, "user_id", self.now_player.id)
+                            await db.sql_update("rpg_players", "players", "mana", players_mana, "user_id", self.now_player.id)
             players_hpa = players_hp - dmg
             if players_hpa <= 0:
-                skill_list = await function_in.sql_findall("rpg_skills", f"{self.now_player.id}")
+                skill_list = await db.sql_findall("rpg_skills", f"{self.now_player.id}")
                 if not skill_list:
                     skill_list = [["無", 0]]
                 for skill_info in skill_list:
@@ -869,7 +864,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                                 self.now_player_skill2_cd = 0
                             if self.now_player_skill3_cd:
                                 self.now_player_skill3_cd = 0
-                            await function_in.sql_update("rpg_players", "players", "hp", 1, "user_id", self.now_player.id)
+                            await db.sql_update("rpg_players", "players", "hp", 1, "user_id", self.now_player.id)
                             embed.add_field(name=f"{self.now_player.name} 觸發了被動技能 最後的癲狂, 免疫致命傷害, 血量減少至1, 所有技能冷卻重置!", value="\u200b", inline=False)
                             players_hpa = 1
                             return embed
@@ -911,7 +906,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 if level_limit > 20:
                     level_limit = 20
                 mdmg = int(mdmg - (mdmg*(level_limit*0.01)))
-            skill_list = await function_in.sql_findall("rpg_skills", f"{self.next_player.id}")
+            skill_list = await db.sql_findall("rpg_skills", f"{self.next_player.id}")
             if not skill_list:
                 skill_list = [["無", 0]]
             for skill_info in skill_list:
@@ -1132,7 +1127,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                     if self.next_player_詠唱:
                         self.next_player_詠唱_range*=0.01
                         skill_type_damage+=(skill_type_damage*self.next_player_詠唱_range)
-                    skill_list = await function_in.sql_findall("rpg_skills", f"{now_player.id}")
+                    skill_list = await db.sql_findall("rpg_skills", f"{now_player.id}")
                     if not skill_list:
                         skill_list = [["無", 0]]
                     for skill_info in skill_list:
@@ -1248,7 +1243,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             if players_hp < 0:
                 players_hp = 0
             players_hp = int(players_hp)
-            await function_in.sql_update("rpg_players", "players", "hp", players_hp, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "hp", players_hp, "user_id", user.id)
             if players_hp <= 0:
                 return False
             return True
@@ -1273,7 +1268,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 embed.add_field(name="獲勝者:", value=f"{atttacker.mention} 決鬥點數+3({money})", inline=False)
                 await function_in.give_skill_exp(self, atttacker.id, "所有被動")
                 if not await function_in.check_money(self, loser, "pp", 3):
-                    await function_in.sql_update("rpg_players", "money", "pp", 0, "user_id", loser.id)
+                    await db.sql_update("rpg_players", "money", "pp", 0, "user_id", loser.id)
                     money = 0
                 else:
                     money = await function_in.remove_money(self, loser, "pp", 3)
@@ -1295,7 +1290,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             embed.add_field(name=f"{now_player.name}     魔力: {now_player_mana}/{now_player_max_mana}", value="\u200b", inline=False)
             items = {}
             for item in item_type_list:
-                search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                 items[item] = search[1]
             item1 = items["戰鬥道具欄位1"]
             item2 = items["戰鬥道具欄位2"]
@@ -1315,7 +1310,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             embed.add_field(name=f"{next_player.name}     魔力: {next_player_mana}/{next_player_max_mana}", value="\u200b", inline=False)
             items = {}
             for item in item_type_list:
-                search = await function_in.sql_search("rpg_equip", f"{next_player.id}", ["slot"], [f"{item}"])
+                search = await db.sql_search("rpg_equip", f"{next_player.id}", ["slot"], [f"{item}"])
                 items[item] = search[1]
             item1 = items["戰鬥道具欄位1"]
             item2 = items["戰鬥道具欄位2"]
@@ -1377,7 +1372,7 @@ class Pvp(discord.Cog, name="PVP系統"):
             players_equip_con = 0
             players_equip_luk = 0
 
-            equips = await function_in.sql_findall("rpg_equip", f"{user_id}")
+            equips = await db.sql_findall("rpg_equip", f"{user_id}")
             set_effects = {}
             for equip in equips:
                 slot = equip[0]
@@ -1579,7 +1574,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1627,7 +1622,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1675,7 +1670,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1723,7 +1718,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1771,7 +1766,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1818,7 +1813,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1871,7 +1866,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]
@@ -1924,7 +1919,7 @@ class Pvp(discord.Cog, name="PVP系統"):
                 item_type_list = ["戰鬥道具欄位1", "戰鬥道具欄位2", "戰鬥道具欄位3", "戰鬥道具欄位4", "戰鬥道具欄位5", "技能欄位1", "技能欄位2", "技能欄位3"]
                 items = {}
                 for item in item_type_list:
-                    search = await function_in.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
+                    search = await db.sql_search("rpg_equip", f"{now_player.id}", ["slot"], [f"{item}"])
                     items[item] = search[1]
                 item1 = items["戰鬥道具欄位1"]
                 item2 = items["戰鬥道具欄位2"]

@@ -1,11 +1,9 @@
 import math
 import random
 import yaml
-import certifi
 import os
-
 import discord
-
+from utility import db
 from utility.config import config
 from cogs.function_in import function_in
 
@@ -51,8 +49,8 @@ class Skill(discord.Cog, name="技能系統"):
                 return f"忘記裝備了{item}! 請檢查你的職業專用道具!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
             else:
                 return f"你的 {ammoname} 已經沒了, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-        await function_in.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
-        search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
+        await db.sql_update("rpg_players", "players", "mana", players_mana-skill_mana, "user_id", user.id)
+        search = await db.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill])
         skill_lvl = search[1]
         monster_def = int(math.floor(monster_def *(random.randint(7, 13) *0.1)))
         players_AD = int(math.floor(players_AD * (random.randint(8, 12) *0.1)))
@@ -108,7 +106,7 @@ class Skill(discord.Cog, name="技能系統"):
             remove_hp = int(players_max_hp * 0.05)
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-            await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
             dmg = int((((players_AD*0.9)*(skill_lvl*0.8))+(remove_hp*5)+(players_con*5))+(skill_lvl*30))
             dmg -= monster_def
             if dmg < 1:
@@ -161,7 +159,7 @@ class Skill(discord.Cog, name="技能系統"):
             remove_hp = int(players_max_hp * 0.1)
             if players_hp <= remove_hp:
                 return "但因為這個技能需要消耗血量, 而你的血量不足, 技能施放失敗!", None, None, None, None, None, None, None, cd, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-            await function_in.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "hp", players_hp-remove_hp, "user_id", user.id)
             dmg = int(((players_AD*skill_lvl)+(remove_hp*7))+(skill_lvl*60))
             dmg -= monster_def
             if dmg < 1:
@@ -212,7 +210,7 @@ class Skill(discord.Cog, name="技能系統"):
                 players_hp = players_max_hp
             else:
                 players_hp+=reg_hp
-            await function_in.sql_update("rpg_players", "players", "hp", players_hp, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "hp", players_hp, "user_id", user.id)
             clear_buff = True
         if skill == "聖光彈":
             dmg = int((skill_lvl*60)+(players_AP*1.5)*skill_lvl*0.9)

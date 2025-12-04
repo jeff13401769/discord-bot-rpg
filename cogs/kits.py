@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 
@@ -32,10 +33,10 @@ class Kits(discord.Cog, name="禮包碼"):
         if not code in code_list:
             await interaction.followup.send(f'禮包碼 `{code}` 不存在!')
             return
-        search = await function_in.sql_search("rpg_kits", f"{code}", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_kits", f"{code}", ["user_id"], [user.id])
         if not search:
             await self.open_kits(interaction, user, code)
-            await function_in.sql_insert("rpg_kits", f"{code}", ["user_id"], [user.id])
+            await db.sql_insert("rpg_kits", f"{code}", ["user_id"], [user.id])
             await interaction.followup.send('你成功使用了禮包碼! 獲得物品已發送至私聊!')
             return
         else:

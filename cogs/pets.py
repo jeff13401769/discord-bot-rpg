@@ -1,19 +1,10 @@
-import datetime
-import pytz
-import asyncio
-import time
 import math
 import random
-import functools
-import yaml
-import certifi
-import os
 import numpy as np
-
 import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
-
+from utility import db
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.monster import Monster
@@ -22,7 +13,6 @@ from cogs.lottery import Lottery
 from cogs.skill import Skill
 from cogs.quest import Quest_system
 
-import mysql.connector
 
 class Pets(discord.Cog, name="寵物系統"):
     def __init__(self, bot):
@@ -67,7 +57,7 @@ class Pets(discord.Cog, name="寵物系統"):
             return
         if func == 0:
             if player:
-                checkreg = await function_in.checkreg(self, interaction, player.id)
+                checkreg = await function_in.checkreg(self, interaction, player.id, True)
                 if not checkreg:
                     return
                 user = player
@@ -80,7 +70,7 @@ class Pets(discord.Cog, name="寵物系統"):
                 embed.set_thumbnail(url=f"{user.default_avatar.url}")
             embed.add_field(name="玩家:", value=f"{user.mention}", inline=False)
             for pets in petlist:
-                search = await function_in.sql_search("rpg_pet", f"{user.id}", ["slot"], [pets])
+                search = await db.sql_search("rpg_pet", f"{user.id}", ["slot"], [pets])
                 pet = search[1]
                 embed.add_field(name=f"{pets}:", value=f"{pet}", inline=True)
             await interaction.followup.send(embed=embed)
@@ -89,33 +79,49 @@ class Pets(discord.Cog, name="寵物系統"):
             if not checkactioning:
                 await interaction.response.send_message(f'你當前正在 {stat} 中, 無法使用寵物系統!')
                 return
-            await interaction.response.send_modal(self.pets_battle_menu(title="寵物出戰選單", user=interaction.user))
+            modal = self.pets_battle_menu(title="寵物出戰選單", user=interaction.user)
+            try:
+                await modal.load_pet_data_and_add_items() 
+            except Exception as e:
+                await interaction.response.send_message("❌ 載入寵物資料時發生錯誤，請稍後再試。", ephemeral=True)
+                self.bot.log.warn(f'使用寵物指令載入寵物時發生錯誤, 玩家ID: {user.id}')
+                return
+            await interaction.response.send_modal(modal)
 
     class pets_battle_menu(discord.ui.Modal):
         def __init__(self, user: discord.Member, *args, **kwargs) -> None:
             super().__init__(*args, **kwargs)
             self.user = user
-            item_type_list = ['寵物一', '寵物二', '寵物三']
-            for item_type in item_type_list:
-                db = mysql.connector.connect(
-                    host="localhost",
-                    user=config.mysql_username,
-                    password=config.mysql_password,
-                    database="rpg_pet",
-                )
-                cursor = db.cursor()
-                query = f"SELECT * FROM `{self.user.id}` WHERE slot = %s"
-                cursor.execute(query, (item_type,))
-                result = cursor.fetchone()
+            self.slot_names = ['寵物一', '寵物二', '寵物三']
 
-                cursor.close()
-                db.close()
+        async def load_pet_data_and_add_items(self):
+            """異步載入資料庫資料並新增 InputText 元件，實現預填寵物欄位。"""
+            
+            table_name = str(self.user.id)
+            database = "rpg_pet"
+            
+            for slot_name in self.slot_names:
+                try:
+                    result = await db.sql_search(
+                        database=database, 
+                        table_name=table_name, 
+                        column_name=['slot'], 
+                        data=[slot_name]
+                    )
+                    value_to_display = "" 
+                    if result and isinstance(result, tuple) and len(result) > 1:
+                        value_to_display = str(result[1])
+                    
+                except Exception as e:
+                    self.bot.log.warn(f'使用寵物指令載入寵物時發生錯誤, 玩家ID: {self.user.id}')
+                    value_to_display = "載入失敗"
+                
                 self.add_item(
                     discord.ui.InputText(
-                        label=item_type,
+                        label=slot_name,
                         style=discord.InputTextStyle.short,
                         required=False,
-                        value=result[1]
+                        value=value_to_display
                     )
                 )
 
@@ -127,7 +133,7 @@ class Pets(discord.Cog, name="寵物系統"):
             msg = await interaction.followup.send("正在為您出戰寵物中...")
             for item_type in item_type_list:
                 a += 1
-                search = await function_in.sql_search("rpg_pet", f"{user.id}", ["slot"], [item_type])
+                search = await db.sql_search("rpg_pet", f"{user.id}", ["slot"], [item_type])
                 pet = search[1]
                 peta = self.children[a].value.replace(" ", "")
                 if peta == "" or peta is None:
@@ -147,7 +153,7 @@ class Pets(discord.Cog, name="寵物系統"):
                         if item_type1 != "寵物":
                             await msg.reply(f'`{peta}` 不是寵物無法出戰! 請聯繫GM處理!')
                             continue
-                        await function_in.sql_update("rpg_pet", f"{user.id}", "pet", peta, "slot", item_type)
+                        await db.sql_update("rpg_pet", f"{user.id}", "pet", peta, "slot", item_type)
                         await function_in.remove_item(self, user.id, peta)
                         await msg.reply(f'成功出戰 `{peta}` 為 {item_type}')
                         continue
@@ -159,7 +165,7 @@ class Pets(discord.Cog, name="寵物系統"):
                         if item_type1 != "寵物":
                             await msg.reply(f'`{pet}` 不是寵物無法脫戰! 請聯繫GM處理!')
                             continue
-                        await function_in.sql_update("rpg_pet", f"{user.id}", "pet", "無", "slot", item_type)
+                        await db.sql_update("rpg_pet", f"{user.id}", "pet", "無", "slot", item_type)
                         await function_in.give_item(self, user.id, pet)
                         await msg.reply(f'成功讓寵物 `{pet}` 脫離戰鬥行列!')
                         if f"{peta}" != '無':
@@ -174,7 +180,7 @@ class Pets(discord.Cog, name="寵物系統"):
                             if item_type1 != "寵物":
                                 await msg.reply(f'`{peta}` 不是寵物無法出戰! 請聯繫GM處理!')
                                 continue
-                            await function_in.sql_update("rpg_pet", f"{user.id}", "pet", peta, "slot", item_type)
+                            await db.sql_update("rpg_pet", f"{user.id}", "pet", peta, "slot", item_type)
                             await function_in.remove_item(self, user.id, peta)
                             await msg.reply(f'成功出戰 `{peta}` 為 {item_type}')
                             continue
@@ -186,7 +192,7 @@ class Pets(discord.Cog, name="寵物系統"):
         item_type_list = ['寵物一', '寵物二', '寵物三']
         total_dmg = 0
         for item_type in item_type_list:
-            search = await function_in.sql_search("rpg_pet", f"{user.id}", ["slot"], [item_type])
+            search = await db.sql_search("rpg_pet", f"{user.id}", ["slot"], [item_type])
             pet = search[1]
             if pet == "無":
                 continue

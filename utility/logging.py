@@ -25,7 +25,7 @@ class LogTimeRotatingFileHandler(BaseRotatingHandler):
         filename: str,
         directory: Optional[StrPath] = None,
         markup: bool = False,
-        expired_interval: timedelta = timedelta(days=30),
+        expired_interval: timedelta = timedelta(days=120),
         maxBytes: int = 1_000_000,
         backupCount: int = 5,
         encoding: str = "utf-8",
@@ -52,6 +52,10 @@ class LogTimeRotatingFileHandler(BaseRotatingHandler):
         self.backupCount = backupCount
 
         self.rolloverAt = self.computeRollover()
+        
+        # [修正 2] 初始化時立刻執行一次清理檢查
+        # 這樣即使機器人重啟，也會立刻刪除過期的 log
+        self.delete_expired_logs()
 
     def computeRollover(self) -> datetime:
         now = datetime.now(self.tz)
@@ -97,18 +101,33 @@ class LogTimeRotatingFileHandler(BaseRotatingHandler):
         file_time_re = re.compile(
             rf"{re.escape(self.filename)}\-(?P<time>\d{{4}}\-\d{{2}}\-\d{{2}})\.log"
         )
-        end_time = datetime.now(self.tz) - self.expired_interval
+        
+        # 取得目前的“時區感知”時間
+        now_aware = datetime.now(self.tz)
+        end_time = now_aware - self.expired_interval
 
         for file in os.listdir(self.directory):
             match = file_time_re.match(file)
             if match:
-                file_time = datetime.strptime(match.group("time"), "%Y-%m-%d")
-                if file_time < end_time:
-                    try:
-                        os.unlink(os.path.join(self.directory, file))
-                        log.info(f"Deleted old log file: {file}")
-                    except Exception as e:
-                        log.warning(f"Failed to delete log file {file}: {e}")
+                try:
+                    # 解析檔名中的日期
+                    file_date_str = match.group("time")
+                    file_time_naive = datetime.strptime(file_date_str, "%Y-%m-%d")
+                    
+                    # [修正 1] 將解析出來的無時區時間，加上時區資訊
+                    # 使用 localize 確保它變成 Aware Time，才能跟 end_time 比較
+                    file_time_aware = self.tz.localize(file_time_naive)
+
+                    # 現在兩邊都有時區資訊，可以安全比較
+                    if file_time_aware < end_time:
+                        file_path = os.path.join(self.directory, file)
+                        os.unlink(file_path)
+                        # 這裡建議用 print 或其他方式輸出，因為此時 log 系統可能正在鎖定中
+                        # 或者使用 root logger
+                        print(f"刪除過舊的紀錄檔: {file}") 
+                except Exception as e:
+                    # 建議把錯誤 print 出來，方便除錯
+                    print(f"無法刪除過舊的紀錄檔 {file}: {e}")
 
     def format(self, record: LogRecord):
         if self.markup:
@@ -116,7 +135,8 @@ class LogTimeRotatingFileHandler(BaseRotatingHandler):
                 record = copy.deepcopy(record)
                 record.msg = Text.from_markup(record.msg)
             except Exception as e:
-                log.debug(e)
+                # 這裡避免遞迴調用 log，改用 print 或 pass
+                pass 
 
         return (self.formatter or Formatter()).format(record)
 

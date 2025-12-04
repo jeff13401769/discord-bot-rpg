@@ -7,6 +7,7 @@ from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 
@@ -241,7 +242,7 @@ class Shop(discord.Cog, name="商店"):
         if not data:
             await interaction.followup.send(f"{name} 不存在於資料庫! 請聯繫GM處理!")
             return
-        search = await function_in.sql_search("rpg_backpack", f"{user.id}", ["name"], [name])
+        search = await db.sql_search("rpg_backpack", f"{user.id}", ["name"], [name])
         if not search:
             await interaction.followup.send(f'你沒有 `{name}` 阿...')
             return

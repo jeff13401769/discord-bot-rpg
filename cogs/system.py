@@ -12,8 +12,8 @@ from openpyxl.styles import Alignment
 
 import discord
 from discord import Option, OptionChoice
-from discord.ext import commands, tasks
-
+from discord.ext import commands
+from utility import db
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -21,6 +21,7 @@ from cogs.quest import Quest_system
 from cogs.event import Event
 from cogs.verify import Verify
 from cogs.premium import Premium
+
 class System(discord.Cog, name="主系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
@@ -28,10 +29,10 @@ class System(discord.Cog, name="主系統"):
     @discord.Cog.listener()
     async def on_ready(self):
         self.bot.log.info("開始初始化")
-        search = await function_in.sql_findall("rpg_players", "players")
+        search = await db.sql_findall("rpg_players", "players")
         for user in search:
-            await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user[0])
-            await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user[0])
+            await db.sql_update("rpg_players", "players", "actioning", "None", "user_id", user[0])
+            await db.sql_update("rpg_players", "players", "action", 0, "user_id", user[0])
             await function_in.fixplayer(self, user[0])
         self.bot.log.info(f'已完成初始化')
     
@@ -39,14 +40,14 @@ class System(discord.Cog, name="主系統"):
     async def on_application_command(self, interaction: discord.Interaction):
         if interaction.guild is None:
             return
-        search = await function_in.sql_search("rpg_system", "last_channel", ["guild_id"], [interaction.guild.id])
+        search = await db.sql_search("rpg_system", "last_channel", ["guild_id"], [interaction.guild.id])
         if not search:
-            await function_in.sql_insert("rpg_system", "last_channel", ["guild_id", "channel_id"], [interaction.guild.id, interaction.channel.id])
+            await db.sql_insert("rpg_system", "last_channel", ["guild_id", "channel_id"], [interaction.guild.id, interaction.channel.id])
         else:
             channel = interaction.guild.get_channel(search[1])
             channel1 = interaction.channel
             if channel != channel1:
-                await function_in.sql_update("rpg_system", "last_channel", "channel_id", interaction.channel.id, "guild_id", interaction.guild.id)
+                await db.sql_update("rpg_system", "last_channel", "channel_id", interaction.channel.id, "guild_id", interaction.guild.id)
     
     @discord.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -58,11 +59,11 @@ class System(discord.Cog, name="主系統"):
     async def 註冊(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         player = interaction.user
-        search = await function_in.sql_search("rpg_system", "banlist", ["user_id"], [player.id])
+        search = await db.sql_search("rpg_system", "banlist", ["user_id"], [player.id])
         if search:
             await interaction.followup.send(f'你當前已經被停權了!\n原因: {search[1]}')
             return
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [player.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [player.id])
         if search:
             await interaction.followup.send('你已經註冊過了!')
             return
@@ -82,15 +83,15 @@ class System(discord.Cog, name="主系統"):
         if players_hp > 0:
             await interaction.followup.send('你目前並沒有死亡!')
             return
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
         if search[21]:
             await System.respawn(self, user, 0)
-            await function_in.sql_update("rpg_players", "players", "world_boss_kill", False, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "world_boss_kill", False, "user_id", user.id)
             now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d %H:%M:%S")
             timeString = now_time
             struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
             time_stamp = int(time.mktime(struct_time))
-            await function_in.sql_update("rpg_players", "players", "action", time_stamp+60, "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "action", time_stamp+60, "user_id", user.id)
             embed = discord.Embed(title=f'{user.name} 你復活了', color=0xbe77ff)
             embed.add_field(name=f"你使用了世界復活", value="\u200b", inline=False)
             embed.add_field(name=f"由於你被世界BOSS擊殺, 你進入了一分鐘的虛弱狀態...", value="\u200b", inline=False)
@@ -279,7 +280,7 @@ class System(discord.Cog, name="主系統"):
         if f"{map}" == f"{players_map}":
             await interaction.followup.send(f'你傳送後, 發現自己原本就在 {map} 裡面了!')
             return
-        await function_in.sql_update("rpg_players", "players", "map", map, "user_id", user.id)
+        await db.sql_update("rpg_players", "players", "map", map, "user_id", user.id)
         await interaction.followup.send(f'你成功傳送到 `{map}` !')
 
     @commands.slash_command(name="背包", description="查看你的背包")
@@ -308,7 +309,7 @@ class System(discord.Cog, name="主系統"):
         sheet10 = workbook.create_sheet(title='生成時間')
         sheet1.title = '道具類'
         sheets = workbook.sheetnames
-        search = await function_in.sql_findall("rpg_backpack", f"{user.id}")
+        search = await db.sql_findall("rpg_backpack", f"{user.id}")
         sheet1['A1'] = '道具名稱'
         sheet1['B1'] = '數量'
         sheet2['A1'] = '道具名稱'
@@ -361,7 +362,7 @@ class System(discord.Cog, name="主系統"):
                     sheet1[f'A{a+1}'] = f'{name}'
                     sheet1[f'B{a+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "材料":
                 if num > 0:
                     if b < 1:
@@ -372,7 +373,7 @@ class System(discord.Cog, name="主系統"):
                     sheet2[f'A{b+1}'] = f'{name}'
                     sheet2[f'B{b+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "技能書":
                 if num > 0:
                     if c < 1:
@@ -383,7 +384,7 @@ class System(discord.Cog, name="主系統"):
                     sheet3[f'A{c+1}'] = f'{name}'
                     sheet3[f'B{c+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "裝備":
                 if num > 0:
                     if d < 1:
@@ -394,7 +395,7 @@ class System(discord.Cog, name="主系統"):
                     sheet4[f'A{d+1}'] = f'{name}'
                     sheet4[f'B{d+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "武器":
                 if num > 0:
                     if e < 1:
@@ -405,7 +406,7 @@ class System(discord.Cog, name="主系統"):
                     sheet5[f'A{e+1}'] = f'{name}'
                     sheet5[f'B{e+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "飾品":
                 if num > 0:
                     if f < 1:
@@ -416,7 +417,7 @@ class System(discord.Cog, name="主系統"):
                     sheet6[f'A{f+1}'] = f'{name}'
                     sheet6[f'B{f+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "寵物":
                 if num > 0:
                     if g < 1:
@@ -427,7 +428,7 @@ class System(discord.Cog, name="主系統"):
                     sheet7[f'A{g+1}'] = f'{name}'
                     sheet7[f'B{g+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "卡牌":
                 if num > 0:
                     if h < 1:
@@ -438,7 +439,7 @@ class System(discord.Cog, name="主系統"):
                     sheet8[f'A{h+1}'] = f'{name}'
                     sheet8[f'B{h+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
             if item_type == "料理":
                 if num > 0:
                     if i < 1:
@@ -449,7 +450,7 @@ class System(discord.Cog, name="主系統"):
                     sheet9[f'A{i+1}'] = f'{name}'
                     sheet9[f'B{i+1}'] = num
                 else:
-                    await function_in.sql_delete("rpg_backpack", f"{user.id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user.id}", "name", name)
         if msg1 == "":
             msg1 = "無"
             sheet1['A2'] = '無'
@@ -690,13 +691,13 @@ class System(discord.Cog, name="主系統"):
                         if class_name != players_class:
                             embed.add_field(name=f"你無法學會 {attname} 技能! 你的職業為 {players_class}! 該技能需要 {class_name} 職業才能學習!", value=f"\u200b", inline=False)
                             continue
-                    search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [attname])
+                    search = await db.sql_search("rpg_skills", f"{user.id}", ["skill"], [attname])
                     if search:
                         embed.add_field(name=f"你已經學會了 {attname} 技能, 無法再次學習!", value=f"\u200b", inline=False)
                         continue
-                    await function_in.sql_insert("rpg_skills", f"{user.id}", ["skill", "level", "exp"], [attname, 1, 0])
+                    await db.sql_insert("rpg_skills", f"{user.id}", ["skill", "level", "exp"], [attname, 1, 0])
                     players_skill_point-=1
-                    await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
+                    await db.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
                     embed.add_field(name=f"你成功學會了 {attname} 技能!", value=f"\u200b", inline=False)
             if "增加屬性" in data.get(name, {}):
                 for attname, value in data.get(name).get("增加屬性", {}).items():
@@ -750,7 +751,7 @@ class System(discord.Cog, name="主系統"):
                     if "行動條冷卻時間" in attname:
                         if value == "歸零":
                             embed.add_field(name=f"你的行動條歸零了! 你感覺到充滿了體力!", value=f"\u200b", inline=False)
-                            await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
                     if "晶幣" in attname:
                         await function_in.give_money(self, user, "money", value, "使用道具")
                         embed.add_field(name=f"你獲得了 {value} 晶幣!", value=f"\u200b", inline=False)
@@ -768,31 +769,31 @@ class System(discord.Cog, name="主系統"):
                         if expc:
                             embed.add_field(name=expc, value=f"\u200b", inline=False)
                     if "屬性重置" in attname:
-                        await function_in.sql_update("rpg_players", "players", "attr_point", players_level, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_point", players_level, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
                         embed.add_field(name="成功重置所有屬性點!", value=f"\u200b", inline=False)
                     if "屬性點增加" in attname:
                         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
-                        await function_in.sql_update("rpg_players", "players", "add_attr_point", players_add_attr_point+value, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "add_attr_point", players_add_attr_point+value, "user_id", user.id)
                         embed.add_field(name=f"成功獲得 {value} 點屬性點!", value=f"\u200b", inline=False)
                     if "全屬性增加" in attname:
-                        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+                        search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
                         players_all_attr_point = search[20]
                         if int(players_level*0.1)*5 < players_all_attr_point:
                             embed.add_field(name=f"你當前已無法在使用更多的 {name}!", value=f"\u200b", inline=False)
                         else:
-                            await function_in.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "all_attr_point", players_all_attr_point+value, "user_id", user.id)
                             embed.add_field(name=f"力量+{value}!\n智慧+{value}!\n敏捷+{value}!\n體質+{value}!\n幸運+{value}!", value=f"\u200b", inline=False)
                     if "任務放棄" in attname:
-                        search = await function_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
+                        search = await db.sql_search("rpg_players", "quest", ["user_id"], [user.id])
                         if not search:
                             embed.add_field(name="你使用了任務放棄證明後才發現\n你根本沒有接任務阿...", value=f"\u200b", inline=False)
                         else:
-                            await function_in.sql_delete("rpg_players", "quest", "user_id", user.id)
+                            await db.sql_delete("rpg_players", "quest", "user_id", user.id)
                             embed.add_field(name="你成功放棄了當前任務!", value=f"\u200b", inline=False)
                     if "水晶" in attname:
                         if value == "0-20":
@@ -800,7 +801,7 @@ class System(discord.Cog, name="主系統"):
                             embed.add_field(name=f"你獲得了 {diamond1} 顆水晶!", value=f"\u200b", inline=False)
                             await function_in.give_money(self, user, "diamond", diamond1, "道具")
                     if "BOSS召喚" in attname:
-                        await function_in.sql_update("rpg_players", "players", "boss", True, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "boss", True, "user_id", user.id)
                         embed.add_field(name=f"你下次攻擊必定召喚出Boss!", value=f"\u200b", inline=False)
                     if "追光寶匣" in attname:
                         lot_list = {
@@ -825,13 +826,13 @@ class System(discord.Cog, name="主系統"):
                             embed.add_field(name=f"你獲得了1個 {item} !", value=f"\u200b", inline=False)
                             await function_in.give_item(self, user.id, item)
                     if "卡牌欄位解鎖" in attname:
-                        search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位2"])
+                        search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位2"])
                         slot2 = search[1]
-                        search = await function_in.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位3"])
+                        search = await db.sql_search("rpg_equip", f"{user.id}", ["slot"], ["卡牌欄位3"])
                         slot3 = search[1]
                         if "普通" in attname:
                             if slot2 == "未解鎖":
-                                await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位2")
+                                await db.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位2")
                                 embed.add_field(name=f"你成功解鎖了卡牌欄位2!", value=f"\u200b", inline=False)
                             else:
                                 embed.add_field(name=f"你的卡牌欄位2已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
@@ -840,7 +841,7 @@ class System(discord.Cog, name="主系統"):
                                 embed.add_field(name=f"你的卡牌欄位2尚未解鎖! {name} 燒毀了...", value=f"\u200b", inline=False)
                             else:
                                 if slot3 == "未解鎖":
-                                    await function_in.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位3")
+                                    await db.sql_update("rpg_equip", f"{user.id}", "equip", "無", "slot", "卡牌欄位3")
                                     embed.add_field(name=f"你成功解鎖了卡牌欄位3!", value=f"\u200b", inline=False)
                                 else:
                                     embed.add_field(name=f"你的卡牌欄位3已經解鎖了! 你的 {name} 燒毀了...", value=f"\u200b", inline=False)
@@ -850,29 +851,29 @@ class System(discord.Cog, name="主系統"):
                         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
                         time_stamp = int(time.mktime(struct_time)) + 3600
                         if "全服" in attname:
-                            search = await function_in.sql_search("rpg_exp", "all", ["user_id"], [user.id])
+                            search = await db.sql_search("rpg_exp", "all", ["user_id"], [user.id])
                             if not search:
-                                await function_in.sql_insert("rpg_exp", "all", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
+                                await db.sql_insert("rpg_exp", "all", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
                                 embed.add_field(name=f"你成功啟用了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
                             else:
                                 exp_time_stamp = search[1]
                                 exp = search[2]
                                 if exp == value:
-                                    await function_in.sql_update("rpg_exp", "all", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
+                                    await db.sql_update("rpg_exp", "all", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
                                     embed.add_field(name=f"你成功增加了{value}倍全服經驗加倍一小時!", value=f"\u200b", inline=False)
                                 else:
                                     embed.add_field(name=f"你的全服經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
                                     await function_in.give_item(self, user.id, name)
                         else:
-                            search = await function_in.sql_search("rpg_exp", "player", ["user_id"], [user.id])
+                            search = await db.sql_search("rpg_exp", "player", ["user_id"], [user.id])
                             if not search:
-                                await function_in.sql_insert("rpg_exp", "player", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
+                                await db.sql_insert("rpg_exp", "player", ["user_id", "time_stamp", "exp"], [user.id, time_stamp, value])
                                 embed.add_field(name=f"你成功啟用了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
                             else:
                                 exp_time_stamp = search[1]
                                 exp = search[2]
                                 if exp == value:
-                                    await function_in.sql_update("rpg_exp", "player", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
+                                    await db.sql_update("rpg_exp", "player", "time_stamp", exp_time_stamp+3600, "user_id", user.id)
                                     embed.add_field(name=f"你成功增加了{value}倍個人經驗加倍一小時!", value=f"\u200b", inline=False)
                                 else:
                                     embed.add_field(name=f"你的個人經驗加倍倍數不同! 你的 {name} 回到了你的手中", value=f"\u200b", inline=False)
@@ -917,9 +918,9 @@ class System(discord.Cog, name="主系統"):
                         embed.add_field(name=f"你獲得了 {item} !", value=f"\u200b", inline=False)
                     if "副本" in attname:
                         dungeon = attname.replace("副本", "")
-                        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+                        search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
                         if not search:
-                            await function_in.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1"], [user.id, 1])
+                            await db.sql_insert("rpg_players", "dungeon", ["user_id", "dungeon_1"], [user.id, 1])
                         if dungeon == "古樹之森":
                             a = 1
                         if dungeon == "寒冰之地":
@@ -930,39 +931,39 @@ class System(discord.Cog, name="主系統"):
                             a = 4
                         if dungeon == "夢魘級惡夢迷宮":
                             a = 5
-                        search = await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
-                        await function_in.sql_update("rpg_players", "dungeon", f"dungeon_{a}", search[a]+1, "user_id", user.id)
+                        search = await db.sql_search("rpg_players", "dungeon", ["user_id"], [user.id])
+                        await db.sql_update("rpg_players", "dungeon", f"dungeon_{a}", search[a]+1, "user_id", user.id)
                         embed.add_field(name=f"你的{dungeon}副本次數+1!", value=f"\u200b", inline=False)
                     if "料理_" in attname:
                         food = attname.replace("料理_", "")
-                        check = await function_in.sql_check_table("rpg_food", f"{user.id}")
+                        check = await db.sql_check_table("rpg_food", f"{user.id}")
                         if not check:
-                            await function_in.sql_create_table("rpg_food", f"{user.id}", ["food", "time_stamp"], ["VARCHAR(100)", "BIGINT"], "food")
-                        search = await function_in.sql_search("rpg_food", f"{user.id}", ["food"], [food])
+                            await db.sql_create_table("rpg_food", f"{user.id}", ["food", "time_stamp"], ["VARCHAR(100)", "BIGINT"], "food")
+                        search = await db.sql_search("rpg_food", f"{user.id}", ["food"], [food])
                         now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime('%Y-%m-%d %H:%M:%S')
                         timeString = now_time
                         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
                         time_stamp = int(time.mktime(struct_time))
                         time_stamp = time_stamp + 3600
                         if not search:
-                            await function_in.sql_insert("rpg_food", f"{user.id}", ["food", "time_stamp"], [food, time_stamp])
+                            await db.sql_insert("rpg_food", f"{user.id}", ["food", "time_stamp"], [food, time_stamp])
                         else:
-                            await function_in.sql_update("rpg_food", f"{user.id}", "time_stamp", time_stamp, "food", food)
+                            await db.sql_update("rpg_food", f"{user.id}", "time_stamp", time_stamp, "food", food)
                         embed.add_field(name=f"你成功食用了 {food} !", value=f"\u200b", inline=False)
                     if "飽食度回復" in attname:
                         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
                         players_hunger += value
                         if players_hunger > 100:
                             players_hunger = 100
-                        await function_in.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user.id)
                         embed.add_field(name=f"你回復了 {value} 點飽食度!", value=f"\u200b", inline=False)
                     if "強化層數" in attname:
-                        search = await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
+                        search = await db.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user.id])
                         if value == 0:
                             if not search:
-                                await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, 0])
+                                await db.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, 0])
                             else:
-                                await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", 0, "user_id", user.id)
+                                await db.sql_update("rpg_players", "equip_upgrade_chance", "amount", 0, "user_id", user.id)
                             await interaction.followup.send(f"你成功將強化層數堆疊歸零!")
                             continue
                         if search:
@@ -971,9 +972,9 @@ class System(discord.Cog, name="主系統"):
                                 await function_in.give_item(self, user.id, name)
                                 continue
                             else:
-                                await function_in.sql_update("rpg_players", "equip_upgrade_chance", "amount", value, "user_id", user.id)
+                                await db.sql_update("rpg_players", "equip_upgrade_chance", "amount", value, "user_id", user.id)
                         else:
-                            await function_in.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, value])
+                            await db.sql_insert("rpg_players", "equip_upgrade_chance", ["user_id", "amount"], [user.id, value])
                         embed.add_field(name=f"你的強化層數為 {value} 層!", value=f"\u200b", inline=False)
                     if "轉職" in attname:
                         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -985,25 +986,25 @@ class System(discord.Cog, name="主系統"):
                             await interaction.followup.send(f"職業 {value} 不存在! 請聯繫GM處理!")
                             await function_in.give_item(self, user.id, name)
                             continue
-                        await function_in.sql_update("rpg_players", "players", "class", value, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "level", 1, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "exp", 1, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "attr_point", 3, "user_id", user.id)
-                        await function_in.sql_update("rpg_players", "players", "skill_point", 1, "user_id", user.id)
-                        await function_in.sql_deleteall("rpg_skills", f"{user.id}")
-                        await function_in.sql_deleteall("rpg_equip", f"{user.id}")
+                        await db.sql_update("rpg_players", "players", "class", value, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "level", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "exp", 1, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_str", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_int", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_dex", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_con", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_luk", 0, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "attr_point", 3, "user_id", user.id)
+                        await db.sql_update("rpg_players", "players", "skill_point", 1, "user_id", user.id)
+                        await db.sql_deleteall("rpg_skills", f"{user.id}")
+                        await db.sql_deleteall("rpg_equip", f"{user.id}")
                         item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
                         for item_type in item_type_list:
-                            await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "無"])
-                        await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], ["卡牌欄位1", "無"])
+                            await db.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "無"])
+                        await db.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], ["卡牌欄位1", "無"])
                         item_type_list = ["卡牌欄位2","卡牌欄位3"]
                         for item_type in item_type_list:
-                            await function_in.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "未解鎖"])
+                            await db.sql_insert("rpg_equip", f"{user.id}", ["slot", "equip"], [item_type, "未解鎖"])
                         embed.add_field(name=f"你成功轉職為 {value}!", value=f"\u200b", inline=False)
                     if "清除資料" in attname:
                         await function_in.delete_player(self, user.id, True)
@@ -1016,7 +1017,7 @@ class System(discord.Cog, name="主系統"):
                         a = random.randint(1, 100)
                         if value > a:
                             players_skill_point+=1
-                            await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
+                            await db.sql_update("rpg_players", "players", "skill_point", players_skill_point, "user_id", user.id)
                             embed.add_field(name="你成功領悟到天賦點! 天賦點+1!", value=f"\u200b", inline=False)
                         else:
                             embed.add_field(name="你沒有領悟到天賦點...", value=f"\u200b", inline=False)
@@ -1102,7 +1103,7 @@ class System(discord.Cog, name="主系統"):
         if players_hp <= 0:
             await interaction.followup.send('你當前已經死亡, 無法使用本指令')
             return
-        search = await function_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "quest", ["user_id"], [user.id])
         if search:
             qtype = search[1]
             qname = search[2]
@@ -1173,7 +1174,7 @@ class System(discord.Cog, name="主系統"):
                 a = quest_daily["qp"]
                 rewards+=f"{a}點任務點數"
             embed.add_field(name=f"任務獎勵:", value=f"{rewards}", inline=False)
-            await function_in.sql_insert("rpg_players", "quest", ["user_id", "qtype", "qname", "qnum", "qnum_1", "qdaily_money", "qdaily_exp", "qdaily_qp"], [user.id, quest_type, quest_name, quest_num, 0, quest_daily["money"], quest_daily["exp"], quest_daily["qp"]])
+            await db.sql_insert("rpg_players", "quest", ["user_id", "qtype", "qname", "qnum", "qnum_1", "qdaily_money", "qdaily_exp", "qdaily_qp"], [user.id, quest_type, quest_name, quest_num, 0, quest_daily["money"], quest_daily["exp"], quest_daily["qp"]])
         await interaction.followup.send(embed=embed)
     
     @commands.slash_command(name="工作", description="查看或使用工作相關",
@@ -1413,7 +1414,7 @@ class System(discord.Cog, name="主系統"):
         if not data:
             await interaction.followup.send(f"技能 {skill_name} 技能不存在於資料庫! 請聯繫GM處理")
             return
-        search = await function_in.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill_name])
+        search = await db.sql_search("rpg_skills", f"{user.id}", ["skill"], [skill_name])
         if not search:
             await interaction.followup.send(f"你還沒有學習 {skill_name} 技能!")
             return
@@ -1423,9 +1424,9 @@ class System(discord.Cog, name="主系統"):
         if players_skill_point < search[1]:
             await interaction.followup.send(f"你的 {skill_name} 技能等級{search[1]}, 需要消耗 {search[1]} 點天賦點才能升等! 你只有 {players_skill_point} 點天賦點!")
             return
-        await function_in.sql_update("rpg_skills", f"{user.id}", "level", search[1]+1, "skill", skill_name)
-        await function_in.sql_update("rpg_skills", f"{user.id}", "exp", 0, "skill", skill_name)
-        await function_in.sql_update("rpg_players", "players", "skill_point", players_skill_point-search[1], "user_id", user.id)
+        await db.sql_update("rpg_skills", f"{user.id}", "level", search[1]+1, "skill", skill_name)
+        await db.sql_update("rpg_skills", f"{user.id}", "exp", 0, "skill", skill_name)
+        await db.sql_update("rpg_players", "players", "skill_point", players_skill_point-search[1], "user_id", user.id)
         await interaction.followup.send(f"你成功消耗了 {search[1]} 點天賦點升級了 {skill_name} 技能! 技能等級 {search[1]+1}!")
 
     @commands.slash_command(name="屬性點", description="屬性加點")
@@ -1462,13 +1463,13 @@ class System(discord.Cog, name="主系統"):
             return
         embed = discord.Embed(title=f'<:exp:1078583848381710346> 當前經驗加倍資訊', color=0x53FF53)
         add_exp = 0.0
-        all_exp_list = await function_in.sql_findall("rpg_exp", "all")
+        all_exp_list = await db.sql_findall("rpg_exp", "all")
         if all_exp_list:
             for exp_info in all_exp_list:
                 add_exp += exp_info[2]
         embed.add_field(name="當前全服經驗加倍倍率:", value=f"{add_exp}倍", inline=False)
         if all_exp_list:
-            all_exp_list = await function_in.sql_search("rpg_exp", "all", ["user_id"], [user.id])
+            all_exp_list = await db.sql_search("rpg_exp", "all", ["user_id"], [user.id])
             if all_exp_list:
                 exp_time_stamp = all_exp_list[1]
                 exp = all_exp_list[2]
@@ -1480,7 +1481,7 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name="你開啟的全服經驗加倍倍率:", value=f"{exp}倍", inline=False)
                 embed.add_field(name="你開啟的全服經驗加倍剩餘時間:", value=f"{exp_time}", inline=False)
         add_exp = 0.0
-        player_exp_list = await function_in.sql_search("rpg_exp", "player", ["user_id"], [user.id])
+        player_exp_list = await db.sql_search("rpg_exp", "player", ["user_id"], [user.id])
         if player_exp_list:
             add_exp += player_exp_list[2]
             exp_time_stamp = player_exp_list[1]
@@ -1556,7 +1557,7 @@ class System(discord.Cog, name="主系統"):
             players_exp -= expa
             if players_exp < 0:
                 players_exp = 0
-            await function_in.sql_update("rpg_players", "players", "exp", players_exp, "user_id", member.id)
+            await db.sql_update("rpg_players", "players", "exp", players_exp, "user_id", member.id)
             return expa
     
     class register(discord.ui.View):
@@ -2140,7 +2141,7 @@ class System(discord.Cog, name="主系統"):
                 pass
         
         async def add_attr(self, user: discord.Member, attr: str, attr_en, attr_num: int, num: int=1):
-            search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+            search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
             players_attr = search[attr_num]
             players_attr_point = search[11]
             players_add_attr_point = search[19]
@@ -2149,8 +2150,8 @@ class System(discord.Cog, name="主系統"):
                 embed.add_field(name=f":x: 你的屬性點不足{num}點, 無法使用 `{attr}+{num}` !", value="\u200b", inline=False)
                 return embed, players_attr_point+players_add_attr_point > 0
             else:
-                await function_in.sql_update("rpg_players", "players", f"attr_{attr_en}", players_attr+num, "user_id", user.id)
-                await function_in.sql_update("rpg_players", "players", "attr_point", players_attr_point-num, "user_id", user.id)
+                await db.sql_update("rpg_players", "players", f"attr_{attr_en}", players_attr+num, "user_id", user.id)
+                await db.sql_update("rpg_players", "players", "attr_point", players_attr_point-num, "user_id", user.id)
                 embed = await self.embed_craft(user)
                 return embed, players_attr_point+players_add_attr_point-num > 0
 

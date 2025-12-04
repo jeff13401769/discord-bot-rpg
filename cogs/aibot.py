@@ -8,6 +8,7 @@ from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from discord.ext import commands
 from cogs.premium import Premium
+from utility import db
 
 class Aibot(discord.Cog, name="AI助手"):
     def __init__(self, bot):
@@ -15,10 +16,10 @@ class Aibot(discord.Cog, name="AI助手"):
         self.client_ai = OpenAI(api_key=config.openai_key)
     
     async def dailyreset_ai(self):
-        players = await function_in.sql_findall('rpg_players', 'aibot')
+        players = await db.sql_findall('rpg_players', 'aibot')
         self.bot.log.info("[排程] 開始重置拜神次數...")
         for player in players:
-            await function_in.sql_update("rpg_players", "aibot", "amount", 5, "user_id", player[0])
+            await db.sql_update("rpg_players", "aibot", "amount", 5, "user_id", player[0])
             check, day = await Premium.month_card_check(self, player[0])
             if not check:
                 affection = player[1]
@@ -26,18 +27,21 @@ class Aibot(discord.Cog, name="AI助手"):
                     affection = 0
                 else:
                     affection -= 5
-                await function_in.sql_update("rpg_players", "aibot", "affection", affection, "user_id", player[0])
+                await db.sql_update("rpg_players", "aibot", "affection", affection, "user_id", player[0])
         self.bot.log.info("[排程] 拜神次數重置完畢!")
             
 
-    async def check_favorability(self, user: discord.Member):
-        search = await function_in.sql_search("rpg_players", "aibot", ["user_id"], [user.id])
+    async def check_favorability(self, user: discord.Member, is_set: bool = True):
+        search = await db.sql_search("rpg_players", "aibot", ["user_id"], [user.id])
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user.id)
         if players_level < 50:
             return False, False
         if not search:
-            await function_in.sql_insert("rpg_players", "aibot", ["user_id", "affection", "amount"], [user.id, 25, 5])
-            return 25, 5
+            if is_set:
+                await db.sql_insert("rpg_players", "aibot", ["user_id", "affection", "amount"], [user.id, 25, 5])
+                return 25, 5
+            else:
+                return False, False
         return search[1], search[2]
 
     async def get_mood_by_affection(self, affection):
@@ -141,7 +145,7 @@ class Aibot(discord.Cog, name="AI助手"):
         loop = asyncio.get_running_loop()
         try:
             response = await loop.run_in_executor(None, lambda: self.client_ai.responses.create(
-                model="gpt-5-nano",
+                model="gpt-4.1-mini",
                 input=prompt
             ))
             text = response.output_text.strip()
@@ -163,9 +167,9 @@ class Aibot(discord.Cog, name="AI助手"):
 
     async def update_affection(self, user_id: int, current_affection: int, score: int) -> int:
         new_affection = max(0, min(100, current_affection + score))
-        await function_in.sql_update("rpg_players", "aibot", "affection", new_affection, "user_id", user_id)
-        search = await function_in.sql_search("rpg_players", "aibot", ["user_id"], [user_id])
-        await function_in.sql_update("rpg_players", "aibot", "amount", search[2]-1, "user_id", user_id)
+        await db.sql_update("rpg_players", "aibot", "affection", new_affection, "user_id", user_id)
+        search = await db.sql_search("rpg_players", "aibot", ["user_id"], [user_id])
+        await db.sql_update("rpg_players", "aibot", "amount", search[2]-1, "user_id", user_id)
         return new_affection
 
     @commands.slash_command(name="神明", description="與神明互動",

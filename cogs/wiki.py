@@ -3,6 +3,7 @@ import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 
@@ -31,7 +32,7 @@ class Wiki(discord.Cog, name="Wiki系統"):
         if not data:
             await interaction.followup.send(f'`{name}` 不存在於資料庫! 請聯繫GM處理!')
             return
-        search = await function_in.sql_search("nameless", "nl2_wiki_pages", ["title"], [name])
+        search = await db.sql_search("nameless", "nl2_wiki_pages", ["title"], [name])
         if search:
             embed = discord.Embed(title=f'{name}', color=0x28FF28, url=f"https://www.rbctw.net/wiki/{search[1]}/{search[2]}")
         else:

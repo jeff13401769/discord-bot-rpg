@@ -2,6 +2,7 @@ import discord
 from discord import Option, OptionChoice
 from discord.ext import commands, tasks
 from utility.config import config
+from utility import db
 from cogs.function_in import function_in
 from cogs.monster import Monster
 from cogs.event import Event
@@ -100,7 +101,7 @@ class Admin(discord.Cog, name="GM指令"):
             await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
             return
         channel = self.bot.get_channel(1382637390832730173)
-        search = await function_in.sql_search("rpg_worldboss", "boss", ["monster_name"], [f"**世界BOSS** {boss}"])
+        search = await db.sql_search("rpg_worldboss", "boss", ["monster_name"], [f"**世界BOSS** {boss}"])
         if not search:
             if func == "spawn":
                 monster = await Monster.summon_mob(self, None, None, None, None, boss)
@@ -117,8 +118,8 @@ class Admin(discord.Cog, name="GM指令"):
                 monster_exp = monster[7]
                 monster_money = monster[8]
                 drop_item = monster[9]
-                await function_in.sql_insert("rpg_worldboss", "boss", ["monster_name", "level", "hp", "max_hp", "def", "AD", "dodge", "hit", "exp", "money", "drop_item"], [monster_name, monster_level, monster_maxhp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, drop_item])
-                await function_in.sql_create_table("rpg_worldboss", f"**世界BOSS** {boss}", ["user_id", "damage"], ["BIGINT", "BIGINT"], "user_id")
+                await db.sql_insert("rpg_worldboss", "boss", ["monster_name", "level", "hp", "max_hp", "def", "AD", "dodge", "hit", "exp", "money", "drop_item"], [monster_name, monster_level, monster_maxhp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, drop_item])
+                await db.sql_create_table("rpg_worldboss", f"**世界BOSS** {boss}", ["user_id", "damage"], ["BIGINT", "BIGINT"], "user_id")
                 await interaction.followup.send(f'`世界BOSS {boss}` 成功生成!')
                 self.bot.log.info(f"{boss} 召喚成功!")
                 self.bot.log.info(f"{boss} 血量 {monster_maxhp}")
@@ -134,8 +135,8 @@ class Admin(discord.Cog, name="GM指令"):
                 await interaction.followup.send(f'`世界BOSS {boss}` 當前已存在!')
                 return
             else:
-                await function_in.sql_delete("rpg_worldboss", "boss", "monster_name", f"**世界BOSS** {boss}")
-                await function_in.sql_drop_table("rpg_worldboss", f"**世界BOSS** {boss}")
+                await db.sql_delete("rpg_worldboss", "boss", "monster_name", f"**世界BOSS** {boss}")
+                await db.sql_drop_table("rpg_worldboss", f"**世界BOSS** {boss}")
                 await interaction.followup.send(f'`世界BOSS {boss}` 成功移除!')
                 await channel.send(f'**世界Boss** {boss} 已經消失了!!!')
                 self.bot.log.info(f'{interaction.user.id} 使用指令 summon_worldboss 移除世界BOSS {boss}')
@@ -170,9 +171,9 @@ class Admin(discord.Cog, name="GM指令"):
             return
         await function_in.heal(self, user.id, "hp", "max")
         await function_in.heal(self, user.id, "mana", "max")
-        await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
-        await function_in.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
-        await function_in.sql_update("rpg_players", "players", "hunger", 100, "user_id", user.id)
+        await db.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
+        await db.sql_update("rpg_players", "players", "action", 0, "user_id", user.id)
+        await db.sql_update("rpg_players", "players", "hunger", 100, "user_id", user.id)
         await interaction.followup.send(f'你成功將 {user.mention} 血量魔力飽食度回滿並消除冷卻值!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 heal 治療了 {user.id}')
 
@@ -203,13 +204,13 @@ class Admin(discord.Cog, name="GM指令"):
             await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
             return
         user = await function_in.players_list_to_players(self, user)
-        search = await function_in.sql_search("rpg_system", "banlist", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_system", "banlist", ["user_id"], [user.id])
         if search:
             await interaction.followup.send(f'<@{user.id}> 當前已被從遊戲中停權!')
             return
         if not reason:
             reason = "無"
-        await function_in.sql_insert("rpg_system", "banlist", ["user_id", "reason"], [user.id, reason])
+        await db.sql_insert("rpg_system", "banlist", ["user_id", "reason"], [user.id, reason])
         msg = await interaction.followup.send(f'你成功停權了 <@{user.id}> 玩家!\n原因: {reason}')
         channel = self.bot.get_channel(1382638422971383861)
         await channel.send(f'{user.mention} 已被停權.\n原因: {reason}')

@@ -10,13 +10,14 @@ from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
 from cogs.quest import Quest_system
 from cogs.verify import Verify
+from utility import db
 
 class Event(discord.Cog, name="活動系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
     async def random_event(self, event):
-        search = await function_in.sql_search("rpg_event", "random_event", ["event_type"], [event])
+        search = await db.sql_search("rpg_event", "random_event", ["event_type"], [event])
         if search:
             return False
         embed = discord.Embed(title=f"觸發了隨機活動!", description=f"一起{event}吧!", color=0x79FF79)
@@ -83,10 +84,10 @@ class Event(discord.Cog, name="活動系統"):
         embed.add_field(name = f"本次活動根據參與人數, 所有人最多可取得{num}個{item}", value="\u200b", inline=False)
         embed.add_field(name = f"直接輸入 `{event}` 以參與活動!", value="\u200b", inline=False)
         embed.set_footer(text=f"活動結束時間: {end_time}(UTC+8)")
-        await function_in.sql_insert("rpg_event", "random_event", ["event_type", "time_stamp", "item", "num", "players_num"], [event, time_stamp, item, num, 0])
-        await function_in.sql_create_table("rpg_event", f"{event}", ["user_id"], ["BIGINT"], "user_id")
+        await db.sql_insert("rpg_event", "random_event", ["event_type", "time_stamp", "item", "num", "players_num"], [event, time_stamp, item, num, 0])
+        await db.sql_create_table("rpg_event", f"{event}", ["user_id"], ["BIGINT"], "user_id")
         for guild in self.bot.guilds:
-            search = await function_in.sql_search("rpg_system", "last_channel", ["guild_id"], [guild.id])
+            search = await db.sql_search("rpg_system", "last_channel", ["guild_id"], [guild.id])
             if search:
                 if guild.id == config.guild:
                     channel = guild.get_channel(1382639415918329896)
@@ -103,7 +104,7 @@ class Event(discord.Cog, name="活動系統"):
                     for channel in text_channels:
                         if channel.permissions_for(guild.me).send_messages:
                             try:
-                                await function_in.sql_update("rpg_system", "last_channel", "channel_id", channel.id, "guild_id", guild.id)
+                                await db.sql_update("rpg_system", "last_channel", "channel_id", channel.id, "guild_id", guild.id)
                                 await channel.send(embed=embed)
                                 await guild.owner.send(f"原頻道已不存在, 系統自動將 {channel.mention} 設定為系統頻道! 活動訊息系統將會發送在該頻道!")
                                 sent = True
@@ -122,7 +123,7 @@ class Event(discord.Cog, name="活動系統"):
                 for channel in text_channels:
                     if channel.permissions_for(guild.me).send_messages:
                         try:
-                            await function_in.sql_insert("rpg_system", "last_channel", ["guild_id", "channel_id"], [guild.id, channel.id])
+                            await db.sql_insert("rpg_system", "last_channel", ["guild_id", "channel_id"], [guild.id, channel.id])
                             await channel.send(embed=embed)
                             await guild.owner.send(f"你的伺服器尚未使用任何RPG指令, 因此機器人尚未註冊最系統頻道, 系統自動將 {channel.mention} 設定為系統頻道! 活動訊息系統將會發送在該頻道!")
                             sent = True
@@ -152,18 +153,18 @@ class Event(discord.Cog, name="活動系統"):
             else:
                 await message.reply('驗證碼已發送至您的私聊')
             return
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [message.author.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [message.author.id])
         if not search:
             return
-        search = await function_in.sql_search("rpg_event", "random_event", ["event_type"], [message.content])
+        search = await db.sql_search("rpg_event", "random_event", ["event_type"], [message.content])
         if not search:
             return
         players_num = search[4]
-        players_list = await function_in.sql_search("rpg_event", f"{message.content}", ["user_id"], [f"{message.author.id}"])
+        players_list = await db.sql_search("rpg_event", f"{message.content}", ["user_id"], [f"{message.author.id}"])
         if players_list:
             return
-        await function_in.sql_update("rpg_event", "random_event", "players_num", players_num+1, "event_type", message.content)
-        await function_in.sql_insert("rpg_event", f"{message.content}", ["user_id"], [f"{message.author.id}"])
+        await db.sql_update("rpg_event", "random_event", "players_num", players_num+1, "event_type", message.content)
+        await db.sql_insert("rpg_event", f"{message.content}", ["user_id"], [f"{message.author.id}"])
         
 def setup(client: discord.Bot):
     client.add_cog(Event(client))

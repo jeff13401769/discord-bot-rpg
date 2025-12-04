@@ -1,4 +1,3 @@
-import asyncio
 import difflib
 import random
 from random import choice
@@ -14,15 +13,16 @@ import certifi
 import discord
 from utility.config import config
 from cogs.function_in_in import function_in_in
+from utility import db
 from cogs.quest import Quest_system
-import mysql.connector
+import aiomysql
 
 class function_in(discord.Cog, name="模塊導入1"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    async def checkreg(self, interaction: discord.ApplicationContext, user_id: int):
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+    async def checkreg(self, interaction: discord.ApplicationContext, user_id: int, sync: bool = False):
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if not search:
             if user_id == interaction.user.id:
                 await interaction.followup.send("你尚未註冊帳號! 請先使用 `/註冊` 來註冊一個帳號!")
@@ -33,6 +33,8 @@ class function_in(discord.Cog, name="模塊導入1"):
         if user:
             return True
         else:
+            if sync:
+                return True
             await interaction.followup.send('機器人無法取得該使用者')
             return False
 
@@ -44,13 +46,13 @@ class function_in(discord.Cog, name="模塊導入1"):
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp = int(time.mktime(struct_time))
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         action = search[14]
         actiontime = await function_in_in.time_calculate(action-time_stamp)
         if time_stamp <= action:
             await interaction.followup.send(f"你還不能進行該行動! 你還需要等待 {actiontime}!")
             return False
-        await function_in.sql_update("rpg_players", "players", "action", time_stamp+cd, "user_id", user_id)
+        await db.sql_update("rpg_players", "players", "action", time_stamp+cd, "user_id", user_id)
         return True
     
     async def check_class_item_name(self, players_class):
@@ -77,21 +79,21 @@ class function_in(discord.Cog, name="模塊導入1"):
         return players
     
     async def check_all_level(self):
-        search = await function_in.sql_findall("rpg_players", "players")
+        search = await db.sql_findall("rpg_players", "players")
         alllevel = 0
         for player in search:
             alllevel = player[1]
         return alllevel
 
     async def check_all_player_num(self):
-        search = await function_in.sql_findall("rpg_players", "players")
+        search = await db.sql_findall("rpg_players", "players")
         num = 0
         for player in search:
             num += 1
         return num
 
     async def check_super_worldboss_level(self, level: int):
-        search = await function_in.sql_findall("rpg_players", "players")
+        search = await db.sql_findall("rpg_players", "players")
         alllevel = 0
         player_num = 0
         for player in search:
@@ -131,7 +133,7 @@ class function_in(discord.Cog, name="模塊導入1"):
     async def players_autocomplete(self, ctx: discord.AutocompleteContext):
         query = ctx.value.lower() if ctx.value else ""
         
-        members = await function_in.sql_findall('rpg_players', 'players')
+        members = await db.sql_findall('rpg_players', 'players')
         members_list = []
         for member in members:
             user = self.bot.get_user(member[0])
@@ -190,7 +192,7 @@ class function_in(discord.Cog, name="模塊導入1"):
     
     async def give_skill_exp(self, user_id, skill_name):
         if skill_name == "所有被動":
-            search = await function_in.sql_findall("rpg_skills", f"{user_id}")
+            search = await db.sql_findall("rpg_skills", f"{user_id}")
             for skill in search:
                 skill_name = skill[0]
                 skill_level = skill[1]
@@ -199,35 +201,35 @@ class function_in(discord.Cog, name="模塊導入1"):
                     if f"{data['技能類型']}" == "被動":
                         skill_exp = skill[2]+1
                         if data['等級上限'] > skill_level:
-                            await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                            await db.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
                             while int(skill_level*100) < skill_exp:
                                 skill_exp -= int(skill_level*100)
                                 skill_level += 1
                                 if skill_level >= data['等級上限']:
                                     skill_exp = 0
-                                await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
-                                await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                                await db.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                                await db.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
         else:
             data, a, b, c = await function_in.search_for_file(self, skill_name, False)
-            search = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])
+            search = await db.sql_search("rpg_skills", f"{user_id}", ["skill"], [skill_name])
             if search:
                 skill_level = search[1]
                 skill_exp = search[2]+1
                 if data['等級上限'] > skill_level:
-                    await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                    await db.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
                     while int(skill_level*100) < skill_exp:
                         skill_exp -= int(skill_level*100)
                         skill_level += 1
                         if skill_level >= data['等級上限']:
                             skill_exp = 0
-                        await function_in.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
-                        await function_in.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
+                        await db.sql_update("rpg_skills", f"{user_id}", "level", skill_level, "skill", f"{skill_name}")
+                        await db.sql_update("rpg_skills", f"{user_id}", "exp", skill_exp, "skill", f"{skill_name}")
             else:
                 return
     
     async def give_exp(self, user_id, exp):
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         a = False
         player_attr_point = search[11]
         player_skill_point = search[12]
@@ -253,14 +255,14 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_level+=1
             player_attr_point+=1
             player_skill_point+=2
-            await function_in.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
-            await function_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
-            await function_in.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)
-            await function_in.sql_update("rpg_players", "players", "skill_point", player_skill_point, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "skill_point", player_skill_point, "user_id", user_id)
             a = True
         if a:
             return f"<a:level_up:1078595519305240667> 你升級了! 你的等級目前為 {players_level} 級!"
-        await function_in.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
+        await db.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
         return False
     
     async def get_skill_book(self, level, class_name="random"):
@@ -286,7 +288,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         if not hunger:
             hunger = 1
         
-        equip_list = await function_in.sql_findall("rpg_equip", f"{user_id}")
+        equip_list = await db.sql_findall("rpg_equip", f"{user_id}")
         for equip in equip_list:
             if equip[1] == "無" or equip[1] == "未解鎖":
                 continue
@@ -323,45 +325,45 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_hunger -= hunger
         if players_hunger < 0:
             players_hunger = 0
-        await function_in.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user_id)
+        await db.sql_update("rpg_players", "players", "hunger", players_hunger, "user_id", user_id)
     
     async def check_guild(self, user_id):
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if search[22] == "無":
             return False
         return search[22]
     
     async def give_guild_gp(self, user_id, gp):
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if search[22] == "無":
             return False
-        search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [search[22]])
+        search = await db.sql_search("rpg_guild", "all", ["guild_name"], [search[22]])
         if not search:
             return False
         gp += search[4]
-        await function_in.sql_update("rpg_guild", "all", "money", gp, "guild_name", search[22])
+        await db.sql_update("rpg_guild", "all", "money", gp, "guild_name", search[22])
         return True
     
     async def give_guild_exp(self, user_id, gexp):
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         if search[22] == "無":
             return False
         guild_name = search[22]
-        search = await function_in.sql_search("rpg_guild", "all", ["guild_name"], [guild_name])
+        search = await db.sql_search("rpg_guild", "all", ["guild_name"], [guild_name])
         if not search:
             return False
         exp = search[3] + gexp
         level = search[2]
-        await function_in.sql_update("rpg_guild", "all", "exp", exp, "guild_name", guild_name)
+        await db.sql_update("rpg_guild", "all", "exp", exp, "guild_name", guild_name)
         while exp >= level*10000:
             exp -= level*10000
             level += 1
-            await function_in.sql_update("rpg_guild", "all", "level", level, "guild_name", guild_name)
-            await function_in.sql_update("rpg_guild", "all", "exp", exp, "guild_name", guild_name)
+            await db.sql_update("rpg_guild", "all", "level", level, "guild_name", guild_name)
+            await db.sql_update("rpg_guild", "all", "exp", exp, "guild_name", guild_name)
         return True
         
     async def give_money(self, user: discord.Member, money_type, money1, reason, msg: discord.Message = None):
-        search = await function_in.sql_search("rpg_players", "money", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "money", ["user_id"], [user.id])
         if money_type == "money":
             money = search[1]
         if money_type == "diamond":
@@ -373,13 +375,13 @@ class function_in(discord.Cog, name="模塊導入1"):
         if money_type == "pp":
             money = search[5]
         money += money1
-        await function_in.sql_update("rpg_players", "money", money_type, money, "user_id", user.id)
+        await db.sql_update("rpg_players", "money", money_type, money, "user_id", user.id)
         if msg:
             await Quest_system.add_quest(self, user, "賺錢", reason, money1, msg)
         return money
 
     async def remove_money(self, user: discord.Member, money_type, money1):
-        search = await function_in.sql_search("rpg_players", "money", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "money", ["user_id"], [user.id])
         if money_type == "money":
             money = search[1]
         if money_type == "diamond":
@@ -391,44 +393,44 @@ class function_in(discord.Cog, name="模塊導入1"):
         if money_type == "pp":
             money = search[5]
         money -= money1
-        await function_in.sql_update("rpg_players", "money", money_type, money, "user_id", user.id)
+        await db.sql_update("rpg_players", "money", money_type, money, "user_id", user.id)
         return money
     
     async def is_gm(self, user_id):
-        search = await function_in.sql_search("rpg_system", "gm", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_system", "gm", ["user_id"], [user_id])
         if search:
             return search[1]
         return False
     
     async def give_item(self, user_id, name: str, num: int=1):
         data, floder_name, floder_name1, item_type1 = await function_in.search_for_file(self, name, False)
-        backpack = await function_in.sql_findall("rpg_backpack", f"{user_id}")
+        backpack = await db.sql_findall("rpg_backpack", f"{user_id}")
         a = False
         if not num or type(num) is not int:
             num = 1
         for item in backpack:
             if item[0] == name:
                 num += item[2]
-                await function_in.sql_update("rpg_backpack", f"{user_id}", "num", num, "name", name)
+                await db.sql_update("rpg_backpack", f"{user_id}", "num", num, "name", name)
                 a = True
                 break
         if not a:
-            await function_in.sql_insert("rpg_backpack", f"{user_id}", ["name", "item_type", "num"], [name, item_type1, num])
+            await db.sql_insert("rpg_backpack", f"{user_id}", ["name", "item_type", "num"], [name, item_type1, num])
     
     async def remove_item(self, user_id, name, num=1):
-        backpack = await function_in.sql_findall("rpg_backpack", f"{user_id}")
+        backpack = await db.sql_findall("rpg_backpack", f"{user_id}")
         for item in backpack:
             if item[0] == name:
                 num = item[2] - num
                 if num <= 0:
-                    await function_in.sql_delete("rpg_backpack", f"{user_id}", "name", name)
+                    await db.sql_delete("rpg_backpack", f"{user_id}", "name", name)
                 else:
-                    await function_in.sql_update("rpg_backpack", f"{user_id}", "num", num, "name", name)
+                    await db.sql_update("rpg_backpack", f"{user_id}", "num", num, "name", name)
                 return True
         return False
     
     async def check_item(self, user_id, name, num=1):
-        backpack = await function_in.sql_findall("rpg_backpack", f"{user_id}")
+        backpack = await db.sql_findall("rpg_backpack", f"{user_id}")
         a = False
         for item in backpack:
             if item[0] == name:
@@ -617,7 +619,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             return None, None, None, None
     
     async def check_ammo(self, user_id, players_class, ammonum = 1):
-        search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["職業專用道具"])
+        search = await db.sql_search("rpg_equip", f"{user_id}", ["slot"], ["職業專用道具"])
         dmg = 0
         hit = 0
         if players_class in {"弓箭手"}:
@@ -639,26 +641,26 @@ class function_in(discord.Cog, name="模塊導入1"):
         return True, -1, None, False, dmg, hit
     
     async def fixplayer(self, user_id):
-        search = await function_in.sql_search("rpg_equip", f"{user_id}", ["slot"], ["戰鬥道具欄位3"])
+        search = await db.sql_search("rpg_equip", f"{user_id}", ["slot"], ["戰鬥道具欄位3"])
         if not search:
             a = 3
             while a <= 5:
-                await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [f"戰鬥道具欄位{a}", "無"])
+                await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [f"戰鬥道具欄位{a}", "無"])
                 a+=1
-        backpack = await function_in.sql_findall("rpg_backpack", f"{user_id}")
+        backpack = await db.sql_findall("rpg_backpack", f"{user_id}")
         for item_info in backpack:
             item = item_info[0]
             item_type = item_info[1]
             num = item_info[2]
             data, floder_name, floder_name1, item_type1 = await function_in.search_for_file(self, item, False)
             if not data:
-                await function_in.sql_delete("rpg_backpack", f"{user_id}", "name", item)
+                await db.sql_delete("rpg_backpack", f"{user_id}", "name", item)
                 self.bot.log.warn(f'[排程] {user_id} 背包內含有 {num} 個非法物品 {item}, 已被自動清除\n原因: 物品不存在')
             else:
                 if item_type != item_type1:
-                    await function_in.sql_delete("rpg_backpack", f"{user_id}", "name", item)
+                    await db.sql_delete("rpg_backpack", f"{user_id}", "name", item)
                     self.bot.log.warn(f'[排程] {user_id} 背包內含有 {num} 個非法物品 {item}, 已被自動清除\n原因: 物品類型錯誤')
-        data = await function_in.sql_findall("rpg_equip", f"{user_id}")
+        data = await db.sql_findall("rpg_equip", f"{user_id}")
         equip_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","職業專用道具","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3","卡牌欄位1","卡牌欄位2","卡牌欄位3"]
         for item_info in data:
             slot = item_info[0]
@@ -666,16 +668,16 @@ class function_in(discord.Cog, name="模塊導入1"):
                 equip_list.remove(slot)
         if equip_list:
             for slot in equip_list:
-                await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [slot, "無"])
+                await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [slot, "無"])
         for item_info in data:
             slot = item_info[0]
             equip = item_info[1]
             if equip == "無" or equip == "未解鎖":
                 continue
             if "技能欄位" in slot:
-                skill_info = await function_in.sql_search("rpg_skills", f"{user_id}", ["skill"], [equip])
+                skill_info = await db.sql_search("rpg_skills", f"{user_id}", ["skill"], [equip])
                 if not skill_info:
-                    await function_in.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
+                    await db.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
                     self.bot.log.warn(f'[排程] {user_id} 技能欄位 {slot} 含有未學習的技能 {equip}, 已被自動清除')
                     continue
                 base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -696,21 +698,21 @@ class function_in(discord.Cog, name="模塊導入1"):
                             continue
                     if skill_in:
                         if skill_type == "被動":
-                            await function_in.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
+                            await db.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
                             self.bot.log.warn(f'[排程] {user_id} 技能欄位 {slot} 含有被動技能 {equip}, 已被自動清除')
                             continue
                 if not skill_in:
-                    await function_in.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
+                    await db.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
                     self.bot.log.warn(f'[排程] {user_id} 技能欄位 {slot} 含有非法技能 {equip}, 已被自動清除')
                     continue
             else:
                 data, floder_name, floder_name1, item_type1 = await function_in.search_for_file(self, equip, False)
                 if not data:
-                    await function_in.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
+                    await db.sql_update("rpg_equip", f"{user_id}", "equip", "無", "slot", slot)
                     self.bot.log.warn(f'[排程] {user_id} 裝備欄位 {slot} 含有非法裝備 {equip}, 已被自動清除\n原因: 裝備不存在')
 
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         players_str = search[6]
         players_int = search[7]
         players_dex = search[8]
@@ -719,10 +721,10 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_add_attr_point = search[19]
         total_attr = players_level + players_add_attr_point
         attr = total_attr - (players_str + players_int + players_dex + players_con + players_luk) - players_add_attr_point
-        await function_in.sql_update("rpg_players", "players", "attr_point", attr, "user_id", user_id)
+        await db.sql_update("rpg_players", "players", "attr_point", attr, "user_id", user_id)
     
     async def checkattr(self, user_id):
-        players_info = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        players_info = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         players_level = players_info[1]
         players_exp = players_info[2]
         players_class = players_info[3]
@@ -759,7 +761,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_dex += players_all_attr_point
         players_con += players_all_attr_point
         players_luk += players_all_attr_point
-        players_info = await function_in.sql_search("rpg_players", "money", ["user_id"], [user_id])
+        players_info = await db.sql_search("rpg_players", "money", ["user_id"], [user_id])
         players_money = players_info[1]
         players_diamond = players_info[2]
         players_qp = players_info[3]
@@ -844,7 +846,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_equip_luk = 0
         players_equip_drop_chance = 0
 
-        equips = await function_in.sql_findall("rpg_equip", f"{user_id}")
+        equips = await db.sql_findall("rpg_equip", f"{user_id}")
         set_effects = {}
         for equip in equips:
             slot = equip[0]
@@ -980,7 +982,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_skills_con = int(0)
         players_skills_luk = int(0)
                     
-        skill_list = await function_in.sql_findall("rpg_skills", f"{user_id}")
+        skill_list = await db.sql_findall("rpg_skills", f"{user_id}")
         if not skill_list:
             skill_list = [["無", 0]]
         for skill_info in skill_list:
@@ -1041,9 +1043,9 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_food_con = int(0)
         players_food_luk = int(0)
 
-        players_food_check = await function_in.sql_check_table("rpg_food", f"{user_id}")
+        players_food_check = await db.sql_check_table("rpg_food", f"{user_id}")
         if players_food_check:
-            players_food_list = await function_in.sql_findall("rpg_food", f"{user_id}")
+            players_food_list = await db.sql_findall("rpg_food", f"{user_id}")
             if players_food_list:
                 for food_info in players_food_list:
                     food = food_info[0]
@@ -1102,9 +1104,9 @@ class function_in(discord.Cog, name="模塊導入1"):
                         players_food_AD+=1000
                         players_food_max_hp+=1000
 
-        players_buff_check = await function_in.sql_check_table("rpg_buff", f"{user_id}")
+        players_buff_check = await db.sql_check_table("rpg_buff", f"{user_id}")
         if players_buff_check:
-            players_buff_list = await function_in.sql_findall("rpg_buff", f"{user_id}")
+            players_buff_list = await db.sql_findall("rpg_buff", f"{user_id}")
             if players_buff_list:
                 for buff_info in players_buff_list:
                     buff = buff_info[0]
@@ -1114,9 +1116,9 @@ class function_in(discord.Cog, name="模塊導入1"):
         players_guild_dex = int(0)
         players_guild_con = int(0)
         players_guild_luk = int(0)
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         guild_name = search[22]
-        skills = await function_in.sql_search("rpg_guild", "skills", ["guild_name"], [guild_name])
+        skills = await db.sql_search("rpg_guild", "skills", ["guild_name"], [guild_name])
         if skills:
             players_guild_str += skills[1]
             players_guild_int += skills[2]
@@ -1268,10 +1270,10 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_max_mana = 0
         if players_hp > players_max_hp:
             players_hp = players_max_hp
-            await function_in.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
         if players_mana > players_max_mana:
             players_mana = players_max_mana
-            await function_in.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
 
         return players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit,  players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger
     
@@ -1283,11 +1285,11 @@ class function_in(discord.Cog, name="模塊導入1"):
                 data = yaml.safe_load(f)
         else:
             return f"勳章 `{medal}` 不存在資料庫!"
-        players_medal_list = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        players_medal_list = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         players_medal_list = players_medal_list[17]
         if players_medal_list == "":
             players_medal_list = f"{medal},"
-            await function_in.sql_update("rpg_players", "players", "medal_list", players_medal_list, "user_id", user_id)
+            await db.sql_update("rpg_players", "players", "medal_list", players_medal_list, "user_id", user_id)
             return f"成功授予 <@{user_id}> 玩家 `{medal}` 勳章!"
         else:
             players_medal_list = players_medal_list.split(",")
@@ -1296,54 +1298,54 @@ class function_in(discord.Cog, name="模塊導入1"):
             else:
                 players_medal_list.append(medal)
                 players_medal_list = ",".join(players_medal_list)
-                await function_in.sql_update("rpg_players", "players", "medal_list", players_medal_list, "user_id", user_id)
+                await db.sql_update("rpg_players", "players", "medal_list", players_medal_list, "user_id", user_id)
                 return f"成功授予 <@{user_id}> 玩家 `{medal}` 勳章!"
 
     async def heal(self, user_id, htype, num):
         players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit, players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger = await function_in.checkattr(self, user_id)
         if htype == "hp":
             if num == "max":
-                await function_in.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
+                await db.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
                 return
             else:
                 if players_hp >= players_max_hp:
                     return "Full", None
                 elif players_hp + num > players_max_hp:
-                    await function_in.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
+                    await db.sql_update("rpg_players", "players", "hp", players_max_hp, "user_id", user_id)
                     return players_max_hp - players_hp, "Full"
                 else:
-                    await function_in.sql_update("rpg_players", "players", "hp", players_hp+num, "user_id", user_id)
+                    await db.sql_update("rpg_players", "players", "hp", players_hp+num, "user_id", user_id)
                     return num, None
         else:
             if num == "max":
-                await function_in.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
+                await db.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
                 return
             else:
                 if players_mana >= players_max_mana:
                     return "Full", None
                 elif players_mana + num > players_max_mana:
-                    await function_in.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
+                    await db.sql_update("rpg_players", "players", "mana", players_max_mana, "user_id", user_id)
                     return players_max_mana - players_mana, "Full"
                 else:
-                    await function_in.sql_update("rpg_players", "players", "mana", players_mana+num, "user_id", user_id)
+                    await db.sql_update("rpg_players", "players", "mana", players_mana+num, "user_id", user_id)
                     return num, None
     
     async def checkactioning(self, user: discord.Member, stat=None):
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
         actioning = search[16]
         if stat == "return":
-            await function_in.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
+            await db.sql_update("rpg_players", "players", "actioning", "None", "user_id", user.id)
             return
         else:
             if actioning != "None":
                 return False, actioning
         if actioning == "None":
             if stat:
-                await function_in.sql_update("rpg_players", "players", "actioning", stat, "user_id", user.id)
+                await db.sql_update("rpg_players", "players", "actioning", stat, "user_id", user.id)
             return True, None
     
     async def check_money(self, user: discord.Member, mtype, num):
-        search = await function_in.sql_search("rpg_players", "money", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "money", ["user_id"], [user.id])
         if mtype == "money":
             money = search[1]
         if mtype == "diamond":
@@ -1366,50 +1368,50 @@ class function_in(discord.Cog, name="模塊導入1"):
         return False
     
     async def delete_player(self, user_id, re=False):
-        if await function_in.sql_check_table("rpg_stock", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_stock", f"{user_id}")
-        if await function_in.sql_check_table("rpg_backpack", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_backpack", f"{user_id}")
-        if await function_in.sql_check_table("rpg_equip", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_equip", f"{user_id}")
-        if await function_in.sql_check_table("rpg_pet", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_pet", f"{user_id}")
-        if await function_in.sql_check_table("rpg_skills", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_skills", f"{user_id}")
-        if await function_in.sql_check_table("rpg_food", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_food", f"{user_id}")
-        if await function_in.sql_check_table("rpg_buff", f"{user_id}"):
-            await function_in.sql_drop_table("rpg_buff", f"{user_id}")
+        if await db.sql_check_table("rpg_stock", f"{user_id}"):
+            await db.sql_drop_table("rpg_stock", f"{user_id}")
+        if await db.sql_check_table("rpg_backpack", f"{user_id}"):
+            await db.sql_drop_table("rpg_backpack", f"{user_id}")
+        if await db.sql_check_table("rpg_equip", f"{user_id}"):
+            await db.sql_drop_table("rpg_equip", f"{user_id}")
+        if await db.sql_check_table("rpg_pet", f"{user_id}"):
+            await db.sql_drop_table("rpg_pet", f"{user_id}")
+        if await db.sql_check_table("rpg_skills", f"{user_id}"):
+            await db.sql_drop_table("rpg_skills", f"{user_id}")
+        if await db.sql_check_table("rpg_food", f"{user_id}"):
+            await db.sql_drop_table("rpg_food", f"{user_id}")
+        if await db.sql_check_table("rpg_buff", f"{user_id}"):
+            await db.sql_drop_table("rpg_buff", f"{user_id}")
         check = await function_in.check_guild(self, user_id)
         if check:
-            await function_in.sql_delete("rpg_guild", f"{check}", "user_id", f"{user_id}")
+            await db.sql_delete("rpg_guild", f"{check}", "user_id", f"{user_id}")
         medal_list = search[17]
         if not medal_list:
             medal_list = ""
-        search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
         player_class = search[3]
-        await function_in.sql_delete("rpg_players", "players", "user_id", user_id)
-        await function_in.sql_delete("rpg_players", "money", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "quest", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "quest", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "aibot", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "aibot", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "equip_upgrade_chance", "user_id", user_id)
-        if await function_in.sql_search("rpg_system", "daily", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_system", "daily", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "dps", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "dps", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "dungeon", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "dungeon", "user_id", user_id)
-        if await function_in.sql_search("rpg_players", "life", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_players", "life", "user_id", user_id)
-        if await function_in.sql_search("rpg_ah", "all", ["seller"], [user_id]):
-            await function_in.sql_delete("rpg_ah", "all", "seller", user_id)
-        if await function_in.sql_search("rpg_system", "verify", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_system", "verify", "user_id", user_id)
-        if await function_in.sql_search("rpg_system", "month_card", ["user_id"], [user_id]):
-            await function_in.sql_delete("rpg_system", "month_card", "user_id", user_id)
+        await db.sql_delete("rpg_players", "players", "user_id", user_id)
+        await db.sql_delete("rpg_players", "money", "user_id", user_id)
+        if await db.sql_search("rpg_players", "quest", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "quest", "user_id", user_id)
+        if await db.sql_search("rpg_players", "aibot", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "aibot", "user_id", user_id)
+        if await db.sql_search("rpg_players", "equip_upgrade_chance", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "equip_upgrade_chance", "user_id", user_id)
+        if await db.sql_search("rpg_system", "daily", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_system", "daily", "user_id", user_id)
+        if await db.sql_search("rpg_players", "dps", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "dps", "user_id", user_id)
+        if await db.sql_search("rpg_players", "dungeon", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "dungeon", "user_id", user_id)
+        if await db.sql_search("rpg_players", "life", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_players", "life", "user_id", user_id)
+        if await db.sql_search("rpg_ah", "all", ["seller"], [user_id]):
+            await db.sql_delete("rpg_ah", "all", "seller", user_id)
+        if await db.sql_search("rpg_system", "verify", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_system", "verify", "user_id", user_id)
+        if await db.sql_search("rpg_system", "month_card", ["user_id"], [user_id]):
+            await db.sql_delete("rpg_system", "month_card", "user_id", user_id)
         if re:
             await function_in.register_player(self, user_id, player_class, medal_list)
     
@@ -1418,277 +1420,92 @@ class function_in(discord.Cog, name="模塊導入1"):
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp = int(time.mktime(struct_time))
-        await function_in.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 1, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100])
+        await db.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 1, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100])
         try:
-            await function_in.sql_insert("rpg_players", "money", ["user_id", "money", "diamond", "qp", "wbp", "pp"], [user_id, 1000, 0, 0, 0, 0])
+            await db.sql_insert("rpg_players", "money", ["user_id", "money", "diamond", "qp", "wbp", "pp"], [user_id, 1000, 0, 0, 0, 0])
         except:
             pass
         try:
-            await function_in.sql_create_table("rpg_backpack", f"{user_id}", ["name", "item_type", "num"], ["VARCHAR(100)", "TEXT", "BIGINT"], "name")
+            await db.sql_create_table("rpg_backpack", f"{user_id}", ["name", "item_type", "num"], ["VARCHAR(100)", "TEXT", "BIGINT"], "name")
         except:
             pass
         try:
-            await function_in.sql_create_table("rpg_equip", f"{user_id}", ["slot", "equip"], ["VARCHAR(100)", "TEXT"], "slot")
+            await db.sql_create_table("rpg_equip", f"{user_id}", ["slot", "equip"], ["VARCHAR(100)", "TEXT"], "slot")
         except:
             pass
         try:
-            await function_in.sql_create_table("rpg_pet", f"{user_id}", ["slot", "pet"], ["VARCHAR(100)", "TEXT"], "slot")
+            await db.sql_create_table("rpg_pet", f"{user_id}", ["slot", "pet"], ["VARCHAR(100)", "TEXT"], "slot")
         except:
             pass
         try:
-            await function_in.sql_create_table("rpg_skills", f"{user_id}", ["skill", "level", "exp"], ["VARCHAR(100)", "BIGINT", "BIGINT"], "skill")
+            await db.sql_create_table("rpg_skills", f"{user_id}", ["skill", "level", "exp"], ["VARCHAR(100)", "BIGINT", "BIGINT"], "skill")
         except:
             pass
         try:
             item_type_list = ["武器","頭盔","胸甲","護腿","鞋子","副手","戒指","項鍊","披風","護身符","職業專用道具","戰鬥道具欄位1","戰鬥道具欄位2","戰鬥道具欄位3","戰鬥道具欄位4","戰鬥道具欄位5","技能欄位1","技能欄位2","技能欄位3"]
             for item_type in item_type_list:
-                await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [item_type, "無"])
+                await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [item_type, "無"])
         except:
             pass
         try:
-            await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], ["卡牌欄位1", "無"])
+            await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], ["卡牌欄位1", "無"])
             item_type_list = ["卡牌欄位2","卡牌欄位3"]
             for item_type in item_type_list:
-                await function_in.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [item_type, "未解鎖"])
+                await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [item_type, "未解鎖"])
         except:
             pass
         try:
             petlist = ["寵物一", "寵物二", "寵物三"]
             for pets in petlist:
-                await function_in.sql_insert("rpg_pet", f"{user_id}", ["slot", "pet"], [pets, "無"])
+                await db.sql_insert("rpg_pet", f"{user_id}", ["slot", "pet"], [pets, "無"])
         except:
             pass
         try:
-            await function_in.sql_insert("rpg_players", "dungeon", ["user_id"], [user_id])
+            await db.sql_insert("rpg_players", "dungeon", ["user_id"], [user_id])
         except:
             pass
         try:
-            await function_in.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user_id, 1, 0])
+            await db.sql_insert("rpg_players", "life", ["user_id", "cook_lv", "cook_exp"], [user_id, 1, 0])
         except:
             pass
         try:
-            await function_in.sql_insert("rpg_system", "daily", ["user_id", "can_daily", "dailyday"], [user_id, 1, 0])
+            await db.sql_insert("rpg_system", "daily", ["user_id", "can_daily", "dailyday"], [user_id, 1, 0])
         except:
             pass
     
     async def check_all_players():
-        cnx = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database="rpg_players",
-        )
-        cursor = cnx.cursor()
-        cursor.execute("SELECT COUNT(*) FROM players")
-        row_count = cursor.fetchone()[0]
-        return row_count
-    
-    async def sql_search_all(databass: str, table_name: str, column_name: list, data: list):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        query = f"SELECT * FROM `{table_name}` WHERE {column_name[0]} = %s"
-        cursor.execute(query, (data[0],))
-        result = cursor.fetchall()
-
-        cursor.close()
-        db.close()
-        if result is not None:
-            return result
-        else:
-            return False
-    
-    async def sql_search(databass: str, table_name: str, column_name: list, data: list):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        query = f"SELECT * FROM `{table_name}` WHERE {column_name[0]} = %s"
-        cursor.execute(query, (data[0],))
-        result = cursor.fetchone()
-
-        cursor.close()
-        db.close()
-        if result is not None:
-            return result
-        else:
-            return False
-
-    async def sql_insert(databass: str, table_name: str, column_name: list, data: list):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass
-        )
-        mycursor = db.cursor()
-        column_str = ", ".join([f"`{column}`" for column in column_name])
-        value_str = ", ".join([f"'{value}'" for value in data])
-        add_data = f"INSERT INTO `{table_name}` ({column_str}) VALUES ({value_str})"
-        mycursor.execute(add_data)
-        db.commit()
-
-        mycursor.close()
-        db.close()
-
-    async def sql_update(databass: str, table_name: str, column_name: str, value: any, condition_column: str, condition_value: any):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        update_query = f"UPDATE `{table_name}` SET {column_name} = %s WHERE {condition_column} = %s"
-        cursor.execute(update_query, (value, condition_value))
-        db.commit()
-
-        cursor.close()
-        db.close()
-    
-    async def sql_update_all(databass: str, table_name: str, column_name: str, value: any):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        update_query = f"UPDATE `{table_name}` SET {column_name} = %s"
-        cursor.execute(update_query, (value,))
-        db.commit()
-
-        cursor.close()
-        db.close()
-    
-    async def sql_findall(databass: str, table_name: str):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        query = f"SELECT * FROM `{table_name}`"
-        cursor.execute(query)
-        result = cursor.fetchall()
-
-        cursor.close()
-        db.close()
-        if result is not None:
-            return result
-        else:
-            return False
-    
-    async def sql_findall_table(databass: str):
-        db = mysql.connector.connect(
-            host="localhost",
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=databass,
-        )
-        cursor = db.cursor()
-        query = "SHOW TABLES"
-        cursor.execute(query)
-        result = cursor.fetchall()
-
-        cursor.close()
-        db.close()
-
-        if result is not None:
-            return [table[0] for table in result]
-        else:
-            return False
-
-    async def sql_delete(database: str, table: str, column: str, value: str):
-        connection = mysql.connector.connect(
-            host='localhost',
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=database
-        )
-        cursor = connection.cursor()
-        query = f"DELETE FROM `{table}` WHERE {column} = %s"
-        cursor.execute(query, (value,))
-        connection.commit()
-        cursor.close()
-        connection.close()
-
-    async def sql_deleteall(database: str, table: str):
-        connection = mysql.connector.connect(
-            host='localhost',
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=database
-        )
-        cursor = connection.cursor()
-
-        query = f"DELETE FROM `{table}`"
-        cursor.execute(query)
-        connection.commit()
-
-        cursor.close()
-        connection.close()
-    
-    async def sql_create_table(database: str, table: str, column: list, data_type: list, primary_key: str):
-        connection = mysql.connector.connect(
-            host='localhost',
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=database
-        )
-        cursor = connection.cursor()
-
-        column_type_pairs = [f"`{col}` {data_type[i]} NOT NULL " for i, col in enumerate(column)]
-        column_type_str = ", ".join(column_type_pairs)
-        query = f"CREATE TABLE `{table}` ({column_type_str}, PRIMARY KEY ({primary_key})) ENGINE = InnoDB;"
-        cursor.execute(query)
-        connection.commit()
-
-        cursor.close()
-        connection.close()
-    
-    async def sql_drop_table(database: str, table: str):
-        connection = mysql.connector.connect(
-            host='localhost',
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=database
-        )
-        cursor = connection.cursor()
-
-        query = f"DROP TABLE IF EXISTS `{table}`"
-        cursor.execute(query)
-        connection.commit()
-
-        cursor.close()
-        connection.close()
-    
-    async def sql_check_table(database: str, table: str):
-        connection = mysql.connector.connect(
-            host='localhost',
-            user=config.mysql_username,
-            password=config.mysql_password,
-            database=database
-        )
-        cursor = connection.cursor()
-        query = f"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{database}' AND table_name = '{table}'"
-        cursor.execute(query)
-        result = cursor.fetchone()[0]
-
-        cursor.close()
-        connection.close()
-        if result == 1:
-            return True
-        else:
-            return False
+        # 這裡的 database 硬編碼為 "rpg_players"，與您原來的程式碼保持一致
+        database_name = "rpg_players" 
+        conn = None # 初始化連線變數
+        try:
+            # 1. 異步建立連線
+            conn = await aiomysql.connect(
+                host="localhost",
+                user=config.mysql_username,
+                password=config.mysql_password,
+                db=database_name,
+                charset="utf8mb4",
+                autocommit=True # 由於是單純的 SELECT 查詢，可以使用自動提交
+            )
+            
+            # 2. 獲取異步游標，並使用 async with 確保游標自動關閉
+            async with conn.cursor() as cursor:
+                # 3. 異步執行查詢
+                await cursor.execute("SELECT COUNT(*) FROM players")
+                
+                # 4. 異步獲取結果
+                row_count = (await cursor.fetchone())[0]
+                return row_count
+                
+        except Exception as e:
+            print(f"❌ 檢查玩家數量時發生錯誤: {e}")
+            # 失敗時回傳 0 或其他錯誤指示
+            return 0
+            
+        finally:
+            # 5. 確保連線被關閉
+            if conn:
+                conn.close() # aiomysql 的連線關閉是同步的
     
 def setup(client: discord.Bot):
     client.add_cog(function_in(client))

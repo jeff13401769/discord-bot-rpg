@@ -4,7 +4,7 @@ import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 import discord
-
+from utility import db
 from utility.config import config
 from cogs.function_in import function_in
 
@@ -71,9 +71,9 @@ class Verify(discord.Cog, name="驗證系統"):
         image.save(save_path)
     
     async def check_verify_status(self, user_id):
-        data = await function_in.sql_search("rpg_system", "verify", ["user_id"], [user_id])
+        data = await db.sql_search("rpg_system", "verify", ["user_id"], [user_id])
         if not data:
-            await function_in.sql_insert("rpg_system", "verify", ["user_id", "verify", "time", "code"], [user_id, 0, 0, ""])
+            await db.sql_insert("rpg_system", "verify", ["user_id", "verify", "time", "code"], [user_id, 0, 0, ""])
             verify = 0
             atime = 0
             code = None
@@ -87,8 +87,8 @@ class Verify(discord.Cog, name="驗證系統"):
             a = random.randint(0, atime)
             if a > 50:
                 code = await Verify.random_text(self)
-                await function_in.sql_update("rpg_system", "verify", "verify", 1, "user_id", user_id)
-                await function_in.sql_update("rpg_system", "verify", "code", code, "user_id", user_id)
+                await db.sql_update("rpg_system", "verify", "verify", 1, "user_id", user_id)
+                await db.sql_update("rpg_system", "verify", "code", code, "user_id", user_id)
                 await Verify.create_captcha(self, code, user_id)
                 verify_status = True
             else:
@@ -113,7 +113,7 @@ class Verify(discord.Cog, name="驗證系統"):
                 return True, False
             return True, True
         else:
-            await function_in.sql_update("rpg_system", "verify", "time", atime+1, "user_id", user_id)
+            await db.sql_update("rpg_system", "verify", "time", atime+1, "user_id", user_id)
             return False, True
     
     @discord.Cog.listener()
@@ -122,9 +122,9 @@ class Verify(discord.Cog, name="驗證系統"):
             return
         if message.guild is None:
             user = message.author
-            data = await function_in.sql_search("rpg_system", "verify", ["user_id"], [user.id])
+            data = await db.sql_search("rpg_system", "verify", ["user_id"], [user.id])
             if not data:
-                await function_in.sql_insert("rpg_system", "verify", ["user_id", "verify", "time", "code"], [user.id, 0, 0, ""])
+                await db.sql_insert("rpg_system", "verify", ["user_id", "verify", "time", "code"], [user.id, 0, 0, ""])
                 verify = 0
             else:
                 verify = data[1]
@@ -135,9 +135,9 @@ class Verify(discord.Cog, name="驗證系統"):
                     await message.reply('驗證碼錯誤! 請確認您的驗證碼!')
                     return
                 else:
-                    await function_in.sql_update("rpg_system", "verify", "time", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_system", "verify", "verify", 0, "user_id", user.id)
-                    await function_in.sql_update("rpg_system", "verify", "code", "", "user_id", user.id)
+                    await db.sql_update("rpg_system", "verify", "time", 0, "user_id", user.id)
+                    await db.sql_update("rpg_system", "verify", "verify", 0, "user_id", user.id)
+                    await db.sql_update("rpg_system", "verify", "code", "", "user_id", user.id)
                     current_dir = os.path.dirname(os.path.abspath(__file__))
                     parent_dir = os.path.dirname(current_dir)
                     verify_dir = os.path.join(parent_dir, "verify")

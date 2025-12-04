@@ -2,6 +2,7 @@ import discord
 from discord.ext import tasks, commands
 
 from cogs.function_in import function_in
+from utility import db
 
 class Vote(discord.Cog, name="投票系統"):
     def __init__(self, bot):
@@ -25,15 +26,15 @@ class Vote(discord.Cog, name="投票系統"):
     
     @tasks.loop(seconds=10)
     async def vote_check(self):
-        search = await function_in.sql_findall("rpg_system", "vote")
+        search = await db.sql_findall("rpg_system", "vote")
         if search:
             for vote_info in search:
                 user_id = vote_info[0]
                 vote_type = vote_info[1]
-                await function_in.sql_delete("rpg_system", "vote", "user_id", user_id)
+                await db.sql_delete("rpg_system", "vote", "user_id", user_id)
                 user = self.bot.get_user(user_id)
                 vote_msg = ""
-                search = await function_in.sql_search("rpg_players", "players", ["user_id"], [user_id])
+                search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
                 if search:
                     vote_msg = "因為您有註冊, 在此送您追光寶匣x1"
                     await function_in.give_item(self, user_id, "追光寶匣")
