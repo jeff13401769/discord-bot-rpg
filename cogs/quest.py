@@ -1,8 +1,8 @@
 import random
-import certifi
 import discord
 
 from utility.config import config
+from utility import db
 from cogs.function_in_in import function_in_in
 
 class Quest_system(discord.Cog, name="任務系統"):
@@ -95,9 +95,9 @@ class Quest_system(discord.Cog, name="任務系統"):
         return quest_info
     
     async def add_quest(self, user: discord.Member, quest_type, quest_name, quest_num: int, msg: discord.Message):
-        search = await function_in_in.sql_search("rpg_players", "quest", ["user_id"], [user.id])
+        search = await db.sql_search("rpg_players", "quest", ["user_id"], [user.id])
         guild_info = await function_in_in.check_guild(self, user.id)
-        search1 = await function_in_in.sql_search("rpg_guild", "quest", ["guild_name"], [guild_info])
+        search1 = await db.sql_search("rpg_guild", "quest", ["guild_name"], [guild_info])
         if not search and not search1:
             return
         if search:
@@ -143,10 +143,10 @@ class Quest_system(discord.Cog, name="任務系統"):
                     if money:
                         await function_in_in.give_money(self, user.id, "money", money, None, None)
                     await function_in_in.give_money(self, user.id, "qp", qp, None, None)
-                    await function_in_in.sql_delete("rpg_players", "quest", "user_id", user.id)
+                    await db.sql_delete("rpg_players", "quest", "user_id", user.id)
                     await msg.reply(embed=embed)
                 else:
-                    await function_in_in.sql_update("rpg_players", "quest", "qnum_1", qnum_1, "user_id", user.id)
+                    await db.sql_update("rpg_players", "quest", "qnum_1", qnum_1, "user_id", user.id)
         if search1:
             qtype = search1[1]
             qname = search1[2]
@@ -185,10 +185,10 @@ class Quest_system(discord.Cog, name="任務系統"):
                         check = await function_in_in.give_guild_exp(self, user.id, gexp)
                         if not check:
                             embed.add_field(name="當前你沒有加入公會, 公會經驗已流失...", value="\u200b", inline=False)
-                    await function_in_in.sql_delete("rpg_guild", "quest", "guild_name", guild_info)
+                    await db.sql_delete("rpg_guild", "quest", "guild_name", guild_info)
                     await msg.reply(embed=embed)
                 else:
-                    await function_in_in.sql_update("rpg_guild", "quest", "qnum_1", qnum_1, "guild_name", f"{guild_info}")
+                    await db.sql_update("rpg_guild", "quest", "qnum_1", qnum_1, "guild_name", f"{guild_info}")
 
 def setup(client: discord.Bot):
     client.add_cog(Quest_system(client))
