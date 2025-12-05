@@ -154,3 +154,21 @@ async def sql_check_table(database: str, table: str):
             return result is not None
     finally:
         conn.close()
+
+async def sql_update_all(database: str, table_name: str, column_name: str, value: any) -> bool:
+    conn = await get_db_connection(database)
+    try:
+        async with conn.cursor() as cursor:
+            query = f"UPDATE `{table_name}` SET `{column_name}` = %s"
+            await cursor.execute(query, (value,))
+            await conn.commit()
+            return True
+    except Exception as e:
+        print(f"❌ 資料庫更新所有行失敗 (Table: {table_name}, Column: {column_name}): {e}")
+        if conn:
+            await conn.rollback()
+        raise e
+    finally:
+        if conn:
+            conn.close()
+    return False
