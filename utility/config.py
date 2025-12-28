@@ -24,6 +24,9 @@ class Config(BaseModel):
     mysql_password: str
     bot_token: str
     openai_key: str
+    bug_report_channel: int
+    suggestion_report_channel: int
+    player_report_channel: int
 
 with open("config.json", "r", encoding="utf8") as f:
     config_data = json.load(f)
