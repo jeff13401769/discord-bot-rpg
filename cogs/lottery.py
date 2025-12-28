@@ -1,12 +1,10 @@
 import asyncio
 import random
 import math
-
 import certifi
 import discord
 from discord.ext import commands
 from discord import Option, OptionChoice
-
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -16,7 +14,7 @@ class Lottery(discord.Cog, name="轉蛋"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
         
-    @commands.slash_command(name="轉蛋", description="查看裝備、材料、道具",
+    @discord.slash_command(name="轉蛋", description="查看裝備、材料、道具",
         options=[
             discord.Option(
                 str,

@@ -10,7 +10,7 @@ class Help(discord.Cog, name="幫助"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="幫助", description="遊戲幫助及指南")
+    @discord.slash_command(name="幫助", description="遊戲幫助及指南")
     async def 幫助(self, interaction: discord.ApplicationContext):
         embed = discord.Embed(title=':book: 遊戲幫助', description="不知道怎麼玩嗎? 來看看幫助吧", timestamp=datetime.datetime.now(pytz.timezone("Asia/Taipei")), color=0xCAFFFF)
         embed.set_thumbnail(url=self.bot.user.avatar.url)
@@ -139,6 +139,8 @@ class Help(discord.Cog, name="幫助"):
             embed.add_field(name="/fix", value="覺得資料有問題嗎? 可以使用這個指令來修復.若還是有問題, 請聯繫GM", inline=False)
             embed.add_field(name="/傷害測試", value="可以召喚一隻稻草人出來, 傷害將登記於系統, 最高的前十個玩家將被載入官網!", inline=False)
             embed.add_field(name="/拍賣", value="想要跨群販賣物品或購買物品嗎? 拍賣行是你的好幫手", inline=False)
+            embed.add_field(name="/回報", value="遇到問題或者想提供建議, 又或者遇到惡意使用bug之類的玩家嗎? 使用這個指令就對了! 該指令使用時, 訊息僅自己可見", inline=False)
+            embed.add_field(name="/邀請", value="想邀請別的玩家遊玩嗎? 使用這個指令, 在該玩家註冊時使用, 完成指定條件, 雙方都將獲得額外獎勵!", inline=False)
             await interaction.response.edit_message(embed=embed, view=Help.help_menu(interaction, self.guild, self.url))
             self.stop()
         

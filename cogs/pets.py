@@ -30,7 +30,7 @@ class Pets(discord.Cog, name="寵物系統"):
     async def 查看寵物(self, interaction: discord.ApplicationContext, player: discord.Member):
         await self.寵物(interaction, 0)
 
-    @commands.slash_command(name="寵物", description="寵物系統",
+    @discord.slash_command(name="寵物", description="寵物系統",
         options=[
             discord.Option(
                 int,

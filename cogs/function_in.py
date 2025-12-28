@@ -233,6 +233,7 @@ class function_in(discord.Cog, name="模塊導入1"):
         a = False
         player_attr_point = search[11]
         player_skill_point = search[12]
+        player_invite = search[24]
         special_exp = 1
         check_special = await function_in.check_special(self, user_id, players_class)
         if check_special:
@@ -244,9 +245,14 @@ class function_in(discord.Cog, name="模塊導入1"):
         
         if exp < 0:
             exp = 0
-                
+            
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [player_invite])
+        if search:
+            player_invite_player = await self.bot.fetch_user(player_invite)
+        user = self.bot.get_user(user_id)
         exp+=players_exp
         while exp >= expfull:
+            check_invite = False
             #if players_level < 12:
             #    expfull = int(19.5 * 1.95 ** players_level) * special_exp
             #else:
@@ -255,6 +261,41 @@ class function_in(discord.Cog, name="模塊導入1"):
             players_level+=1
             player_attr_point+=1
             player_skill_point+=2
+            if player_invite:
+                if players_level in {10, 30, 60, 120}:
+                    check_invite = True
+                if players_level == 10:
+                    invite_players_item = 1
+                    invite_players_money = 100
+                    players_item = 1
+                    players_money = 100
+                if players_level == 30:
+                    invite_players_item = 5
+                    invite_players_money = 500
+                    players_item = 3
+                    players_money = 300
+                if players_level == 60:
+                    invite_players_item = 10
+                    invite_players_money = 1000
+                    players_item = 5
+                    players_money = 500
+                if players_level == 120:
+                    invite_players_item = 30
+                    invite_players_money = 10000
+                    players_item = 15
+                    players_money = 5000
+                
+                if check_invite:
+                    try:
+                        await function_in.give_item(self, user_id, "追光寶匣", players_item)
+                        await function_in.give_money(self, user, "money", players_money, "邀請系統")
+                        await user.send(f'你因為在註冊時輸入邀請碼並升級到 {players_level} 級, 你獲得了以下獎勵:\n追光寶匣x{players_item}, 晶幣x{players_money}')
+                        await function_in.give_item(self, player_invite_player.id, "追光寶匣", invite_players_item)
+                        await function_in.give_money(self, player_invite_player, "money", invite_players_money, "邀請系統")
+                        await player_invite_player.send(f'你因為玩家 {user.mention} 在註冊時輸入您的邀請碼並升級到 {players_level} 級, 你獲得了以下獎勵:\n追光寶匣x{invite_players_item}, 晶幣x{invite_players_money}')
+                    except:
+                        pass
+                        
             await db.sql_update("rpg_players", "players", "level", players_level, "user_id", user_id)
             await db.sql_update("rpg_players", "players", "exp", exp, "user_id", user_id)
             await db.sql_update("rpg_players", "players", "attr_point", player_attr_point, "user_id", user_id)
@@ -641,12 +682,17 @@ class function_in(discord.Cog, name="模塊導入1"):
         return True, -1, None, False, dmg, hit
     
     async def fixplayer(self, user_id):
+        if not await db.sql_check_table("rpg_equip", f"{user_id}"):
+            await db.sql_create_table("rpg_equip", f"{user_id}", ["slot", "equip"], ["VARCHAR(100)", "TEXT"], "slot")
         search = await db.sql_search("rpg_equip", f"{user_id}", ["slot"], ["戰鬥道具欄位3"])
         if not search:
             a = 3
             while a <= 5:
                 await db.sql_insert("rpg_equip", f"{user_id}", ["slot", "equip"], [f"戰鬥道具欄位{a}", "無"])
                 a+=1
+
+        if not await db.sql_check_table("rpg_backpack", f"{user_id}"):
+            await db.sql_create_table("rpg_backpack", f"{user_id}", ["name", "item_type", "num"], ["VARCHAR(100)", "TEXT", "BIGINT"], "name")
         backpack = await db.sql_findall("rpg_backpack", f"{user_id}")
         for item_info in backpack:
             item = item_info[0]
@@ -1385,11 +1431,11 @@ class function_in(discord.Cog, name="模塊導入1"):
         check = await function_in.check_guild(self, user_id)
         if check:
             await db.sql_delete("rpg_guild", f"{check}", "user_id", f"{user_id}")
+        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
+        player_class = search[3]
         medal_list = search[17]
         if not medal_list:
             medal_list = ""
-        search = await db.sql_search("rpg_players", "players", ["user_id"], [user_id])
-        player_class = search[3]
         await db.sql_delete("rpg_players", "players", "user_id", user_id)
         await db.sql_delete("rpg_players", "money", "user_id", user_id)
         if await db.sql_search("rpg_players", "quest", ["user_id"], [user_id]):
@@ -1413,14 +1459,14 @@ class function_in(discord.Cog, name="模塊導入1"):
         if await db.sql_search("rpg_system", "month_card", ["user_id"], [user_id]):
             await db.sql_delete("rpg_system", "month_card", "user_id", user_id)
         if re:
-            await function_in.register_player(self, user_id, player_class, medal_list)
+            await function_in.register_player(self, user_id, player_class, medal_list, 0)
     
-    async def register_player(self, user_id, player_class, medal_list=""):
+    async def register_player(self, user_id, player_class, medal_list="", invite = 0):
         now_time = datetime.datetime.now(pytz.timezone("Asia/Taipei")).strftime("%Y-%m-%d %H:%M:%S")
         timeString = now_time
         struct_time = time.strptime(timeString, "%Y-%m-%d %H:%M:%S")
         time_stamp = int(time.mktime(struct_time))
-        await db.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 1, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100])
+        await db.sql_insert("rpg_players", "players", ["user_id", "level", "exp","class", "hp", "mana", "attr_str", "attr_int", "attr_dex", "attr_con", "attr_luk", "attr_point", "skill_point", "register_time_stamp", "action", "map", "actioning", "medal_list", "boss", "add_attr_point", "all_attr_point", "world_boss_kill", "guild_name", "hunger", "invite"], [user_id, 1, 0, player_class, 100, 50, 0, 0, 0, 0, 0, 1, 0, time_stamp, time_stamp, "翠葉林地", "None", medal_list, 0, 0, 0, 0, "無", 100, invite])
         try:
             await db.sql_insert("rpg_players", "money", ["user_id", "money", "diamond", "qp", "wbp", "pp"], [user_id, 1000, 0, 0, 0, 0])
         except:

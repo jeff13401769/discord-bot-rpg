@@ -31,7 +31,7 @@ class Info(discord.Cog, name="資訊"):
     async def rpg資訊(self, interaction: discord.ApplicationContext, players: discord.Member):
         await self.資訊(interaction, f"{players.name} ({players.id})")
 
-    @commands.slash_command(name="資訊", description="查看自己或別人的資訊",
+    @discord.slash_command(name="資訊", description="查看自己或別人的資訊",
         options=[
             discord.Option(
                 str,

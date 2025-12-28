@@ -12,7 +12,7 @@ class Equip(discord.Cog, name="裝備系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @commands.slash_command(name="裝備", description="編輯裝備囉",
+    @discord.slash_command(name="裝備", description="編輯裝備囉",
         options=[
             discord.Option(
                 int,

@@ -28,7 +28,7 @@ class Report(discord.Cog, name="回報系統"):
     async def before_check_report_block(self):
         await self.bot.wait_until_ready()
 
-    @commands.slash_command(name="gmcmd_report_block", description="禁止使用回報",
+    @discord.slash_command(name="gmcmd_report_block", description="禁止使用回報",
         options=[
             discord.Option(
                 str,
@@ -69,7 +69,7 @@ class Report(discord.Cog, name="回報系統"):
         else:
             await interaction.followup.send('該玩家當前已被禁止使用回報!')
 
-    @commands.slash_command(name="回報", description="回報系統",
+    @discord.slash_command(name="回報", description="回報系統",
         options=[
             discord.Option(
                 int,

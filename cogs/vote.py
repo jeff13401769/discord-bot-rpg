@@ -9,7 +9,7 @@ class Vote(discord.Cog, name="投票系統"):
         self.bot: discord.Bot = bot
         self.vote_check.start()
     
-    @commands.slash_command(name="投票", description="查看投票")
+    @discord.slash_command(name="投票", description="查看投票")
     async def 投票(self, interaction: discord.ApplicationContext):
         embed = discord.Embed(title="機器人投票", color=0xFFE153)
         embed.add_field(name="以下為目前機器人可進行投票的網站", value="\u200b", inline=False)

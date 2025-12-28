@@ -5,7 +5,6 @@ import time
 import pytz
 import discord
 from discord import Option, OptionChoice
-from discord.ext import commands
 from utility.config import config
 from cogs.function_in import function_in
 from cogs.function_in_in import function_in_in
@@ -16,7 +15,7 @@ class Auction_House(discord.Cog, name="拍賣行"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="拍賣", description="拍賣行",
+    @discord.slash_command(name="拍賣", description="拍賣行",
         options=[
             discord.Option(
                 str,

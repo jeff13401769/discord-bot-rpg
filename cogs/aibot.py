@@ -172,7 +172,7 @@ class Aibot(discord.Cog, name="AI助手"):
         await db.sql_update("rpg_players", "aibot", "amount", search[2]-1, "user_id", user_id)
         return new_affection
 
-    @commands.slash_command(name="神明", description="與神明互動",
+    @discord.slash_command(name="神明", description="與神明互動",
         options=[
             discord.Option(
                 int,

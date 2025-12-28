@@ -14,7 +14,7 @@ class Daily(discord.Cog, name="簽到"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="簽到", description="簽到囉")
+    @discord.slash_command(name="簽到", description="簽到囉")
     async def 簽到(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user

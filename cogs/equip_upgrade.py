@@ -12,7 +12,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="強化", description="強化裝備",
+    @discord.slash_command(name="強化", description="強化裝備",
         options=[
             discord.Option(
                 str,
@@ -429,7 +429,7 @@ class Equip_upgrade(discord.Cog, name="強化系統"):
             else:
                 return True
     
-    @commands.slash_command(name="附魔", description="附魔裝備",
+    @discord.slash_command(name="附魔", description="附魔裝備",
         options=[
             discord.Option(
                 str,

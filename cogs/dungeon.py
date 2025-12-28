@@ -23,7 +23,7 @@ class Dungeon(discord.Cog, name="副本系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="副本", description="進入副本",
+    @discord.slash_command(name="副本", description="進入副本",
         options=[
             discord.Option(
                 str,

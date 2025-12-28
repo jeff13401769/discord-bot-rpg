@@ -8,7 +8,7 @@ import pytz
 import datetime
 
 import discord
-from discord.ext import commands
+from discord.ext import tasks
 from discord import Option, OptionChoice
 from utility import db
 from utility.config import config
@@ -143,7 +143,7 @@ class Stock(discord.Cog, name="股票系統"):
         stocks = await db.sql_findall("rpg_stock", "all")
         return [stock[1] for stock in stocks if ctx.value.lower() in stock[1].lower()]
     
-    @commands.slash_command(name="股票", description="股票系統",
+    @discord.slash_command(name="股票", description="股票系統",
         options=[
             discord.Option(
                 int,

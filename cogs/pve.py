@@ -36,7 +36,7 @@ class Pve(discord.Cog, name="PVE系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="傷害測試", description="測試傷害",
+    @discord.slash_command(name="傷害測試", description="測試傷害",
         options=[
             discord.Option(
                 int,
@@ -170,7 +170,7 @@ class Pve(discord.Cog, name="PVE系統"):
         msg = await interaction.followup.send(embed=embed, view=self.monster_button(interaction, False, embed, self.bot, guild, 10, monster_level, monster_name, monster_hp, monster_maxhp, monster_def, monster_AD, monster_dodge, monster_hit, monster_exp, monster_money, a, b, c, d , e, f, g, h, None, 0, False, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, 0, False, 0, "", 0, 0, True))
         await msg.reply('你成功花費1000晶幣來使用一次訓練假人!')
 
-    @commands.slash_command(name="攻擊", description="攻擊一隻怪物",
+    @discord.slash_command(name="攻擊", description="攻擊一隻怪物",
         options=[
             discord.Option(
                 str,

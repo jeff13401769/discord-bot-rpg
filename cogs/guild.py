@@ -1,6 +1,5 @@
 import functools
 import discord
-from discord.ext import commands
 from discord import Option, OptionChoice
 import difflib
 from utility.config import config
@@ -60,7 +59,7 @@ class Guild(discord.Cog, name="公會"):
         else:
             return []
     
-    @commands.slash_command(name="公會", description="查看公會資訊",
+    @discord.slash_command(name="公會", description="查看公會資訊",
         options=[
             discord.Option(
                 str,

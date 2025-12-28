@@ -22,7 +22,7 @@ class Admin(discord.Cog, name="GM指令"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @commands.slash_command(name="gmcmd_start_random_event", description="開啟隨機事件",
+    @discord.slash_command(name="gmcmd_start_random_event", description="開啟隨機事件",
         options=[
             discord.Option(
                 str,
@@ -70,7 +70,7 @@ class Admin(discord.Cog, name="GM指令"):
                 await interaction.followup.send(f'成功開啟隨機事件: {event}!')
                 self.bot.log.info(f'{interaction.user.id} 使用指令 start_random_event 開啟 {event} 隨機事件')
     
-    @commands.slash_command(name="gmcmd_summon_worldboss", description="召喚世界王",
+    @discord.slash_command(name="gmcmd_summon_worldboss", description="召喚世界王",
         options=[
             discord.Option(
                 str,
@@ -142,7 +142,7 @@ class Admin(discord.Cog, name="GM指令"):
                 self.bot.log.info(f'{interaction.user.id} 使用指令 summon_worldboss 移除世界BOSS {boss}')
                 return
 
-    @commands.slash_command(name="gmcmd_heal", description="強制治癒玩家",
+    @discord.slash_command(name="gmcmd_heal", description="強制治癒玩家",
         options=[
             discord.Option(
                 str,
@@ -177,7 +177,7 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'你成功將 {user.mention} 血量魔力飽食度回滿並消除冷卻值!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 heal 治療了 {user.id}')
 
-    @commands.slash_command(name="gmcmd_ban", description="禁止一名玩家遊玩本遊戲",
+    @discord.slash_command(name="gmcmd_ban", description="禁止一名玩家遊玩本遊戲",
         options=[
             discord.Option(
                 str,
@@ -222,7 +222,7 @@ class Admin(discord.Cog, name="GM指令"):
             await msg.reply(f'停權警告無法傳送給該用戶: {user.id}')
         self.bot.log.info(f'{interaction.user.id} 使用指令 ban 停權了 {user.id}')
     
-    @commands.slash_command(name="gmcmd_delete", description="刪除玩家資料",
+    @discord.slash_command(name="gmcmd_delete", description="刪除玩家資料",
         options=[
             discord.Option(
                 str,
@@ -253,7 +253,7 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'你成功清除了 <@{user.id}> 的資料!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 delete 刪除了 {user.id}')
     
-    @commands.slash_command(name="gmcmd_givemoney", description="給予玩家貨幣",
+    @discord.slash_command(name="gmcmd_givemoney", description="給予玩家貨幣",
         options=[
             discord.Option(
                 str,
@@ -310,7 +310,7 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'成功給予 {player.mention} {mnum} {mtype_str}! 現在 {player.mention} 擁有 {money} {mtype_str}')
         self.bot.log.info(f'{interaction.user.id} 使用指令 givemoney 給予了 {player.id} {mnum} {mtype_str}')
     
-    @commands.slash_command(name="gmcmd_giveexp", description="給予玩家經驗",
+    @discord.slash_command(name="gmcmd_giveexp", description="給予玩家經驗",
         options=[
             discord.Option(
                 str,
@@ -347,7 +347,7 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(f'成功給予 {player.mention} {exp} 經驗!')
         self.bot.log.info(f'{interaction.user.id} 使用指令 giveexp 給予了 {player.id} {exp}經驗')
     
-    @commands.slash_command(name="gmcmd_givemedal", description="授予勳章",
+    @discord.slash_command(name="gmcmd_givemedal", description="授予勳章",
         options=[
             discord.Option(
                 str,
@@ -381,7 +381,7 @@ class Admin(discord.Cog, name="GM指令"):
         await interaction.followup.send(msg)
         self.bot.log.info(f'{interaction.user.id} 使用指令 givemedal 給予了 {player.id} {medal} 勳章')
     
-    @commands.slash_command(name="gmcmd_giveitem", description="給予玩家物品",
+    @discord.slash_command(name="gmcmd_giveitem", description="給予玩家物品",
         options=[
             discord.Option(
                 str,

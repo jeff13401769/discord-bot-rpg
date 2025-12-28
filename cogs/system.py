@@ -9,6 +9,7 @@ import os
 from collections import Counter
 import openpyxl
 from openpyxl.styles import Alignment
+import string
 
 import discord
 from discord import Option, OptionChoice
@@ -55,8 +56,17 @@ class System(discord.Cog, name="主系統"):
             await msg.publish()
             self.bot.log.info(f'已自動發布訊息\n連結: {msg.jump_url}')
 
-    @commands.slash_command(name="註冊", description="註冊帳號")
-    async def 註冊(self, interaction: discord.ApplicationContext):
+    @discord.slash_command(name="註冊", description="註冊帳號",
+        options=[
+            discord.Option(
+                str,
+                name="邀請碼",
+                description="請輸入邀請你遊玩的玩家邀請碼",
+                required=False
+            )
+        ]
+    )
+    async def 註冊(self, interaction: discord.ApplicationContext, invite: str = None):
         await interaction.defer()
         player = interaction.user
         search = await db.sql_search("rpg_system", "banlist", ["user_id"], [player.id])
@@ -67,12 +77,18 @@ class System(discord.Cog, name="主系統"):
         if search:
             await interaction.followup.send('你已經註冊過了!')
             return
+        if invite:
+            search = await db.sql_search("rpg_invite", "all", ["code"], [invite])
+            if not search:
+                await interaction.followup.send('您輸入的邀請碼不存在!')
+                return
+            invite = search[0]
         embed = discord.Embed(title=f'{player.name} 的註冊選單', color=0x6A6AFF)
         embed.add_field(name="歡迎加入幻境之旅 RPG!", value="\u200b", inline=False)
         embed.add_field(name="請選擇你的職業", value="\u200b", inline=False)
-        await interaction.followup.send(embed=embed, view=System.register(self.bot, interaction, player))
+        await interaction.followup.send(embed=embed, view=System.register(self.bot, interaction, player, invite))
 
-    @commands.slash_command(name="復活", description="復活自己")
+    @discord.slash_command(name="復活", description="復活自己")
     async def 復活(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -105,7 +121,7 @@ class System(discord.Cog, name="主系統"):
         embed.add_field(name=f"<:magic_stone:1078155095126056971> 神聖復活", value="復活後不會損失任何經驗(需要消耗一顆魔法石)", inline=True)
         await interaction.followup.send(embed=embed, view=self.respawn_menu(interaction, players_level))
 
-    @commands.slash_command(name="交易", description="與別人交易",
+    @discord.slash_command(name="交易", description="與別人交易",
         options=[
             discord.Option(
                 str,
@@ -245,7 +261,7 @@ class System(discord.Cog, name="主系統"):
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
 
-    @commands.slash_command(name="傳送", description="切換至其他地圖",
+    @discord.slash_command(name="傳送", description="切換至其他地圖",
         options=[
             discord.Option(
                 str,
@@ -283,7 +299,32 @@ class System(discord.Cog, name="主系統"):
         await db.sql_update("rpg_players", "players", "map", map, "user_id", user.id)
         await interaction.followup.send(f'你成功傳送到 `{map}` !')
 
-    @commands.slash_command(name="背包", description="查看你的背包")
+    @discord.slash_command(name="邀請", description="查看邀請碼")
+    async def 邀請(self, interaction: discord.ApplicationContext):
+        await interaction.defer()
+        user = interaction.author
+        checkreg = await function_in.checkreg(self, interaction, user.id)
+        if not checkreg:
+            return
+        invite_info = await db.sql_search("rpg_invite", "all", ["user_id"], [user.id])
+        if not invite_info:
+            invite_code = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            use = 0
+            await db.sql_insert("rpg_invite", "all", ["user_id", "code", "use"], [user.id, invite_code, 0])
+        else:
+            invite_code = invite_info[1]
+            use = invite_info[2]
+        embed = discord.Embed(title="邀請系統", color=0xc07ab8)
+        embed.add_field(name="您的邀請碼:", value=f"{invite_code}", inline=False)
+        embed.add_field(name="邀請人數:", value=f"{use}", inline=False)
+        embed.add_field(name="當輸入您邀請碼的玩家在升級到10, 30, 60, 120級時, 您與該玩家都將會獲得額外獎勵!", value="\u200b", inline=False)
+        embed.add_field(name="玩家升到10級時, 您/玩家將會獲得下列獎勵:", value="100晶幣, 1x追光寶匣 / 100晶幣, 1x追光寶匣", inline=False)
+        embed.add_field(name="玩家升到30級時, 您/玩家將會獲得下列獎勵:", value="500晶幣, 5x追光寶匣 / 300晶幣, 3x追光寶匣", inline=False)
+        embed.add_field(name="玩家升到60級時, 您/玩家將會獲得下列獎勵:", value="1000晶幣, 10x追光寶匣 / 500晶幣, 5x追光寶匣", inline=False)
+        embed.add_field(name="玩家升到120級時, 您/玩家將會獲得下列獎勵:", value="10000晶幣, 30x追光寶匣 / 5000晶幣, 15x追光寶匣", inline=False)
+        await interaction.followup.send(embed=embed)
+
+    @discord.slash_command(name="背包", description="查看你的背包")
     @commands.cooldown(1, 30, commands.BucketType.user)
     async def 背包(self, interaction: discord.ApplicationContext):
         await interaction.defer()
@@ -589,7 +630,7 @@ class System(discord.Cog, name="主系統"):
             
         return all_items[:25]
 
-    @commands.slash_command(name="使用", description="使用道具",
+    @discord.slash_command(name="使用", description="使用道具",
         options=[
             discord.Option(
                 str,
@@ -1025,7 +1066,7 @@ class System(discord.Cog, name="主系統"):
         if quest:
             await Quest_system.add_quest(self, user, "賺錢", "道具", value, msg)
 
-    @commands.slash_command(name="休息", description="休息一下, 回個血~")
+    @discord.slash_command(name="休息", description="休息一下, 回個血~")
     async def 休息(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -1055,7 +1096,7 @@ class System(discord.Cog, name="主系統"):
         else:
             await interaction.followup.send(f'你休息了一下, 感覺身體好了一些! 💗你回復了 {a} 點血量💗!\n目前飽食度剩餘 {players_hunger}')
 
-    @commands.slash_command(name="冥想", description="冥想一下, 回個魔~")
+    @discord.slash_command(name="冥想", description="冥想一下, 回個魔~")
     async def 冥想(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -1085,7 +1126,7 @@ class System(discord.Cog, name="主系統"):
         else:
             await interaction.followup.send(f'你冥想了一下, 感覺精神好了一些! 💦你回復了 {a} 點魔力💦!\n目前飽食度剩餘 {players_hunger}')
     
-    @commands.slash_command(name="任務", description="任務")
+    @discord.slash_command(name="任務", description="任務")
     async def 任務(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -1177,7 +1218,7 @@ class System(discord.Cog, name="主系統"):
             await db.sql_insert("rpg_players", "quest", ["user_id", "qtype", "qname", "qnum", "qnum_1", "qdaily_money", "qdaily_exp", "qdaily_qp"], [user.id, quest_type, quest_name, quest_num, 0, quest_daily["money"], quest_daily["exp"], quest_daily["qp"]])
         await interaction.followup.send(embed=embed)
     
-    @commands.slash_command(name="工作", description="查看或使用工作相關",
+    @discord.slash_command(name="工作", description="查看或使用工作相關",
         options=[
             discord.Option(
                 str,
@@ -1377,7 +1418,7 @@ class System(discord.Cog, name="主系統"):
         item = await function_in.lot(self, lot_list)
         return item, lmsg, lmsg1
     
-    @commands.slash_command(name="升級", description="升級技能",
+    @discord.slash_command(name="升級", description="升級技能",
         options=[
             discord.Option(
                 str,
@@ -1429,7 +1470,7 @@ class System(discord.Cog, name="主系統"):
         await db.sql_update("rpg_players", "players", "skill_point", players_skill_point-search[1], "user_id", user.id)
         await interaction.followup.send(f"你成功消耗了 {search[1]} 點天賦點升級了 {skill_name} 技能! 技能等級 {search[1]+1}!")
 
-    @commands.slash_command(name="屬性點", description="屬性加點")
+    @discord.slash_command(name="屬性點", description="屬性加點")
     async def 屬性點(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -1454,7 +1495,7 @@ class System(discord.Cog, name="主系統"):
         embed.add_field(name=f"你當前還有 {players_attr_point+players_add_attr_point} 點屬性點", value="\u200b", inline=False)
         await interaction.followup.send(embed=embed, view=System.attr_up(interaction))
     
-    @commands.slash_command(name="經驗加倍", description="查看當前經驗加倍")
+    @discord.slash_command(name="經驗加倍", description="查看當前經驗加倍")
     async def 經驗加倍(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
@@ -1495,14 +1536,14 @@ class System(discord.Cog, name="主系統"):
             embed.add_field(name="當前個人經驗加倍剩餘時間:", value=f"{exp_time}", inline=False)
         await interaction.followup.send(embed=embed)
     
-    @commands.slash_command(name="fix", description="修復資料")
+    @discord.slash_command(name="fix", description="修復資料")
     async def fix(self, interaction: discord.ApplicationContext):
         await interaction.defer()
         user = interaction.user
         await function_in.fixplayer(self, user.id)
         await interaction.followup.send('已修復完您的資料!')
     
-    @commands.slash_command(name="垃圾桶", description="丟棄物品",
+    @discord.slash_command(name="垃圾桶", description="丟棄物品",
         options=[
             discord.Option(
                 str,
@@ -1561,11 +1602,12 @@ class System(discord.Cog, name="主系統"):
             return expa
     
     class register(discord.ui.View):
-        def __init__(self, bot: discord.Bot, interaction: discord.ApplicationContext, player: discord.Member):
+        def __init__(self, bot: discord.Bot, interaction: discord.ApplicationContext, player: discord.Member, invite):
             super().__init__(timeout=30)
             self.interaction = interaction
             self.bot = bot
             self.player = player
+            self.invite = invite
             self.button1 = discord.ui.Button(label="戰士", style=discord.ButtonStyle.blurple, custom_id="button1")
             self.button2 = discord.ui.Button(label="弓箭手", style=discord.ButtonStyle.red, custom_id="button2")
             self.button3 = discord.ui.Button(label="法師", style=discord.ButtonStyle.green, custom_id="button3")
@@ -1610,7 +1652,12 @@ class System(discord.Cog, name="主系統"):
         
         async def class_select(self, interaction: discord.ApplicationContext, players_class):
             user = self.player
-            await function_in.register_player(self, user.id, players_class)
+            if not self.invite:
+                self.invite = 0
+            search = await db.sql_search("rpg_invite", "all", ["user_id"], [self.invite])
+            use = search[2]
+            await db.sql_update("rpg_invite", "all", "use", use+1, "user_id", self.invite)
+            await function_in.register_player(self, user.id, players_class,"", self.invite)
             embed = discord.Embed(title=f'{user.name} 註冊成功!', color=0x28FF28)
             embed.add_field(name=f"你的職業是 {players_class}", value="\u200b", inline=False)
             embed.add_field(name=f"歡迎遊玩幻境之旅 RPG!", value="\u200b", inline=False)

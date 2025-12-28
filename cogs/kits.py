@@ -14,7 +14,7 @@ class Kits(discord.Cog, name="禮包碼"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
     
-    @commands.slash_command(name="禮包碼", description="使用禮包碼",
+    @discord.slash_command(name="禮包碼", description="使用禮包碼",
         options=[
             discord.Option(
                 str,

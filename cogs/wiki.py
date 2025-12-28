@@ -11,7 +11,7 @@ class Wiki(discord.Cog, name="Wiki系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
 
-    @commands.slash_command(name="wiki", description="查看裝備、材料、道具",
+    @discord.slash_command(name="wiki", description="查看裝備、材料、道具",
         options=[
             discord.Option(
                 str,

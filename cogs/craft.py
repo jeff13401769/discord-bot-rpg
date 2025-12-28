@@ -70,7 +70,7 @@ class Craft(discord.Cog, name="合成系統"):
         else:
             return []
     
-    @commands.slash_command(name="合成台", description="合成或分解物品",
+    @discord.slash_command(name="合成台", description="合成或分解物品",
         options=[
             discord.Option(
                 str,

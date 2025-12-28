@@ -90,7 +90,7 @@ class Shop(discord.Cog, name="商店"):
         return items[:25]
 
 
-    @commands.slash_command(name="商店", description="看看商店有賣什麼吧",
+    @discord.slash_command(name="商店", description="看看商店有賣什麼吧",
         options=[
             discord.Option(
                 int,
@@ -190,7 +190,7 @@ class Shop(discord.Cog, name="商店"):
             await interaction.response.send_message(f'該指令冷卻中! 你可以在 {time} 後再次使用.', ephemeral=True)
             return
     
-    @commands.slash_command(name="販售", description="賣東西給系統",
+    @discord.slash_command(name="販售", description="賣東西給系統",
         options=[
             discord.Option(
                 str,
@@ -254,7 +254,7 @@ class Shop(discord.Cog, name="商店"):
         await function_in.give_money(self, user, "money", price, "販賣")
         await interaction.followup.send(f'你成功販售了 {num} 個 `{name}` 給系統, 你獲得了 {price}元!')
 
-    @commands.slash_command(name="購買", description="買東西囉",
+    @discord.slash_command(name="購買", description="買東西囉",
         options=[
             discord.Option(
                 str,

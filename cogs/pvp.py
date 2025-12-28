@@ -24,7 +24,7 @@ class Pvp(discord.Cog, name="PVP系統"):
         self.bot: discord.Bot = bot
 
     @commands.cooldown(1, 600, commands.BucketType.user)
-    @commands.slash_command(name="決鬥", description="與其他玩家決鬥",
+    @discord.slash_command(name="決鬥", description="與其他玩家決鬥",
         options=[
             discord.Option(
                 discord.Member,

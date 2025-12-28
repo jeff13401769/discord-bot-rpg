@@ -3,7 +3,7 @@ import difflib
 import os
 import yaml
 import discord
-from discord.ext import commands
+from discord.ext import tasks
 from discord import Option, OptionChoice
 from utility.config import config
 from utility import db
@@ -83,7 +83,7 @@ class Life(discord.Cog, name="生活系統"):
         name = f"{member.name} ({member.id})"
         await self.生活(interaction, "查看生活等級", name)
     
-    @commands.slash_command(name="生活", description="生活系統",
+    @discord.slash_command(name="生活", description="生活系統",
         options=[
             discord.Option(
                 str,
