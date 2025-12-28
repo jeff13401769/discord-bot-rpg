@@ -44,7 +44,7 @@ class Report(discord.Cog, name="回報系統"):
                 required=False
             )
         ])
-    async def 回報(self, interaction: discord.ApplicationContext, players: str, reason: str=None):
+    async def gmcmd_report_block(self, interaction: discord.ApplicationContext, players: str, reason: str=None):
         await interaction.defer()
         user = interaction.user
         is_gm = await function_in.is_gm(self, user.id)
