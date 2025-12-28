@@ -92,7 +92,7 @@ class Report(discord.Cog, name="回報系統"):
         check = await db.sql_search("rpg_system", "report_block", ["user_id"], [user.id])
         if check:
             block_time = check[1]
-            await interaction.response.send(f'你目前已被禁止使用回報表單直到 <t:{block_time}:R> !\n詳細原因請至官方伺服器查看')
+            await interaction.response.send_message(f'你目前已被禁止使用回報表單直到 <t:{block_time}:R> !\n詳細原因請至官方伺服器查看')
             return
         modal = self.report_menu(title="回報表單", report_type=report_type, bot=self.bot)
         await interaction.response.send_modal(modal)
