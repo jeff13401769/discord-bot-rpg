@@ -12,6 +12,62 @@ from utility import db
 class Report(discord.Cog, name="回報系統"):
     def __init__(self, bot):
         self.bot: discord.Bot = bot
+        self.check_report_block.start()
+        
+    @tasks.loop(seconds=10)
+    async def check_report_block(self):
+        now_timestamp = int(datetime.datetime.now().timestamp())
+        search = await db.sql_findall("rpg_system", "report_block")
+        for block_info in search:
+            block_user = block_info[0]
+            block_time = block_info[1]
+            if now_timestamp > block_time:
+                await db.sql_delete("rpg_system", "report_block", "user_id", block_user)
+
+    @check_report_block.before_loop
+    async def before_check_report_block(self):
+        await self.bot.wait_until_ready()
+
+    @commands.slash_command(name="gmcmd_report_block", description="禁止使用回報",
+        options=[
+            discord.Option(
+                str,
+                name="玩家",
+                description="選擇你要禁止使用回報的玩家",
+                required=True,
+                autocomplete=function_in.players_autocomplete
+            ),
+            discord.Option(
+                str,
+                name="原因",
+                description="輸入你要禁止該玩家使用回報的原因",
+                required=False
+            )
+        ])
+    async def 回報(self, interaction: discord.ApplicationContext, players: str, reason: str=None):
+        await interaction.defer()
+        user = interaction.user
+        is_gm = await function_in.is_gm(self, user.id)
+        if not is_gm:
+            await interaction.followup.send("你不是GM, 無法使用此指令!")
+            return
+        if is_gm < 2:
+            await interaction.followup.send("你的權限階級不足, 無法使用該指令!")
+            return
+        if not reason:
+            reason = "無"
+        player = await function_in.players_list_to_players(self, players)
+        now = datetime.datetime.now(pytz.timezone("Asia/Taipei"))
+        future_date = now + datetime.timedelta(days=7)
+        future_timestamp = int(future_date.timestamp())
+        check = await db.sql_search("rpg_system", "report_block", ["user_id"], [player.id])
+        if not check:
+            await db.sql_insert("rpg_system", "report_block", ["user_id", "time_stamp"], [player.id, future_timestamp])
+            await interaction.followup.send('成功禁止該玩家使用回報系統7天!')
+            channel = self.bot.get_channel(1382638422971383861)
+            await channel.send(f'{player.mention} 已被禁止使用回報系統7天\n原因: {reason}')
+        else:
+            await interaction.followup.send('該玩家當前已被禁止使用回報!')
 
     @commands.slash_command(name="回報", description="回報系統",
         options=[
@@ -32,6 +88,11 @@ class Report(discord.Cog, name="回報系統"):
         search = await db.sql_search("rpg_players", "players", ["user_id"], [user.id])
         if not search:
             await interaction.response.send_message("你尚未註冊帳號! 請先使用 `/註冊` 來註冊一個帳號!")
+            return
+        check = await db.sql_search("rpg_system", "report_block", ["user_id"], [user.id])
+        if check:
+            block_time = check[1]
+            await interaction.response.send(f'你目前已被禁止使用回報表單直到 <t:{block_time}:R> !\n詳細原因請至官方伺服器查看')
             return
         modal = self.report_menu(title="回報表單", report_type=report_type, bot=self.bot)
         await interaction.response.send_modal(modal)
@@ -123,7 +184,7 @@ class Report(discord.Cog, name="回報系統"):
                 embed.set_footer(text=f'回報時間: {now_time}')
                 await player_report_channel.send(embed=embed)
             
-            await interaction.followup.send(f'{user.mention} 您的回報已成功送出!')
+            await interaction.followup.send('您的回報已成功送出!')
         
 def setup(client: discord.Bot):
     client.add_cog(Report(client))
