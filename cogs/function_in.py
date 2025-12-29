@@ -168,6 +168,7 @@ class function_in(discord.Cog, name="模塊導入1"):
             ("裝備", "pet"),
             ("裝備", "card"),
             ("裝備", "class_item"),
+            ("裝備", "medal"),
         ]
         all_items = []
         for folder_a, folder_b in folders_to_search:
@@ -292,7 +293,15 @@ class function_in(discord.Cog, name="模塊導入1"):
                         await user.send(f'你因為在註冊時輸入邀請碼並升級到 {players_level} 級, 你獲得了以下獎勵:\n追光寶匣x{players_item}, 晶幣x{players_money}')
                         await function_in.give_item(self, player_invite_player.id, "追光寶匣", invite_players_item)
                         await function_in.give_money(self, player_invite_player, "money", invite_players_money, "邀請系統")
+                        if players_level == 120:
+                            search = await db.sql_search("rpg_invite", "all", ["user_id"], [player_invite_player.id])
+                            player_120 = search[3]
+                            await db.sql_update("rpg_invite", "all", "120", player_120+1, "user_id", player_invite_player.id)
+                            if player_120+1 == 30:
+                                a = await function_in.give_medal(self, player_invite_player.id, "千輝之星的領袖")
+                                await player_invite_player.send(f'你因為邀請的玩家中有30名玩家升到120級, 獲得了徽章 `千輝之星的領袖`')
                         await player_invite_player.send(f'你因為玩家 {user.mention} 在註冊時輸入您的邀請碼並升級到 {players_level} 級, 你獲得了以下獎勵:\n追光寶匣x{invite_players_item}, 晶幣x{invite_players_money}')
+                            
                     except:
                         pass
                         
@@ -1323,7 +1332,7 @@ class function_in(discord.Cog, name="模塊導入1"):
 
         return players_level, players_exp, players_money, players_diamond, players_qp, players_wbp, players_pp, players_hp, players_max_hp, players_mana, players_max_mana, players_dodge, players_hit,  players_crit_damage, players_crit_chance, players_AD, players_AP, players_def, players_ndef, players_str, players_int, players_dex, players_con, players_luk, players_attr_point, players_add_attr_point, players_skill_point, players_register_time, players_map, players_class, drop_chance, players_hunger
     
-    async def give_medal(self, user_id, medal):
+    async def give_medal(self, user_id, medal: str):
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         yaml_path = os.path.join(base_path, "rpg", "裝備", "medal", f"{medal}.yml")
         if os.path.exists(yaml_path):

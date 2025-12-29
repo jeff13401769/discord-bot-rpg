@@ -310,18 +310,23 @@ class System(discord.Cog, name="主系統"):
         if not invite_info:
             invite_code = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
             use = 0
+            player_120 = 0
             await db.sql_insert("rpg_invite", "all", ["user_id", "code", "use"], [user.id, invite_code, 0])
         else:
             invite_code = invite_info[1]
             use = invite_info[2]
+            player_120 = invite_info[3]
         embed = discord.Embed(title="邀請系統", color=0xc07ab8)
         embed.add_field(name="您的邀請碼:", value=f"{invite_code}", inline=False)
         embed.add_field(name="邀請人數:", value=f"{use}", inline=False)
+        embed.add_field(name="達到120級人數:", value=f"{player_120}", inline=False)
         embed.add_field(name="當輸入您邀請碼的玩家在升級到10, 30, 60, 120級時, 您與該玩家都將會獲得額外獎勵!", value="\u200b", inline=False)
         embed.add_field(name="玩家升到10級時, 您/玩家將會獲得下列獎勵:", value="100晶幣, 1x追光寶匣 / 100晶幣, 1x追光寶匣", inline=False)
         embed.add_field(name="玩家升到30級時, 您/玩家將會獲得下列獎勵:", value="500晶幣, 5x追光寶匣 / 300晶幣, 3x追光寶匣", inline=False)
         embed.add_field(name="玩家升到60級時, 您/玩家將會獲得下列獎勵:", value="1000晶幣, 10x追光寶匣 / 500晶幣, 5x追光寶匣", inline=False)
         embed.add_field(name="玩家升到120級時, 您/玩家將會獲得下列獎勵:", value="10000晶幣, 30x追光寶匣 / 5000晶幣, 15x追光寶匣", inline=False)
+        embed.add_field(name="特殊條件", value="\u200b", inline=False)
+        embed.add_field(name="當您邀請的玩家中有30名玩家升到120級時, 您將會獲得下列獎勵:", value="100000晶幣, 100x追光寶匣, 1x千輝之星的領袖", inline=False)
         await interaction.followup.send(embed=embed)
 
     @discord.slash_command(name="背包", description="查看你的背包")
